@@ -9,8 +9,8 @@ export default defineConfig({
   plugins: [tailwindcss(), vue(), vueDevTools()],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
-      node_modules: path.resolve(__dirname, "node_modules"),
+      "@": path.resolve(import.meta.dirname, "./src"),
+      node_modules: path.resolve(import.meta.dirname, "node_modules"),
     },
   },
 });

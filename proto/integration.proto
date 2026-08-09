@@ -1,26 +1,25 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "xyz.om3lette.deadlines_api.proto";
 option java_outer_classname = "IntegrationProto";
-
+option java_package = "xyz.om3lette.deadlines_api.proto";
 
 service IntegrationService {
-  rpc LinkMessengerAccount(LinkMessengerAccountRequest) returns (GeneralResponse) {};
+  rpc LinkMessengerAccount(LinkMessengerAccountRequest) returns (GeneralResponse) {}
 
-  rpc RegisterChat(RegisterChatRequest) returns (GeneralResponse) {};
-  rpc DeregisterChat(DeregisterChatRequest) returns (GeneralResponse) {};
+  rpc RegisterChat(RegisterChatRequest) returns (GeneralResponse) {}
+  rpc DeregisterChat(DeregisterChatRequest) returns (GeneralResponse) {}
 
-  rpc UpdateChatInfo(UpdateChatInfoRequest) returns (GeneralResponse) {};
+  rpc UpdateChatInfo(UpdateChatInfoRequest) returns (GeneralResponse) {}
 
-  rpc SubscribeToOrganization(SubscribeToRequest) returns (GeneralResponse) {};
-  rpc SubscribeToThread(SubscribeToRequest) returns (GeneralResponse) {};
-  rpc SubscribeToDeadline(SubscribeToRequest) returns (GeneralResponse) {};
+  rpc SubscribeToOrganization(SubscribeToRequest) returns (GeneralResponse) {}
+  rpc SubscribeToThread(SubscribeToRequest) returns (GeneralResponse) {}
+  rpc SubscribeToDeadline(SubscribeToRequest) returns (GeneralResponse) {}
 
-  rpc UnsubscribeFromOrganization(UnsubscribeFromRequest) returns (GeneralResponse) {};
-  rpc UnsubscribeFromThread(UnsubscribeFromRequest) returns (GeneralResponse) {};
-  rpc UnsubscribeFromDeadline(UnsubscribeFromRequest) returns (GeneralResponse) {};
-  rpc UnsubscribeFromAll(UnsubscribeFromAllRequest) returns (GeneralResponse) {};
+  rpc UnsubscribeFromOrganization(UnsubscribeFromRequest) returns (GeneralResponse) {}
+  rpc UnsubscribeFromThread(UnsubscribeFromRequest) returns (GeneralResponse) {}
+  rpc UnsubscribeFromDeadline(UnsubscribeFromRequest) returns (GeneralResponse) {}
+  rpc UnsubscribeFromAll(UnsubscribeFromAllRequest) returns (GeneralResponse) {}
 }
 
 message LinkMessengerAccountRequest {

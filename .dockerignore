@@ -1,0 +1,26 @@
+.git
+
+# api
+api/build
+api/.idea
+api/.gradle
+api/.kotlin
+
+# bots
+bots/.venv
+bots/.env
+bots/config.yaml
+bots/config.yml
+bots/common/infrastructure/grpc/generated
+bots/.vscode
+bots/.idea
+bots/*cache*
+bots/.coverage
+
+# frontend
+frontend/node_modules
+frontend/dist
+frontend/dist-ssr
+frontend/.vscode
+!frontend/.vscode/extensions.json
+frontend/.idea

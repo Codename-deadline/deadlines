@@ -5,6 +5,7 @@ on:
     branches: ['main']
     paths:
       - 'api/**'
+      - 'proto'
       - '.github/workflows/backend-dependency-submission.yml'
 
 permissions:

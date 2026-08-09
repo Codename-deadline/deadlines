@@ -1,0 +1,96 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "xyz.om3lette.deadlines_api.proto";
+option java_outer_classname = "IntegrationProto";
+
+
+service IntegrationService {
+  rpc LinkMessengerAccount(LinkMessengerAccountRequest) returns (GeneralResponse) {};
+
+  rpc RegisterChat(RegisterChatRequest) returns (GeneralResponse) {};
+  rpc DeregisterChat(DeregisterChatRequest) returns (GeneralResponse) {};
+
+  rpc UpdateChatInfo(UpdateChatInfoRequest) returns (GeneralResponse) {};
+
+  rpc SubscribeToOrganization(SubscribeToRequest) returns (GeneralResponse) {};
+  rpc SubscribeToThread(SubscribeToRequest) returns (GeneralResponse) {};
+  rpc SubscribeToDeadline(SubscribeToRequest) returns (GeneralResponse) {};
+
+  rpc UnsubscribeFromOrganization(UnsubscribeFromRequest) returns (GeneralResponse) {};
+  rpc UnsubscribeFromThread(UnsubscribeFromRequest) returns (GeneralResponse) {};
+  rpc UnsubscribeFromDeadline(UnsubscribeFromRequest) returns (GeneralResponse) {};
+  rpc UnsubscribeFromAll(UnsubscribeFromAllRequest) returns (GeneralResponse) {};
+}
+
+message LinkMessengerAccountRequest {
+  string request_id = 1;
+  bool is_accepted = 2;
+  int64 messenger_account_id = 3;
+  ProtoMessenger messenger = 4;
+}
+
+message RegisterChatRequest {
+  int64 bot_id = 1;
+  int64 issuer_messenger_account_id = 2;
+  ProtoMessenger messenger = 3;
+  int64 messenger_chat_id = 4;
+  string chat_title = 5;
+  string language = 6;
+  bool issuer_has_messenger_chat_admin_rights = 7;
+  string time_zone = 8;
+}
+
+message DeregisterChatRequest {
+  int64 messenger_chat_id = 1;
+  ProtoMessenger messenger = 2;
+  int64 issuer_messenger_account_id = 3;
+  bool issuer_has_messenger_chat_admin_rights = 4;
+}
+
+message SubscribeToRequest {
+  int64 issuer_messenger_account_id = 1;
+  int64 target_id = 2;
+  int64 messenger_chat_id = 3;
+  ProtoMessenger messenger = 4;
+  bool issuer_has_messenger_chat_admin_rights = 5;
+}
+
+message UnsubscribeFromRequest {
+  int64 issuer_messenger_account_id = 1;
+  int64 target_id = 2;
+  int64 messenger_chat_id = 3;
+  ProtoMessenger messenger = 4;
+  bool issuer_has_messenger_chat_admin_rights = 5;
+}
+
+message UpdateChatInfoRequest {
+  int64 issuer_messenger_account_id = 1;
+  optional Locale language = 2;
+  optional string title = 3;
+  int64 messenger_chat_id = 4;
+  ProtoMessenger messenger = 5;
+  bool issuer_has_messenger_chat_admin_rights = 6;
+  optional string time_zone = 7;
+}
+
+message UnsubscribeFromAllRequest {
+  int64 messenger_chat_id = 1;
+  int64 issuer_messenger_account_id = 2;
+  ProtoMessenger messenger = 3;
+  bool issuer_has_messenger_chat_admin_rights = 4;
+}
+
+message GeneralResponse {
+  string key = 1;
+  Locale locale = 2;
+}
+
+enum Locale {
+  RU = 0;
+  EN = 1;
+}
+
+enum ProtoMessenger {
+  TELEGRAM = 0;
+}

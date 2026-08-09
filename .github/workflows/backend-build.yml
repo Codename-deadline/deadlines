@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'api/**'
+      - 'proto'
       - '.github/workflows/backend-build.yml'
 
 jobs:

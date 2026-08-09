@@ -10,6 +10,14 @@ plugins {
 group = "xyz.om3lette"
 version = "0.0.1-SNAPSHOT"
 
+sourceSets {
+    main {
+        proto {
+            srcDir("../proto")
+        }
+    }
+}
+
 java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(25)

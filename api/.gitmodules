@@ -1,3 +1,0 @@
-[submodule "src/main/proto/internal"]
-	path = src/main/proto/internal
-	url = ../proto-internal.git

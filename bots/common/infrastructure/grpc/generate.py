@@ -11,7 +11,8 @@ class GrpcGenerator:
     def __init__(self) -> None:
         self._directory = Path(__file__).resolve().parent
         self._generated_directory = self._directory / "generated"
-        self._proto_path = self._directory / "proto" / "integration.proto"
+
+        self._proto_path = (self._directory.parents[3] / "proto") / "integration.proto"
 
     def run(self) -> None:
         self._generate()

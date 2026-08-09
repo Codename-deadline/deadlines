@@ -1,0 +1,12 @@
+generated
+
+.venv
+.env
+config.yaml
+
+.git
+
+.vscode
+.idea
+*cache*
+.coverage

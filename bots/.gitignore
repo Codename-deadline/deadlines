@@ -1,0 +1,12 @@
+.venv
+.wheels
+.env
+config.yaml
+config.yml
+
+generated
+
+.vscode
+.idea
+*cache*
+.coverage

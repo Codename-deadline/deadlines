@@ -1,0 +1,543 @@
+package xyz.om3lette.deadlines_api.services
+
+import io.mockk.CapturingSlot
+import io.mockk.clearMocks
+import io.mockk.every
+import io.mockk.junit5.MockKExtension
+import io.mockk.mockk
+import io.mockk.slot
+import io.mockk.verify
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.assertAll
+import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
+import org.springframework.data.domain.PageImpl
+import xyz.om3lette.deadlines_api.DomainObjectBuilder
+import xyz.om3lette.deadlines_api.data.permissions.dto.PermissionRoleDTO
+import xyz.om3lette.deadlines_api.data.scopes.common.dto.UsernameRolePair
+import xyz.om3lette.deadlines_api.data.scopes.common.dto.UsernameRolePairList
+import xyz.om3lette.deadlines_api.data.scopes.organization.enums.OrganizationType
+import xyz.om3lette.deadlines_api.data.scopes.organization.model.Organization
+import xyz.om3lette.deadlines_api.data.scopes.organization.model.OrganizationInvitation
+import xyz.om3lette.deadlines_api.data.scopes.organization.repo.OrganizationInvitationRepository
+import xyz.om3lette.deadlines_api.data.scopes.organization.repo.OrganizationRepository
+import xyz.om3lette.deadlines_api.data.scopes.userScope.enums.ScopeRole
+import xyz.om3lette.deadlines_api.data.scopes.userScope.enums.ScopeType
+import xyz.om3lette.deadlines_api.data.scopes.userScope.model.UserScope
+import xyz.om3lette.deadlines_api.data.scopes.userScope.repo.UserScopeRepository
+import xyz.om3lette.deadlines_api.data.user.model.User
+import xyz.om3lette.deadlines_api.data.user.repo.UserRepository
+import xyz.om3lette.deadlines_api.exceptions.enums.ErrorCode
+import xyz.om3lette.deadlines_api.exceptions.type.StatusCodeException
+import xyz.om3lette.deadlines_api.services.permission.PermissionService
+import java.util.Optional
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+
+@ExtendWith(MockKExtension::class)
+class OrganizationServiceTest {
+    private val userRepository: UserRepository = mockk()
+    private val userScopeRepository: UserScopeRepository = mockk()
+    private val organizationRepository: OrganizationRepository = mockk()
+    private val organizationInvitationRepository: OrganizationInvitationRepository = mockk()
+    private val permissionService: PermissionService = mockk()
+    private val organizationInvitationService: OrganizationInvitationService = mockk()
+    private val organizationService: OrganizationService = OrganizationService(
+        userRepository,
+        userScopeRepository,
+        organizationRepository,
+        organizationInvitationRepository,
+        permissionService,
+        organizationInvitationService
+    )
+
+    private lateinit var dummyUserBob: User
+    private lateinit var dummyUserAlice: User
+    private lateinit var dummyOrganization: Organization
+    private lateinit var dummyInvitation: OrganizationInvitation
+    private lateinit var dummyUserScopeBob: UserScope
+    private lateinit var dummyUserScopeAlice: UserScope
+
+    @BeforeEach
+    fun commonHappyStubs() {
+        clearMocks(userScopeRepository, recordedCalls = true)
+
+        dummyOrganization = DomainObjectBuilder.organization(
+            id = 256,
+            title = "My first org",
+            description = null,
+            type = OrganizationType.PUBLIC
+        )
+
+        dummyUserBob = DomainObjectBuilder.userBob()
+        dummyUserScopeBob = DomainObjectBuilder.userScope(
+            user = dummyUserBob,
+            scopeType = ScopeType.ORGANIZATION,
+            scopeId = dummyOrganization.id,
+            role = ScopeRole.ORG_OWNER
+        )
+        dummyUserAlice = DomainObjectBuilder.userAlice()
+        dummyUserScopeAlice = DomainObjectBuilder.userScope(
+            user = dummyUserAlice,
+            scopeType = ScopeType.ORGANIZATION,
+            scopeId = dummyOrganization.id,
+            role = ScopeRole.ORG_MEMBER
+        )
+
+        dummyInvitation = DomainObjectBuilder.organizationInvitation(
+            invitedBy = dummyUserBob,
+            invitedUser = dummyUserAlice,
+            organization = dummyOrganization,
+            role = ScopeRole.ORG_ADMIN
+        )
+
+        every { userScopeRepository.findByUserAndScopeIdAndScopeType(
+            dummyUserBob, dummyOrganization.id, ScopeType.ORGANIZATION
+        ) } returns Optional.of(dummyUserScopeBob)
+        every { userRepository.findByUsernameInIgnoreCase(emptyList()) } returns emptyList()
+        every { userRepository.findByUsernameInIgnoreCase(listOf(dummyUserAlice.username)) } returns listOf(dummyUserAlice)
+
+        every { organizationRepository.findById(dummyOrganization.id) } returns Optional.of(dummyOrganization)
+        every { organizationRepository.findByIdForUpdate(dummyOrganization.id) } returns dummyOrganization
+
+        every { userScopeRepository.deleteByUserIdAndOrganizationId(dummyUserAlice.id, dummyOrganization.id) } returns 1
+
+    }
+
+    @Nested
+    inner class CreateOrganization {
+        private val savedInvitationsSlot: CapturingSlot<List<OrganizationInvitation>> = slot()
+        private val savedOrganizationSlot: CapturingSlot<Organization> = slot()
+        private val savedUserScopeSlot: CapturingSlot<UserScope> = slot()
+
+        @BeforeEach
+        fun commonHappyStubs() {
+            savedInvitationsSlot.clear()
+            savedOrganizationSlot.clear()
+
+            every { userScopeRepository.save(capture(savedUserScopeSlot)) } returnsArgument 0
+
+            every { organizationRepository.save(capture(savedOrganizationSlot)) } returnsArgument 0
+
+            every { organizationInvitationRepository.saveAll(capture(savedInvitationsSlot)) } returnsArgument 0
+            every { organizationInvitationService.newPendingInvitation(dummyUserBob, dummyUserAlice, any(), any()) } returns dummyInvitation
+        }
+
+        @Test
+        fun `happy path no users to invite creates organization`() {
+            organizationService.createOrganization(
+                dummyUserBob,
+                "My first org",
+                null,
+                OrganizationType.PUBLIC,
+                UsernameRolePairList(emptyList())
+            )
+
+            verify {
+                organizationRepository.save(
+                    match { it.title == "My first org" && it.description == null }
+                )
+            }
+
+            assertAll(
+                { assertTrue { savedOrganizationSlot.isCaptured } },
+                { assertTrue { savedInvitationsSlot.isCaptured } },
+                { assertTrue { savedUserScopeSlot.isCaptured } }
+            )
+            val savedInvitations = savedInvitationsSlot.captured
+            val savedUserScope = savedUserScopeSlot.captured
+            assertAll(
+                { assertEquals(dummyUserBob.id, savedUserScope.user.id) },
+                { assertEquals(ScopeRole.ORG_OWNER, savedUserScope.role) },
+                { assertEquals(ScopeType.ORGANIZATION, savedUserScope.scopeType) },
+                { assertEquals(0, savedInvitations.size)}
+            )
+        }
+
+        @Test
+        fun `happy path with a user to invite creates organization and an invitation`() {
+            organizationService.createOrganization(
+                dummyUserBob,
+                "My first org",
+                null,
+                OrganizationType.PUBLIC,
+                UsernameRolePairList(
+                    listOf(
+                        UsernameRolePair(dummyUserAlice.username, ScopeRole.ORG_ADMIN)
+                    )
+                )
+            )
+
+            assertAll(
+                { assertTrue { savedOrganizationSlot.isCaptured } },
+                { assertTrue { savedInvitationsSlot.isCaptured } },
+                { assertTrue { savedUserScopeSlot.isCaptured } }
+            )
+            val savedInvitations = savedInvitationsSlot.captured
+            val savedUserScope = savedUserScopeSlot.captured
+            assertAll(
+                { assertEquals(dummyUserBob.id, savedUserScope.user.id) },
+                { assertEquals(ScopeRole.ORG_OWNER, savedUserScope.role) },
+                { assertEquals(ScopeType.ORGANIZATION, savedUserScope.scopeType) },
+                { assertEquals(1, savedInvitations.size)},
+                { assertEquals(dummyUserBob.id, savedInvitations.first().invitedBy.id) },
+                { assertEquals(dummyUserAlice.id, savedInvitations.first().invitedUser.id) },
+                { assertEquals(ScopeRole.ORG_ADMIN, savedInvitations.first().role) },
+                { assertEquals(dummyOrganization.id, savedInvitations.first().organization.id) },
+            )
+        }
+
+        @Test
+        fun `personal organization with invitations is rejected before creation`() {
+            val error = assertThrows<StatusCodeException> {
+                organizationService.createOrganization(
+                    dummyUserBob,
+                    "Personal",
+                    null,
+                    OrganizationType.PERSONAL,
+                    UsernameRolePairList(
+                        listOf(UsernameRolePair(dummyUserAlice.username, ScopeRole.ORG_MEMBER))
+                    )
+                )
+            }
+
+            assertAll(
+                { assertEquals(400, error.statusCode) },
+                { assertEquals(ErrorCode.INVITATION_PERSONAL_ORG, error.code) },
+                { verify(exactly = 0) { organizationRepository.save(any()) } },
+                { verify(exactly = 0) { userScopeRepository.save(any()) } },
+                { verify(exactly = 0) { organizationInvitationRepository.saveAll(any<List<OrganizationInvitation>>()) } }
+            )
+        }
+    }
+
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    @Nested
+    inner class DeleteOrganization() {
+
+        private val deletedOrganizationSlot: CapturingSlot<Organization> = slot()
+
+        @BeforeEach
+        fun commonHappyStubs() {
+            deletedOrganizationSlot.clear()
+
+            every { organizationRepository.delete(capture(deletedOrganizationSlot)) } returnsArgument 0
+            every { permissionService.canDelete(any(), any()) } returns true
+        }
+
+        @Test
+        fun `if organization not found throws StatusCodeException 404`() {
+            val fakeOrganizationId = dummyOrganization.id + 1
+            every { organizationRepository.findById(fakeOrganizationId) } returns Optional.empty()
+
+            val res = assertThrows<StatusCodeException> {
+                organizationService.deleteOrganization(dummyUserBob, fakeOrganizationId)
+            }
+            assertAll(
+                { assertEquals(404, res.statusCode) },
+                { assertFalse(deletedOrganizationSlot.isCaptured) }
+            )
+        }
+
+        @Test
+        fun `not enough permissions throws StatusCodeException 403`() {
+            every { permissionService.canDelete(any(), any()) } returns false
+
+            val res = assertThrows<StatusCodeException> {
+                organizationService.deleteOrganization(dummyUserBob, dummyOrganization.id)
+            }
+            assertAll(
+                { assertEquals(403, res.statusCode) },
+                { assertFalse(deletedOrganizationSlot.isCaptured) }
+            )
+        }
+
+        @Test
+        fun `happy path deletes the organization`() {
+            organizationService.deleteOrganization(dummyUserBob, dummyOrganization.id)
+
+            verify {
+                organizationRepository.delete(
+                    match { it.id == dummyOrganization.id }
+                )
+            }
+            assertTrue(deletedOrganizationSlot.isCaptured)
+            val deletedOrganization = deletedOrganizationSlot.captured
+            assertEquals(dummyOrganization.id, deletedOrganization.id)
+        }
+    }
+
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    @Nested
+    inner class RemoveMember() {
+
+        @BeforeEach
+        fun commonHappyStubs() {
+            every { permissionService.canRemoveAssignee(any(), any(), any()) } returns true
+        }
+
+        @Test
+        fun `if member is not found throws StatusCodeException 404`() {
+            every { userScopeRepository.findRoleAndUserIdByUsernameLowerAndScopeIdAndScopeType(
+                any(), any(), any()
+            ) } returns null
+
+            val res = assertThrows<StatusCodeException> {
+                organizationService.removeMember(dummyUserBob, dummyOrganization.id, "UnknownMember")
+            }
+
+            assertAll(
+                { verify(exactly = 0) { userScopeRepository.deleteByUserIdAndOrganizationId(any(), any()) } },
+                { assertEquals(404, res.statusCode) }
+            )
+        }
+
+        @Test
+        fun `not enough permissions throws StatusCodeException 403`() {
+            every { userScopeRepository.findRoleAndUserIdByUsernameLowerAndScopeIdAndScopeType(
+                dummyUserAlice.username.lowercase(), any(), any()
+            ) } returns PermissionRoleDTO(dummyUserAlice.id, dummyUserScopeAlice.role)
+            every { permissionService.canRemoveAssignee(any(), any(), any()) } returns false
+
+            val res = assertThrows<StatusCodeException>{
+                organizationService.removeMember(dummyUserBob, dummyOrganization.id, dummyUserAlice.username)
+            }
+
+            assertAll(
+                { verify(exactly = 0) { userScopeRepository.deleteByUserIdAndOrganizationId(any(), any()) } },
+                { assertEquals(403, res.statusCode) }
+            )
+        }
+
+        @Test
+        fun `removing issuer throws StatusCodeException 400`() {
+            val res = assertThrows<StatusCodeException>{
+                organizationService.removeMember(dummyUserBob, dummyOrganization.id, dummyUserBob.username)
+            }
+
+            assertAll(
+                { verify(exactly = 0) { userScopeRepository.deleteByUserIdAndOrganizationId(any(), any()) } },
+                { assertEquals(400, res.statusCode) }
+            )
+        }
+
+        @Test
+        fun `happy path removes organization member`() {
+            every { userScopeRepository.findRoleAndUserIdByUsernameLowerAndScopeIdAndScopeType(
+                dummyUserAlice.username.lowercase(), any(), any()
+            ) } returns PermissionRoleDTO(dummyUserAlice.id, dummyUserScopeAlice.role)
+
+            organizationService.removeMember(dummyUserBob, dummyOrganization.id, dummyUserAlice.username)
+
+            verify(exactly = 1) { userScopeRepository.deleteByUserIdAndOrganizationId(dummyUserAlice.id, dummyOrganization.id) }
+        }
+    }
+
+    @Nested
+    inner class AnonymousReads {
+        @BeforeEach
+        fun commonHappyStubs() {
+            every { permissionService.hasAccess(null, any()) } returns true
+        }
+
+        @Test
+        fun `organization members are available through anonymous permission check`() {
+            every {
+                userScopeRepository.findAllByScopeIdAndScopeType(
+                    dummyOrganization.id,
+                    ScopeType.ORGANIZATION,
+                    any()
+                )
+            } returns PageImpl(emptyList())
+
+            organizationService.getOrganizationMembers(null, dummyOrganization.id, 0, 10)
+
+            verify(exactly = 1) { permissionService.hasAccess(null, any()) }
+            verify(exactly = 1) {
+                userScopeRepository.findAllByScopeIdAndScopeType(
+                    dummyOrganization.id,
+                    ScopeType.ORGANIZATION,
+                    any()
+                )
+            }
+        }
+
+        @Test
+        fun `member hints are available through anonymous permission check`() {
+            every {
+                userScopeRepository.findOrganizationMembersWithUsernameStartingWithIgnoreCase(
+                    dummyOrganization.id,
+                    "ali",
+                    any()
+                )
+            } returns listOf(dummyUserAlice.username)
+
+            val result = organizationService.getMemberUsernamesStartingWith(null, dummyOrganization.id, "Ali")
+
+            assertEquals(listOf(dummyUserAlice.username), result)
+            verify(exactly = 1) { permissionService.hasAccess(null, any()) }
+        }
+
+        @Test
+        fun `member hints are rejected before querying members when access is denied`() {
+            every { permissionService.hasAccess(null, any()) } returns false
+
+            val error = assertThrows<StatusCodeException> {
+                organizationService.getMemberUsernamesStartingWith(null, dummyOrganization.id, "Ali")
+            }
+
+            assertEquals(403, error.statusCode)
+            verify(exactly = 0) {
+                userScopeRepository.findOrganizationMembersWithUsernameStartingWithIgnoreCase(
+                    any(),
+                    any(),
+                    any()
+                )
+            }
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ChangeVisibility {
+        @BeforeEach
+        fun commonHappyStubs() {
+            every {
+                permissionService.canChangeOrganizationVisibility(dummyUserBob, dummyOrganization.id)
+            } returns true
+            every { organizationRepository.save(dummyOrganization) } returns dummyOrganization
+            every { userScopeRepository.findOrganizationOwnerId(dummyOrganization.id) } returns dummyUserBob.id
+            every {
+                userScopeRepository.existsOrganizationTreeScopeByUserIdNot(dummyOrganization.id, dummyUserBob.id)
+            } returns false
+            every {
+                organizationInvitationRepository.existsPendingByOrganizationId(dummyOrganization.id)
+            } returns false
+        }
+
+        fun visibilityTransitions() = listOf(
+            Arguments.of(OrganizationType.PUBLIC, OrganizationType.PRIVATE),
+            Arguments.of(OrganizationType.PRIVATE, OrganizationType.PUBLIC),
+            Arguments.of(OrganizationType.PRIVATE, OrganizationType.PERSONAL),
+            Arguments.of(OrganizationType.PERSONAL, OrganizationType.PRIVATE)
+        )
+
+        @ParameterizedTest
+        @MethodSource("visibilityTransitions")
+        fun `supported visibility transition updates organization`(
+            currentType: OrganizationType,
+            newType: OrganizationType
+        ) {
+            dummyOrganization.type = currentType
+
+            organizationService.changeOrganizationVisibility(dummyUserBob, dummyOrganization.id, newType)
+
+            assertEquals(newType, dummyOrganization.type)
+            verify(exactly = 1) { organizationRepository.save(dummyOrganization) }
+        }
+
+        @Test
+        fun `missing organization returns 404`() {
+            every { organizationRepository.findByIdForUpdate(dummyOrganization.id) } returns null
+
+            val error = assertThrows<StatusCodeException> {
+                organizationService.changeOrganizationVisibility(
+                    dummyUserBob,
+                    dummyOrganization.id,
+                    OrganizationType.PRIVATE
+                )
+            }
+
+            assertAll(
+                { assertEquals(404, error.statusCode) },
+                { assertEquals(ErrorCode.ORG_NOT_FOUND, error.code) }
+            )
+        }
+
+        @Test
+        fun `insufficient permissions returns 403`() {
+            every {
+                permissionService.canChangeOrganizationVisibility(dummyUserBob, dummyOrganization.id)
+            } returns false
+
+            val error = assertThrows<StatusCodeException> {
+                organizationService.changeOrganizationVisibility(
+                    dummyUserBob,
+                    dummyOrganization.id,
+                    OrganizationType.PRIVATE
+                )
+            }
+
+            assertEquals(403, error.statusCode)
+            verify(exactly = 0) { organizationRepository.save(any()) }
+        }
+
+        @Test
+        fun `conversion to personal requires an owner`() {
+            every { userScopeRepository.findOrganizationOwnerId(dummyOrganization.id) } returns null
+
+            val error = assertThrows<StatusCodeException> {
+                organizationService.changeOrganizationVisibility(
+                    dummyUserBob,
+                    dummyOrganization.id,
+                    OrganizationType.PERSONAL
+                )
+            }
+
+            assertAll(
+                { assertEquals(400, error.statusCode) },
+                { assertEquals(ErrorCode.ORG_PERSONAL_CONVERSION_INVALID_MEMBERS, error.code) },
+                { verify(exactly = 0) { organizationRepository.save(any()) } }
+            )
+        }
+
+        @Test
+        fun `conversion to personal rejects non-owner scopes`() {
+            every {
+                userScopeRepository.existsOrganizationTreeScopeByUserIdNot(dummyOrganization.id, dummyUserBob.id)
+            } returns true
+
+            val error = assertThrows<StatusCodeException> {
+                organizationService.changeOrganizationVisibility(
+                    dummyUserBob,
+                    dummyOrganization.id,
+                    OrganizationType.PERSONAL
+                )
+            }
+
+            assertAll(
+                { assertEquals(400, error.statusCode) },
+                { assertEquals(ErrorCode.ORG_PERSONAL_CONVERSION_INVALID_MEMBERS, error.code) },
+                { verify(exactly = 0) { organizationRepository.save(any()) } }
+            )
+        }
+
+        @Test
+        fun `conversion to personal rejects pending invitations`() {
+            every {
+                organizationInvitationRepository.existsPendingByOrganizationId(dummyOrganization.id)
+            } returns true
+
+            val error = assertThrows<StatusCodeException> {
+                organizationService.changeOrganizationVisibility(
+                    dummyUserBob,
+                    dummyOrganization.id,
+                    OrganizationType.PERSONAL
+                )
+            }
+
+            assertAll(
+                { assertEquals(400, error.statusCode) },
+                { assertEquals(ErrorCode.ORG_PERSONAL_CONVERSION_PENDING_INVITATIONS, error.code) },
+                { verify(exactly = 0) { organizationRepository.save(any()) } }
+            )
+        }
+    }
+}

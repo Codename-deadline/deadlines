@@ -1,0 +1,376 @@
+package xyz.om3lette.deadlines_api.services
+
+import io.mockk.CapturingSlot
+import io.mockk.every
+import io.mockk.junit5.MockKExtension
+import io.mockk.mockk
+import io.mockk.slot
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.assertAll
+import org.junit.jupiter.api.assertNotNull
+import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
+import xyz.om3lette.deadlines_api.db.constraintViolation
+import xyz.om3lette.deadlines_api.data.common.constraints.DatabaseConstraint
+import xyz.om3lette.deadlines_api.DomainObjectBuilder
+import xyz.om3lette.deadlines_api.data.scopes.organization.enums.InvitationStatus
+import xyz.om3lette.deadlines_api.data.scopes.organization.enums.OrganizationType
+import xyz.om3lette.deadlines_api.data.scopes.organization.model.Organization
+import xyz.om3lette.deadlines_api.data.scopes.organization.model.OrganizationInvitation
+import xyz.om3lette.deadlines_api.data.scopes.organization.repo.OrganizationInvitationRepository
+import xyz.om3lette.deadlines_api.data.scopes.organization.repo.OrganizationRepository
+import xyz.om3lette.deadlines_api.data.scopes.userScope.enums.ScopeRole
+import xyz.om3lette.deadlines_api.data.scopes.userScope.enums.ScopeType
+import xyz.om3lette.deadlines_api.data.scopes.userScope.model.UserScope
+import xyz.om3lette.deadlines_api.data.scopes.userScope.repo.UserScopeRepository
+import xyz.om3lette.deadlines_api.data.user.model.User
+import xyz.om3lette.deadlines_api.data.user.repo.UserRepository
+import xyz.om3lette.deadlines_api.exceptions.enums.ErrorCode
+import xyz.om3lette.deadlines_api.exceptions.type.StatusCodeException
+import xyz.om3lette.deadlines_api.services.permission.PermissionService
+import java.util.Optional
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+
+@ExtendWith(MockKExtension::class)
+class OrganizationInvitationServiceTest {
+    private val userRepository: UserRepository = mockk()
+    private val userScopeRepository: UserScopeRepository = mockk()
+    private val organizationRepository: OrganizationRepository = mockk()
+    private val organizationInvitationRepository: OrganizationInvitationRepository = mockk()
+    private val permissionService: PermissionService = mockk()
+    private val organizationInvitationService: OrganizationInvitationService = OrganizationInvitationService(
+        userRepository,
+        userScopeRepository,
+        organizationRepository,
+        organizationInvitationRepository,
+        permissionService
+    )
+
+    private lateinit var dummyUserBob: User
+    private lateinit var dummyUserScopeBob: UserScope
+    private lateinit var dummyUserAlice: User
+    private lateinit var dummyOrganization: Organization
+    private lateinit var dummyInvitation: OrganizationInvitation
+
+    @BeforeEach
+    fun commonMock() {
+        dummyOrganization = DomainObjectBuilder.organization(id = 42, title = "org", description = null)
+
+        dummyUserBob = DomainObjectBuilder.userBob()
+        dummyUserScopeBob = DomainObjectBuilder.userScope(
+            user = dummyUserBob,
+            scopeType = ScopeType.ORGANIZATION,
+            scopeId = dummyOrganization.id,
+            role = ScopeRole.ORG_OWNER
+        )
+        dummyUserAlice = DomainObjectBuilder.userAlice()
+
+        dummyInvitation = DomainObjectBuilder.organizationInvitation(
+            invitedBy = dummyUserBob,
+            invitedUser = dummyUserAlice,
+            organization = dummyOrganization,
+            status = InvitationStatus.PENDING,
+            role = ScopeRole.ORG_ADMIN,
+            id = 0
+        )
+        every { organizationInvitationRepository.findById(0) } returns Optional.of(dummyInvitation)
+        every { userScopeRepository.existsByUserAndScopeIdAndScopeType(
+            dummyUserBob, dummyOrganization.id, ScopeType.ORGANIZATION)
+        } returns true
+        every { userScopeRepository.existsByUserAndScopeIdAndScopeType(
+            dummyUserAlice, dummyOrganization.id, ScopeType.ORGANIZATION)
+        } returns false
+
+
+        every { permissionService.canSendOrganizationInvitation(any(), any()) } returns true
+
+        every { organizationRepository.findByIdForUpdate(dummyOrganization.id) } returns dummyOrganization
+
+        val bobUsername = dummyUserBob.username
+        val aliceUsername = dummyUserAlice.username
+        every { userRepository.findByUsernameIgnoreCase(bobUsername) } returns Optional.of(dummyUserBob)
+        every { userRepository.findByUsernameIgnoreCase(aliceUsername) } returns Optional.of(dummyUserAlice)
+    }
+
+    @Nested
+    inner class InviteUser {
+        private val savedInvitationSlot: CapturingSlot<OrganizationInvitation> = slot()
+
+        @BeforeEach
+        fun commonHappyStubs() {
+            savedInvitationSlot.clear()
+
+            every { organizationInvitationRepository.saveAndFlush(capture(savedInvitationSlot)) } returnsArgument 0
+        }
+
+        @Test
+        fun `not enough permissions throws StatusCodeException 403`() {
+            every { permissionService.canSendOrganizationInvitation(any(), any()) } returns false
+
+            val res = assertThrows<StatusCodeException> {
+                organizationInvitationService.createInvitation(
+                    dummyUserBob, dummyOrganization.id, dummyUserAlice.username, ScopeRole.ORG_MEMBER
+                )
+            }
+
+            assertAll(
+                { assertFalse { savedInvitationSlot.isCaptured } },
+                { assertEquals(403, res.statusCode) }
+            )
+        }
+
+        @Test
+        fun `inviting to a personal organization throws StatusCodeException 400`() {
+            dummyOrganization.type = OrganizationType.PERSONAL
+
+            val res = assertThrows<StatusCodeException> {
+                organizationInvitationService.createInvitation(
+                    dummyUserBob, dummyOrganization.id, dummyUserAlice.username, ScopeRole.ORG_MEMBER
+                )
+            }
+
+            assertAll(
+                { assertFalse { savedInvitationSlot.isCaptured } },
+                { assertEquals(400, res.statusCode) }
+            )
+        }
+
+        @Test
+        fun `organization not found throws StatusCodeException 404`() {
+            every { organizationRepository.findByIdForUpdate(1) } returns null
+
+            val res = assertThrows<StatusCodeException> {
+                organizationInvitationService.createInvitation(
+                    dummyUserBob, 1, dummyUserAlice.username, ScopeRole.ORG_MEMBER
+                )
+            }
+
+            assertAll(
+                { assertFalse { savedInvitationSlot.isCaptured } },
+                { assertEquals(404, res.statusCode) }
+            )
+        }
+
+        @Test
+        fun `user not found throws StatusCodeException 404`() {
+            every { userRepository.findByUsernameIgnoreCase("Unknown_user") } returns Optional.empty()
+            val res = assertThrows<StatusCodeException> {
+                organizationInvitationService.createInvitation(
+                    dummyUserBob, dummyOrganization.id, "Unknown_user", ScopeRole.ORG_MEMBER
+                )
+            }
+
+            assertAll(
+                { assertFalse { savedInvitationSlot.isCaptured } },
+                { assertEquals(404, res.statusCode) }
+            )
+        }
+
+        @Test
+        fun `inviting with role ORG_OWNER throws StatusCodeException 400`() {
+            val res = assertThrows<StatusCodeException> {
+                organizationInvitationService.createInvitation(
+                    dummyUserBob, dummyOrganization.id, dummyUserAlice.username, ScopeRole.ORG_OWNER
+                )
+            }
+
+            assertAll(
+                { assertFalse { savedInvitationSlot.isCaptured } },
+                { assertEquals(400, res.statusCode) }
+            )
+        }
+
+        @Test
+        fun `inviting organization member throws StatusCodeException 400`() {
+            val res = assertThrows<StatusCodeException> {
+                organizationInvitationService.createInvitation(
+                    dummyUserBob, dummyOrganization.id, dummyUserBob.username, ScopeRole.ORG_MEMBER
+                )
+            }
+
+            assertAll(
+                { assertFalse { savedInvitationSlot.isCaptured } },
+                { assertEquals(400, res.statusCode) }
+            )
+        }
+
+        @Test
+        fun `happy path creates an organizationInvitation`() {
+            organizationInvitationService.createInvitation(
+                dummyUserBob, dummyOrganization.id, dummyUserAlice.username, ScopeRole.ORG_MEMBER
+            )
+
+            assertTrue(savedInvitationSlot.isCaptured)
+            val savedInvitation = savedInvitationSlot.captured
+
+            assertAll(
+                { assertEquals(dummyUserBob.id, savedInvitation.invitedBy.id) },
+                { assertEquals(dummyUserAlice.id, savedInvitation.invitedUser.id) },
+                { assertEquals(dummyOrganization.id, savedInvitation.organization.id) },
+                { assertEquals(ScopeRole.ORG_MEMBER, savedInvitation.role) }
+            )
+        }
+
+        @Test
+        fun `concurrent pending invitation throws StatusCodeException 400`() {
+            every { organizationInvitationRepository.saveAndFlush(any()) } throws
+                constraintViolation(DatabaseConstraint.UQ_ORGANIZATION_INVITATIONS_PENDING)
+
+            val error = assertThrows<StatusCodeException> {
+                organizationInvitationService.createInvitation(
+                    dummyUserBob, dummyOrganization.id, dummyUserAlice.username, ScopeRole.ORG_MEMBER
+                )
+            }
+
+            assertEquals(ErrorCode.INVITATION_ALREADY_INVITED, error.code)
+        }
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class ResolveInvitation() {
+        private val savedUserScopeSlot: CapturingSlot<UserScope> = slot()
+        private val savedInvitationSlot: CapturingSlot<OrganizationInvitation> = slot()
+
+        @BeforeEach
+        fun commonHappyStubs() {
+            savedUserScopeSlot.clear()
+            savedInvitationSlot.clear()
+
+            every { userScopeRepository.save(capture(savedUserScopeSlot)) } returnsArgument 0
+            every { organizationInvitationRepository.save(capture(savedInvitationSlot)) } returnsArgument 0
+        }
+
+        fun badInvitationStatusesProvider() = listOf(
+            InvitationStatus.ACCEPTED, InvitationStatus.DECLINED
+        )
+
+        @Test
+        fun `invitation not found throws StatusCodeException 404`() {
+            every { organizationInvitationRepository.findById(-1) } returns Optional.empty()
+
+            val res = assertThrows<StatusCodeException> {
+                organizationInvitationService.resolveInvitation(
+                    dummyUserAlice,
+                    -1,
+                    InvitationStatus.ACCEPTED
+                )
+            }
+
+            assertAll(
+                { assertFalse(savedInvitationSlot.isCaptured) },
+                { assertFalse(savedUserScopeSlot.isCaptured) },
+                { assertEquals(404, res.statusCode) }
+            )
+        }
+
+        @Test
+        fun `resolving someone else's invitation throws StatusCodeException 403`() {
+            val res = assertThrows<StatusCodeException> {
+                organizationInvitationService.resolveInvitation(
+                    dummyUserBob,
+                    0,
+                    InvitationStatus.ACCEPTED
+                )
+            }
+
+            assertAll(
+                { assertFalse(savedInvitationSlot.isCaptured) },
+                { assertFalse(savedUserScopeSlot.isCaptured) },
+                { assertEquals(403, res.statusCode) }
+            )
+        }
+
+        @ParameterizedTest
+        @MethodSource("badInvitationStatusesProvider")
+        fun `resolving answered invitation throws StatusCodeException 400`(currentInvitationStatus: InvitationStatus) {
+            dummyInvitation.status = currentInvitationStatus
+
+            val res = assertThrows<StatusCodeException> {
+                organizationInvitationService.resolveInvitation(
+                    dummyUserAlice,
+                    0,
+                    InvitationStatus.ACCEPTED
+                )
+            }
+
+            assertAll(
+                { assertFalse(savedInvitationSlot.isCaptured) },
+                { assertFalse(savedUserScopeSlot.isCaptured) },
+                { assertEquals(400, res.statusCode) }
+            )
+        }
+
+        @Test
+        fun `happy path DECLINED updates the invitation`() {
+            organizationInvitationService.resolveInvitation(
+                dummyUserAlice,
+                0,
+                InvitationStatus.DECLINED
+            )
+
+            assertAll(
+                { assertFalse(savedUserScopeSlot.isCaptured) },
+                { assertTrue(savedInvitationSlot.isCaptured) }
+            )
+
+            val savedInvitation = savedInvitationSlot.captured
+            assertAll(
+                { assertNotNull(savedInvitation.answeredAt) },
+                { assertEquals(InvitationStatus.DECLINED, dummyInvitation.status) },
+            )
+        }
+
+        @Test
+        fun `happy path ACCEPTED updates the invitation and adds user to organization members`() {
+            organizationInvitationService.resolveInvitation(
+                dummyUserAlice,
+                0,
+                InvitationStatus.ACCEPTED
+            )
+
+            assertAll(
+                { assertTrue(savedUserScopeSlot.isCaptured) },
+                { assertTrue(savedInvitationSlot.isCaptured) }
+            )
+
+            val savedUserScope = savedUserScopeSlot.captured
+            val savedInvitation = savedInvitationSlot.captured
+            assertAll(
+                { assertNotNull(savedInvitation.answeredAt) },
+                { assertEquals(InvitationStatus.ACCEPTED, dummyInvitation.status) },
+                { assertEquals(dummyOrganization.id, savedUserScope.scopeId) },
+                { assertEquals(dummyUserAlice.id, savedUserScope.user.id) },
+                { assertEquals(dummyInvitation.role, savedUserScope.role) },
+            )
+        }
+
+        @Test
+        fun `accepting an invitation to a personal organization is rejected`() {
+            dummyOrganization.type = OrganizationType.PERSONAL
+
+            val error = assertThrows<StatusCodeException> {
+                organizationInvitationService.resolveInvitation(
+                    dummyUserAlice,
+                    0,
+                    InvitationStatus.ACCEPTED
+                )
+            }
+
+            assertAll(
+                { assertEquals(400, error.statusCode) },
+                { assertEquals(ErrorCode.INVITATION_PERSONAL_ORG, error.code) },
+                { assertEquals(InvitationStatus.PENDING, dummyInvitation.status) },
+                { assertFalse(savedInvitationSlot.isCaptured) },
+                { assertFalse(savedUserScopeSlot.isCaptured) }
+            )
+        }
+    }
+}

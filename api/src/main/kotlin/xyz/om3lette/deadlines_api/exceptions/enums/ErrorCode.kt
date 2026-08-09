@@ -1,0 +1,65 @@
+package xyz.om3lette.deadlines_api.exceptions.enums
+
+import com.fasterxml.jackson.annotation.JsonValue
+
+enum class ErrorCode(val code: String) {
+    UNKNOWN_ERROR("unknown-error"),
+    DESERIALIZATION_ERROR("deserialization-error"),
+    VALIDATION_FAILED("validation.failed"),
+
+    AUTH_INSUFFICIENT_PERMISSIONS("auth.insufficient-permissions"),
+    AUTH_INVALID_CREDENTIALS("auth.invalid-credentials"),
+    AUTH_SESSIONS_LIMIT_EXCEEDED("auth.sessions-limit-exceeded"),
+
+    SIGN_UP_REGISTRATION_REQUEST_NOT_FOUND("sign-up.request-not-found"),
+    SIGN_UP_INSUFFICIENT_DATA("sign-up.insufficient-data"),
+
+    PASSWORD_CHANGE_UNCHANGED("password-change.unchanged"),
+    PASSWORD_CHANGE_INVALID_CREDENTIALS("password-change.invalid-credentials"),
+
+    USER_ALREADY_EXISTS("user.already-exists"),
+    USER_NOT_FOUND("user.not-found"),
+
+    MEMBER_NOT_FOUND("member.not-found"),
+    MEMBER_ALREADY_ASSIGNED("member.already-assigned"),
+
+    ACTION_SELF_REMOVAL("action.self-removal"),
+
+    ROLE_CHANGE_SELF("role-change.self"),
+    ROLE_CHANGE_INVALID_SCOPE_ROLE("role-change.invalid-scope-role"),
+    ROLE_CHANGE_NO_ROLE("role-change.no-role"),
+    ROLE_IMPLICIT_OWNERSHIP_CHANGE("role-change.implicit-ownership"),
+
+    INVITATION_NOT_FOUND("invitation.not-found"),
+    INVITATION_INVALID_ROLE("invitation.invalid-role"),
+    INVITATION_PERSONAL_ORG("invitation.personal-org"),
+    INVITATION_ALREADY_INVITED("invitation.already-invited"),
+    INVITATION_ALREADY_ORG_MEMBER("invitation.already-org-member"),
+    INVITATION_ALREADY_ANSWERED("invitation.already-answered"),
+    INVITATION_NOT_ORG_MEMBER("invitation.not-org-member"),
+    INVITATION_SELF_INVITE("invitation.self-invite"),
+
+    ORG_NOT_FOUND("organization.not-found"),
+    ORG_PERSONAL_CONVERSION_INVALID_MEMBERS("organization.personal-conversion.invalid-members"),
+    ORG_PERSONAL_CONVERSION_PENDING_INVITATIONS("organization.personal-conversion.pending-invitations"),
+
+    THR_NOT_FOUND("thread.not-found"),
+
+    DDL_NOT_FOUND("deadline.not-found"),
+    DDL_INVALID_TIMESTAMP("deadline.invalid-timestamp"),
+    DDL_ASSIGNEE_LIMIT_EXCEEDED("deadline.assignee-limit-exceeded"),
+
+    INTEGRATION_ACCOUNT_ALREADY_IN_USE("integration.account-not-available"),
+    INTEGRATION_ACCOUNT_NOT_LINKED("integration.account-not-linked"),
+    INTEGRATION_LAST_ACCOUNT_UNLINK_FORBIDDEN("integration.last-account-unlink-forbidden"),
+    INTEGRATION_INVALID_IDENTIFIER_FORMAT("integration.invalid-identifier-format"),
+    INTEGRATION_MESSENGER_LINKAGE_LIMIT_EXCEEDED("integration.messenger-linkage-limit-exceeded"),
+
+    ATTACHMENT_NOT_FOUND("attachment.not-found"),
+    ATTACHMENT_UPLOAD_FAILED("attachment.upload-failed"),
+    ATTACHMENT_LIMIT_EXCEEDED("attachment.limit-exceeded"),
+    ATTACHMENT_INVALID_FILE_TYPE("attachment.invalid-file-type");
+
+    @JsonValue
+    fun toJson(): String = code
+}

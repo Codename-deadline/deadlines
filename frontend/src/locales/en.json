@@ -1,0 +1,503 @@
+{
+  "language": {
+    "en": "English",
+    "ru": "Русский"
+  },
+  "state": {
+    "loading": "Loading...",
+    "no-entities-found": "No {entity} found"
+  },
+  "actions": {
+    "header": "Actions",
+    "continue": "Continue",
+    "back": "Back",
+    "create": "Create",
+    "delete": "Delete",
+    "download": "Download",
+    "preview": "Preview",
+    "save": "Save",
+    "accept": "Accept",
+    "cancel": "Cancel",
+    "decline": "Decline",
+    "revoke": "Revoke",
+    "page-reload": "Please perform a page reload",
+    "confirmation": "I want to {action}",
+    "mark-as-done": "Mark as done",
+    "mark-as-incomplete": "Mark as incomplete",
+    "transfer-org-ownership": "Transfer ownership",
+    "change-password": "Change password",
+    "change-language": "Change language",
+    "to-confirm": {
+      "remove-member": "remove this member",
+      "delete-entity": "delete this {entity}",
+      "delete-account": "delete my account",
+      "end-all-sessions": "end all sessions"
+    }
+  },
+  "errors": {
+    "error": "Error",
+    "critical-error": "Critical error",
+    "unknown-error": "Unknown error",
+    "failed-to-fetch-user": "Failed to fetch user data.",
+    "failed-to-fetch-metadata-versions": "Failed to fetch metadata versions.",
+    "failed-to-fetch-metadata": "Failed to fetch metadata.",
+    "failed-to-resolve-bot": "Failed to resolve bot.",
+    "validation": {
+      "title": "Invalid input",
+      "invalid": "{field} is invalid.",
+      "field-with-context": "{field} ({context})",
+      "item-index": " #{index}",
+      "reasons": {
+        "required": "{field} is required.",
+        "not-blank": "{field} must not be blank.",
+        "invalid": "{field} is invalid.",
+        "length": {
+          "min": "{field} length must be at least {min} characters.",
+          "max": "{field} length must be at most {max} characters.",
+          "between": "{field} length must be between {min} and {max} characters.",
+          "exact": "{field} length must be exactly {exact} characters."
+        },
+        "items": {
+          "min": "{field} must contain at least {min} items.",
+          "max": "{field} must contain at most {max} items.",
+          "between": "{field} must contain between {min} and {max} items.",
+          "exact": "{field} must contain exactly {exact} items."
+        },
+        "value": {
+          "positive": "{field} must be positive.",
+          "min": "{field} must be at least {min}.",
+          "max": "{field} must be at most {max}.",
+          "one-of": "{field} must be one of: {allowed}."
+        },
+        "format": {
+          "digits-only": "{field} must contain digits only.",
+          "uuid": "{field} must be a valid UUID.",
+          "timestamp": "{field} must be a valid timestamp."
+        },
+        "type": {
+          "invalid": "{field} must be {expected}."
+        }
+      },
+      "types": {
+        "string": "text",
+        "integer": "an integer",
+        "number": "a number",
+        "boolean": "true or false",
+        "array": "a list",
+        "object": "an object"
+      },
+      "fields": {
+        "title": "Title",
+        "description": "Description",
+        "type": "Organization type",
+        "invitations": "Invitations",
+        "usernameRolePairs": "Invitations",
+        "username": "Username",
+        "role": "Role",
+        "due": "Due date",
+        "isCompleted": "Completion status",
+        "filename": "Filename",
+        "file": "File",
+        "meta": "Metadata",
+        "identifier": "Identifier",
+        "channel": "Authentication channel",
+        "language": "Language",
+        "timeZone": "Time zone",
+        "fullName": "Full name",
+        "id": "Request ID",
+        "code": "Verification code",
+        "password": "Password",
+        "oldPassword": "Current password",
+        "newPassword": "New password",
+        "accountId": "Account ID",
+        "messenger": "Messenger",
+        "initData": "Authentication data",
+        "subjectUsername": "Member username",
+        "newRole": "New role",
+        "organizationId": "Organization ID",
+        "orgId": "Organization ID",
+        "threadId": "Thread ID",
+        "thrId": "Thread ID",
+        "deadlineId": "Deadline ID",
+        "ddlId": "Deadline ID",
+        "attachmentId": "Attachment ID",
+        "invitationId": "Invitation ID",
+        "memberUsername": "Member username",
+        "assigneeUsername": "Assignee username",
+        "page": "Page",
+        "pageNumber": "Page",
+        "size": "Page size",
+        "pageSize": "Page size",
+        "startsWith": "Username prefix",
+        "disposition": "File display mode"
+      }
+    },
+    "api": {
+      "timeout": "Request timed out.",
+      "no-network": "Failed to establish internet connection.",
+      "deserialization-error": "Failed to process the received data.",
+      "auth": {
+        "insufficient-permissions": "You do not have permission to perform this action.",
+        "invalid-credentials": "Invalid username or password.",
+        "sessions-limit-exceeded": "You have {opened} active sessions, which exceeds the maximum allowed ({max})."
+      },
+      "sign-up": {
+        "request-not-found": "The registration request was not found.",
+        "insufficient-data": "Not enough data was provided to complete registration."
+      },
+      "password-change": {
+        "unchanged": "The new password must be different from the current one.",
+        "invalid-credentials": "The current password is incorrect."
+      },
+      "user": {
+        "already-exists": "A user with this information already exists.",
+        "not-found": "User \"{username}\" was not found."
+      },
+      "action": {
+        "self-removal": "You cannot perform this action on yourself."
+      },
+      "member": {
+        "not-found": "The organization member was not found.",
+        "already-assigned": "Member already assigned."
+      },
+      "role-change": {
+        "self": "You cannot change your own role.",
+        "implicit-ownership": "Organization ownership must be transferred explicitly.",
+        "invalid-scope-role": "The selected role is not valid for this scope.",
+        "no-role": "No role was specified for the role change."
+      },
+      "invitation": {
+        "not-found": "The invitation was not found.",
+        "invalid-role": "The invitation contains an invalid role.",
+        "personal-org": "You cannot invite users to a personal organization.",
+        "already-org-member": "The user is already a member of this organization.",
+        "already-answered": "This invitation has already been responded to.",
+        "not-org-member": "User must be an organization member to proceed.",
+        "self-invite": "Cannot invite yourself."
+      },
+      "organization": {
+        "not-found": "The organization was not found.",
+        "personal-conversion": {
+          "invalid-members": "A personal organization cannot contain scopes belonging to other members.",
+          "pending-invitations": "Revoke all pending invitations before converting this organization to personal."
+        }
+      },
+      "thread": {
+        "not-found": "The thread was not found."
+      },
+      "deadline": {
+        "not-found": "The deadline was not found.",
+        "invalid-timestamp": "The deadline must be at least {min} minutes in the future. Only {remaining} minutes remain.",
+        "assignee-limit-exceeded": "Assignee limit exceeded."
+      },
+      "integration": {
+        "account-not-available": "This account is already linked to another user.",
+        "account-not-linked": "No linked account was found for this integration.",
+        "last-account-unlink-forbidden": "At least one messenger account must remain linked.",
+        "invalid-identifier-format": "The integration identifier format is invalid.",
+        "messenger-linkage-limit-exceeded": "The maximum number of linked messenger accounts has been reached."
+      },
+      "attachment": {
+        "not-found": "The attachment was not found.",
+        "upload-failed": "Failed to upload the attachment.",
+        "invalid-file-type": "This file type is not supported.",
+        "limit-exceeded": "Attachments limit exceeded"
+      }
+    },
+    "form": {
+      "invalid-input": "Invalid input",
+      "too-small": "{field} is too small. Minimum length: {min}",
+      "too-big": "{field} is too big. Maximum length: {max}",
+      "invalid-type": "{field} has an invalid type. Expected {expected}",
+      "invalid-format": "{field} has an invalid format",
+      "not-multiple-of": "{field} must be a multiple of {divisor}",
+      "unrecognized-keys": "{field} contains unrecognized keys",
+      "invalid-union": "{field} does not match any valid variant",
+      "invalid-key": "{field} has an invalid key",
+      "invalid-element": "{field} contains an invalid element",
+      "invalid-value": "{field} has an invalid value",
+      "custom": "{field} is invalid"
+    }
+  },
+  "auth": {
+    "description": "Collaborate on deadlines using you favorite messenger",
+    "method": "Connected via",
+    "methods": {
+      "telegram": "Telegram"
+    },
+    "otp": {
+      "fields": {
+        "otp": "OTP"
+      },
+      "action": "Verify",
+      "header": "Verification Code",
+      "description": "Enter the one-time code we just sent you"
+    },
+    "password": {
+      "fields": {
+        "password": "Password"
+      },
+      "action": "Verify",
+      "header": "Just One More Step",
+      "description": "Enter your password to finish signing in"
+    },
+    "sign-up": {
+      "fields": {
+        "identifier": {
+          "telegram": "Telegram ID",
+          "placeholder": "Enter your identifier"
+        },
+        "username": {
+          "label": "Username",
+          "placeholder": "Enter your username"
+        },
+        "fullName": {
+          "label": "Full name",
+          "placeholder": "Enter your full name"
+        },
+        "language": {
+          "label": "Language",
+          "tooltip": "Determines the language of the interface and notifications"
+        },
+        "time-zone": "Time zone"
+      },
+      "action": "Sign up",
+      "header": "Complete Your Profile",
+      "description": "Set up your account to get started",
+      "alreadyRegistered": "Already registered:"
+    },
+    "sign-in": {
+      "fields": {
+        "identifier": {
+          "telegram": "Telegram ID",
+          "placeholder": "Enter your identifier"
+        },
+        "username": {
+          "label": "Username",
+          "placeholder": "Enter your username"
+        }
+      },
+      "action": "Sign in",
+      "header": "Welcome back",
+      "description": "Sign in to keep your tasks and deadlines on track",
+      "notRegistered": "Not registered yet:"
+    },
+    "channels": {
+      "bot": {
+        "header": "Start the bot",
+        "description": "Our bot will not be able to send you the code if it is not activated.",
+        "link": "Link to bot"
+      }
+    }
+  },
+  "navigation": {
+    "buttons": {
+      "organizations": "Organizations",
+      "threads": "Threads",
+      "deadlines": "Deadlines",
+      "invitations": "Invitations"
+    }
+  },
+  "profile": {
+    "account-info": "Account Information",
+    "edit": "Edit Profile",
+    "form": {
+      "title": "Edit profile",
+      "full-name": "Full name",
+      "username": "Username",
+      "language": "Language",
+      "time-zone": "Time zone",
+      "updated": "Profile updated",
+      "validation": {
+        "full-name-required": "Full name is required",
+        "username-required": "Username is required",
+        "language-required": "Language is required",
+        "time-zone-required": "Time zone is required"
+      }
+    },
+    "password": {
+      "title": "Change password",
+      "updated": "Password updated",
+      "old": "Old password",
+      "new": "New password",
+      "warning": "Changing your password will immediately invalidate all active sessions. You will need to sign in again on all devices.",
+      "validation": {
+        "password-match": "New and old passwords should not match"
+      }
+    },
+    "properties": {
+      "joined": "Joined",
+      "language": "Language",
+      "time-zone": "Time zone"
+    },
+    "accounts": {
+      "header": "Linked accounts",
+      "link": "Link account",
+      "unlink": "Unlink account",
+      "unlink-confirmation": "Unlink this messenger account?",
+      "unlinked": "Messenger account unlinked",
+      "empty": "No messenger accounts linked",
+      "link-title": "Link messenger account",
+      "messenger": "Messenger",
+      "account-id": "Account ID",
+      "confirmation-sent": "Confirmation request sent",
+      "messengers": {
+        "telegram": "Telegram"
+      },
+      "validation": {
+        "account-required": "Account ID is required",
+        "account-invalid": "Account ID must be a positive integer",
+        "messenger-required": "Messenger is required"
+      }
+    },
+    "actions": {
+      "sign-out": "Sign Out",
+      "sign-out-all": "Sign out on every device",
+      "delete": "Delete Account"
+    }
+  },
+  "scopes": {
+    "toasts": {
+      "member-removed": "Member removed",
+      "member-invited": "Member invited",
+      "role-assigned": "Role assigned",
+      "entity-created": "{entity} created",
+      "entity-updated": "{entity} updated",
+      "entity-deleted": "{entity} deleted",
+      "invitation-accepted": "Invitation accepted",
+      "invitation-declined": "Invitation declined",
+      "invitation-revoked": "Invitation revoked"
+    },
+    "common": {
+      "members": "Members",
+      "assignees": "Assignees",
+      "unknown": "Unknown",
+      "due": "Due",
+      "nothing-here": "Nothing here yet",
+      "name-not-provided": "Name is not provided",
+      "deleted-user": "Deleted user",
+      "mention": {
+        "placeholder": "username"
+      },
+      "form-sections": {
+        "settings": "Settings",
+        "details": "Details",
+        "invitations": "Invitations"
+      },
+      "form-errors": {
+        "field-required": "\"{field}\" is required"
+      },
+      "form-labels": {
+        "title": "Title",
+        "description": "Description",
+        "username": "Username",
+        "invitations": "Invitations",
+        "visibility": "Visibility",
+        "due-date": "Due date",
+        "filename": "Filename",
+        "file": "File",
+        "file-size": "Size",
+        "mime-type": "MIME type",
+        "uploaded-by": "Uploaded by",
+        "uploaded-at": "Uploaded at",
+        "is-completed": "Is completed",
+        "identifier": "Identifier",
+        "full-name": "Full name",
+        "time-zone": "Time zone",
+        "new-password": "New password",
+        "language": "Language"
+      }
+    },
+    "organization": {
+      "name": "Organization",
+      "header": "Organizations",
+      "type": {
+        "personal": "Personal",
+        "public": "Public",
+        "private": "Private"
+      },
+      "role": {
+        "admin": "Admin",
+        "member": "Member",
+        "owner": "Owner"
+      },
+      "ownership": {
+        "title": "Transfer organization ownership",
+        "warning": "This action cannot be undone by you. You will become an administrator, and the selected member will become the new owner.",
+        "new-owner": "New owner username",
+        "transferred": "Organization ownership transferred",
+        "validation": {
+          "username": "Enter a valid organization member username",
+          "self": "Select another organization member"
+        }
+      },
+      "visibility": {
+        "title": "Change organization visibility",
+        "action": "Change visibility",
+        "updated": "Organization visibility updated",
+        "description": {
+          "public": "Anyone can view this organization and its contents.",
+          "private": "Only organization members can view this organization and its contents.",
+          "personal": "Only you can view this organization and its contents. Invitations are not allowed."
+        }
+      },
+      "no-invitations": "No invitations added yet",
+      "description": "Manage your teams and projects"
+    },
+    "thread": {
+      "name": "Thread",
+      "header": "Threads",
+      "description": "Track project threads",
+      "no-assignees": "No assignees yet",
+      "role": {
+        "admin": "Admin",
+        "assignee": "Assignee",
+        "owner": "Owner"
+      },
+      "x-of-total-deadlines-done": "{done} of {total} deadlines done "
+    },
+    "deadline": {
+      "name": "Deadline",
+      "header": "Deadlines",
+      "description": "Manage and track all deadlines",
+      "no-assignees": "No assignees yet",
+      "assigned-to": "Assigned to",
+      "files": "files",
+      "attachment": "Attachment",
+      "attachments": "Attachments",
+      "create-attachment": "Create attachment",
+      "edit-attachment": "Edit attachment",
+      "drop-file": "Click or drag a file here to upload",
+      "drop-replacement-file": "Click or drag a replacement file here",
+      "no-description": "No description provided",
+      "attachment-created": "Attachment created",
+      "attachment-updated": "Attachment updated",
+      "markdown": "Markdown",
+      "date-picker": {
+        "time-zone": "Time zone: {timeZone}",
+        "invalid": "Enter a valid date and time.",
+        "nonexistent": "This local time does not exist because the clock moves forward. Choose another time.",
+        "ambiguous": "This local time occurs twice. Choose which occurrence to use:",
+        "earlier": "Earlier occurrence (UTC{offset})",
+        "later": "Later occurrence (UTC{offset})",
+        "minimum": "The deadline must be at least {minutes} minutes in the future."
+      },
+      "role": {
+        "assignee": "Assignee"
+      },
+      "state": {
+        "open": "Open",
+        "overdue": "Overdue",
+        "completed": "Completed"
+      },
+      "no-attachments": "No attachments yet"
+    },
+    "invitation": {
+      "header": "Invitations",
+      "description": "Accept or decline organization invitations",
+      "invited-by": "Invited by",
+      "received": "Received",
+      "sent": "Sent"
+    }
+  }
+}

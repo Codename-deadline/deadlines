@@ -1,0 +1,8 @@
+node_modules
+dist
+.VSCodeCounter
+.vscode
+.husky
+.github
+.env
+*.tsbuildinfo

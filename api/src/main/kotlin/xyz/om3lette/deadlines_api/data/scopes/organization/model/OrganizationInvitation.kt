@@ -1,0 +1,58 @@
+package xyz.om3lette.deadlines_api.data.scopes.organization.model
+
+import jakarta.persistence.*
+import org.hibernate.annotations.OnDelete
+import org.hibernate.annotations.OnDeleteAction
+import xyz.om3lette.deadlines_api.data.scopes.organization.enums.InvitationStatus
+import xyz.om3lette.deadlines_api.data.scopes.organization.response.OrganizationInvitationResponse
+import xyz.om3lette.deadlines_api.data.user.model.User
+import xyz.om3lette.deadlines_api.data.scopes.userScope.enums.ScopeRole
+import java.time.Instant
+
+@Entity
+@Table(name = "organization_invitations")
+data class OrganizationInvitation(
+    @Id
+    @SequenceGenerator(name = "org_inv_seq", sequenceName = "org_inv_sequence", initialValue = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "org_inv_seq")
+    val id: Long = 0,
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "invited_by_user_id", nullable = false)
+    val invitedBy: User,
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "invited_user_id", nullable = false)
+    val invitedUser: User,
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "organization_id", nullable = false)
+    val organization: Organization,
+
+    @Enumerated(value = EnumType.STRING)
+    @Column(nullable = false, length = 8)
+    var status: InvitationStatus,
+
+    @Enumerated(value = EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    val role: ScopeRole,
+
+    @Column(nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    val createdAt: Instant,
+
+    @Column(columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    var answeredAt: Instant? = null
+) {
+    fun toResponse() = OrganizationInvitationResponse(
+        id,
+        invitedBy.toMinimalResponse(),
+        invitedUser.toMinimalResponse(),
+        organization.toDTO(),
+        status.name,
+        role.name,
+        createdAt,
+        answeredAt
+    )
+}

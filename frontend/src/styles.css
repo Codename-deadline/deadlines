@@ -1,0 +1,82 @@
+@import "@fontsource-variable/geist";
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme inline {
+  --color-surface: var(--app-color-surface);
+  --color-border-default: var(--app-color-border);
+  --color-muted: var(--app-color-muted);
+  --color-accent-hover: var(--app-color-accent-hover);
+  --color-accent-active: var(--app-color-accent-active);
+  --color-on-accent: var(--app-color-on-accent);
+  --color-status-info: var(--app-color-status-info);
+  --color-status-success: var(--app-color-status-success);
+  --color-status-error: var(--app-color-status-error);
+}
+
+@layer base {
+  body {
+    font-family: "geist", sans-serif !important;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+    font-family: "geist", monospace;
+    font-weight: 700;
+  }
+
+  html {
+    font-size: 100%;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  h2 {
+    font-size: 1.75rem;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+  }
+
+  h4 {
+    font-size: 1.25rem;
+  }
+
+  h5 {
+    font-size: 1.125rem;
+  }
+
+  h6 {
+    font-size: 1rem;
+  }
+
+  small {
+    font-size: 0.75rem;
+  }
+}
+
+@layer components {
+  .layout-dynamic-padding {
+    @apply px-6 lg:px-24 2xl:px-32 landscape-mobile:px-4;
+  }
+
+  .card {
+    @apply rounded-lg! shadow-sm;
+  }
+
+  .description {
+    @apply text-muted;
+  }
+}
+
+@custom-variant landscape-mobile {
+  @media (orientation: landscape) and (height < 40rem) and (width < 64rem) {
+    @slot;
+  }
+}

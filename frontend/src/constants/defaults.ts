@@ -1,0 +1,2 @@
+export const DEFAULT_MEMBERS_PAGE_SIZE = 5;
+export const DETAULT_ENTITIES_PAGE_SIZE = 10;

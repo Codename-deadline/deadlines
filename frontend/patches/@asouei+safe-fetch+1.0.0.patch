@@ -1,0 +1,44 @@
+diff --git a/node_modules/@asouei/safe-fetch/dist/index.js b/node_modules/@asouei/safe-fetch/dist/index.js
+index 9fcb8ad..f98df8d 100644
+--- a/node_modules/@asouei/safe-fetch/dist/index.js
++++ b/node_modules/@asouei/safe-fetch/dist/index.js
+@@ -151,8 +151,12 @@ function createSafeFetch(base = {}) {
+         if (init.integrity) reqInit.integrity = init.integrity;
+         if (init.keepalive) reqInit.keepalive = init.keepalive;
+         if (init.mode) reqInit.mode = init.mode;
+-        await base.interceptors?.onRequest?.(targetUrl, { ...reqInit, url: targetUrl });
+-        const fetchPromise = fetch(targetUrl, reqInit);
++        const modified = await base.interceptors?.onRequest?.(targetUrl, { ...reqInit, url: targetUrl });
++        if (modified) {
++            url = modified.input;
++            Object.assign(reqInit, modified.init);
++        }
++        const fetchPromise = fetch(url, reqInit);
+         const abortPromise = attemptController?.signal ?? overallController?.signal ? new Promise((_, reject) => {
+           const s = attemptController?.signal ?? overallController.signal;
+           s.addEventListener("abort", () => {
+diff --git a/node_modules/@asouei/safe-fetch/dist/types.d.ts b/node_modules/@asouei/safe-fetch/dist/types.d.ts
+index f075c75..d6e6f23 100644
+--- a/node_modules/@asouei/safe-fetch/dist/types.d.ts
++++ b/node_modules/@asouei/safe-fetch/dist/types.d.ts
+@@ -41,11 +41,15 @@ export type ValidateResult<T> = {
+     error: NormalizedError | unknown;
+ };
+ export interface Interceptors {
+-    onRequest?: (input: RequestInfo, init: RequestInit & {
+-        url: string;
+-    }) => Promise<void> | void;
+-    onResponse?: (response: Response) => Promise<void> | void;
+-    onError?: (error: NormalizedError) => Promise<void> | void;
++	onRequest?: (
++		input: RequestInfo,
++		init: RequestInit & { url: string }
++	) =>
++		| Promise<{ input: RequestInfo; init: RequestInit & { url: string } } | void>
++		| { input: RequestInfo; init: RequestInit & { url: string } }
++		| void;
++	onResponse?: (response: Response) => Promise<void> | void;
++	onError?: (error: NormalizedError) => Promise<void> | void;
+ }
+ export type SafeResult<T> = {
+     ok: true;

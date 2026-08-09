@@ -1,0 +1,504 @@
+package xyz.om3lette.deadlines_api.services
+
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.junit5.MockKExtension
+import io.mockk.spyk
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
+import xyz.om3lette.deadlines_api.DomainObjectBuilder
+import xyz.om3lette.deadlines_api.configs.properties.UsersProperties
+import xyz.om3lette.deadlines_api.data.attachments.model.Attachment
+import xyz.om3lette.deadlines_api.data.attachments.reponse.AttachmentPermissions
+import xyz.om3lette.deadlines_api.data.permissions.dto.DeadlineScope
+import xyz.om3lette.deadlines_api.data.permissions.dto.OrganizationScope
+import xyz.om3lette.deadlines_api.data.permissions.dto.PermissionScope
+import xyz.om3lette.deadlines_api.data.permissions.dto.ThreadScope
+import xyz.om3lette.deadlines_api.data.scopes.deadline.dto.DeadlinePermissions
+import xyz.om3lette.deadlines_api.data.scopes.deadline.model.Deadline
+import xyz.om3lette.deadlines_api.data.scopes.organization.dto.OrganizationPermissions
+import xyz.om3lette.deadlines_api.data.scopes.organization.enums.OrganizationType
+import xyz.om3lette.deadlines_api.data.scopes.organization.model.Organization
+import xyz.om3lette.deadlines_api.data.scopes.thread.dto.ThreadPermissions
+import xyz.om3lette.deadlines_api.data.scopes.thread.model.Thread
+import xyz.om3lette.deadlines_api.data.scopes.userScope.dto.ScopeRoleDTO
+import xyz.om3lette.deadlines_api.data.scopes.userScope.enums.ScopeRole
+import xyz.om3lette.deadlines_api.data.scopes.userScope.enums.ScopeType
+import xyz.om3lette.deadlines_api.data.scopes.userScope.model.UserScope
+import xyz.om3lette.deadlines_api.data.scopes.userScope.repo.UserScopeRepository
+import xyz.om3lette.deadlines_api.data.scopes.userScope.roleIsEqualOrHigherThan
+import xyz.om3lette.deadlines_api.data.user.model.User
+import xyz.om3lette.deadlines_api.services.permission.PermissionContext
+import xyz.om3lette.deadlines_api.services.permission.PermissionService
+import xyz.om3lette.deadlines_api.util.user.isAdminOr
+import xyz.om3lette.deadlines_api.util.user.isAdminOrHasRoleAnd
+import java.time.Instant
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+
+
+@ExtendWith(MockKExtension::class)
+class PermissionServiceTest {
+    @MockK
+    lateinit var userScopeRepository: UserScopeRepository
+
+    @MockK
+    lateinit var permissionContext: PermissionContext
+
+    lateinit var permissionService: PermissionService
+
+    private val admin = DomainObjectBuilder.admin()
+    private val nonAdmin = DomainObjectBuilder.userBob()
+    private val userScope = spyk<UserScope>()
+
+    private lateinit var organization: Organization
+    private lateinit var thread: Thread
+    private lateinit var deadline: Deadline
+
+    fun orgScope() = OrganizationScope(organization.id, organization)
+    fun thrScope() = ThreadScope(thread)
+    fun ddlScope() = DeadlineScope(deadline)
+
+    private val maxLinkedAccountsPerMessenger = 5
+
+    @BeforeEach
+    fun commonHappyStubs() {
+        permissionService = PermissionService(
+            userScopeRepository,
+            permissionContext,
+            UsersProperties(maxLinkedAccountsPerMessenger = maxLinkedAccountsPerMessenger)
+        )
+
+        organization = DomainObjectBuilder.organization()
+        thread = DomainObjectBuilder.thread(organization)
+        deadline = DomainObjectBuilder.deadline(thread)
+
+        // Cache passthrough
+        every {
+            permissionContext.getOrLoadBatch(any(), any())
+        } answers {
+            val res = lastArg<() -> List<ScopeRoleDTO>>()()
+            if (res.isEmpty()) null else res[0].role
+        }
+    }
+
+    fun withRoleScope(user: User, permissionScope: PermissionScope, role: ScopeRole?) {
+        when (permissionScope) {
+            is OrganizationScope -> withRole(user, orgId = permissionScope.orgId, role = role)
+            is ThreadScope -> withRole(user, thread = permissionScope.thread, role = role)
+            is DeadlineScope -> withRole(user, deadline = permissionScope.deadline, role = role)
+        }
+    }
+
+    fun withRole(
+        user: User,
+        orgId: Long? = null,
+        thread: Thread? = null,
+        deadline: Deadline? = null,
+        role: ScopeRole?,
+        useAny: Boolean = false,
+    ) {
+        assertTrue(
+            listOf(orgId, thread, deadline).count { it != null } <= 1,
+            "Only one of ORG, THR, DDL or none can be supplied"
+        )
+
+        var curOrgId: Long? = orgId
+        var thrId: Long? = null
+        var ddlId: Long? = null
+
+        var roleScopeId = orgId ?: 0
+        var roleScopeType = ScopeType.ORGANIZATION
+
+        if (thread != null) {
+            curOrgId = thread.organization.id
+            thrId = thread.id
+            roleScopeId = thread.id
+            roleScopeType = ScopeType.THREAD
+        } else if (deadline != null) {
+            curOrgId = deadline.thread.organization.id
+            thrId = deadline.thread.id
+            ddlId = deadline.id
+            roleScopeId = deadline.id
+            roleScopeType = ScopeType.DEADLINE
+        }
+        every {
+            userScopeRepository.findUserRolesInScope(
+                user.id,
+                if (useAny && curOrgId == null) any() else curOrgId,
+                if (useAny && thrId == null) any() else thrId,
+                if (useAny && ddlId == null) any() else ddlId
+            )
+        } returns if (role == null) emptyList()
+                  else listOf(ScopeRoleDTO(role, roleScopeId, roleScopeType))
+    }
+
+    private fun <T> withRoleForTarget(user: User, target: T, role: ScopeRole?) {
+        when (target) {
+            is Long -> withRole(user, orgId = target, role = role)
+            is Organization -> withRole(user, orgId = target.id, role = role)
+            is Thread -> withRole(user, thread = target, role = role)
+            is Deadline -> withRole(user, deadline = target, role = role)
+            else -> throw IllegalArgumentException("Unsupported permission target: ${target!!::class}")
+        }
+    }
+
+    private fun testForMinAcceptableRole(
+        minRole: ScopeRole,
+        permissionScope: PermissionScope,
+        method: (User, PermissionScope) -> Boolean
+    ) {
+        ScopeRole.entries.forEach { role ->
+            withRoleScope(nonAdmin, permissionScope, role)
+            assertEquals(
+                role.isEqualOrHigherThan(minRole),
+                method(nonAdmin, permissionScope),
+                "$role should ${if (role.isEqualOrHigherThan(minRole)) "pass" else "fail"} for minimum role $minRole"
+            )
+        }
+    }
+
+    /**
+     * Tests minimal acceptable role for function which do not accept `PermissionScope`.
+     *
+     * This means that the function is entity specific and cannot be generalized to use a `PermissionScope`.
+     */
+    private fun <T> testForMinAcceptableRoleRaw(
+        minRole: ScopeRole,
+        target: T,
+        method: (User, T) -> Boolean
+    ) {
+        ScopeRole.entries.forEach { role ->
+            withRoleForTarget(nonAdmin, target, role)
+            assertEquals(
+                role.isEqualOrHigherThan(minRole),
+                method(nonAdmin, target),
+                "$role should ${if (role.isEqualOrHigherThan(minRole)) "pass" else "fail"} for minimum role $minRole"
+            )
+        }
+    }
+
+    @Nested
+    inner class IsAdminOr {
+        @Test
+        fun `returns false for non admin`() = assertFalse(nonAdmin.isAdminOr { false })
+
+        @Test
+        fun `returns true for admin`() = assertTrue(admin.isAdminOr { false })
+    }
+
+    @Nested
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    inner class RoleComparisonTests {
+
+        fun higherLowerPairs(): List<Arguments> = ScopeRole.entries.flatMap { currentRole ->
+            ScopeRole.entries.map { requiredRole ->
+                Arguments.of(currentRole, requiredRole, currentRole.rank >= requiredRole.rank)
+            }
+        }
+
+        @ParameterizedTest
+        @MethodSource("higherLowerPairs")
+        fun `roleIsEqualOrHigherThan behaves as expected`(currentRole: ScopeRole, requiredRole: ScopeRole, expected: Boolean) {
+            every { userScope.role } returns currentRole
+            assertEquals(expected, currentRole.isEqualOrHigherThan(requiredRole))
+            assertEquals(expected, userScope.roleIsEqualOrHigherThan(requiredRole))
+        }
+
+        @Test
+        fun `role ranks preserve the published role hierarchy`() {
+            assertEquals((0..6).toList(), ScopeRole.entries.map { it.rank })
+            ScopeRole.entries.forEach { role -> assertEquals(role, ScopeRole.fromInt(role.rank)) }
+        }
+    }
+
+
+    @Nested
+    inner class IsAdminOrHasRoleAnd {
+
+        @Test
+        fun `returns true for admin regardless of scope`() =
+            assertTrue(admin.isAdminOrHasRoleAnd({ null }) { false })
+
+        @Test
+        fun `returns false when no scope present and not admin`() =
+            assertFalse(nonAdmin.isAdminOrHasRoleAnd({ null }) { true })
+
+        @Test
+        fun `returns predicate result when scope present and not admin`() {
+            val resultTrue = nonAdmin.isAdminOrHasRoleAnd({ ScopeRole.ORG_OWNER }) { true }
+            val resultFalse = nonAdmin.isAdminOrHasRoleAnd({ ScopeRole.ORG_OWNER }) { false }
+
+            assertTrue(resultTrue)
+            assertFalse(resultFalse)
+        }
+    }
+
+    @Nested
+    inner class OrganizationPermissions {
+        @Nested
+        inner class HasOrganizationAccess {
+
+            @Test
+            fun `public organization is available regardless of membership`() {
+                withRole(nonAdmin, orgId = organization.id, role = null)
+                assertTrue(permissionService.hasAccess(nonAdmin, orgScope()))
+            }
+
+            @Test
+            fun `public organization is available anonymously`() {
+                assertTrue(permissionService.hasAccess(null, orgScope()))
+            }
+
+            @Test
+            fun `private organization is not available anonymously`() {
+                organization.type = OrganizationType.PRIVATE
+                assertFalse(permissionService.hasAccess(null, orgScope()))
+            }
+
+            @Test
+            fun `private organization are not available if user is not a member`() {
+                organization.type = OrganizationType.PRIVATE
+                withRole(nonAdmin, orgId = organization.id, role = null)
+                assertFalse (
+                    permissionService.hasAccess(nonAdmin, orgScope()),
+                    "Private organization should not be accessible by non members"
+                )
+
+                withRole(nonAdmin, orgId = organization.id, role = ScopeRole.ORG_MEMBER)
+                assertTrue(
+                    permissionService.hasAccess(nonAdmin, orgScope()),
+                    "Private organization should be available to ORG_MEMBER or higher"
+                )
+            }
+        }
+
+        @Test
+        fun canDeleteOrganization() = testForMinAcceptableRole(
+            ScopeRole.ORG_OWNER, orgScope(), permissionService::canDelete
+        )
+
+        @Test
+        fun canUpdateOrganization() = testForMinAcceptableRole(
+            ScopeRole.ORG_OWNER, orgScope(), permissionService::canUpdate
+        )
+
+        @Test
+        fun canChangeOrganizationVisibility() = testForMinAcceptableRoleRaw(
+            ScopeRole.ORG_OWNER, organization.id, permissionService::canChangeOrganizationVisibility
+        )
+
+        @Test
+        fun canManageOrganizationMembers() = testForMinAcceptableRole(
+            ScopeRole.ORG_ADMIN, orgScope(), permissionService::canAddAssignees
+        )
+    }
+
+    @Nested
+    inner class ThreadPermissions {
+        @Nested
+        inner class HasThreadAccess {
+
+            @Test
+            fun `threads in public organization are accessible by everyone`() {
+                withRole(nonAdmin, thread = thread, role = null)
+                assertTrue(
+                    permissionService.hasAccess(nonAdmin, thrScope()),
+                    "Thread inside of public a organization should be available to everyone"
+                )
+            }
+
+            @Test
+            fun `thread in public organization is available anonymously`() {
+                assertTrue(permissionService.hasAccess(null, thrScope()))
+            }
+
+            @Test
+            fun `thread in private organization is not available anonymously`() {
+                organization.type = OrganizationType.PRIVATE
+                assertFalse(permissionService.hasAccess(null, thrScope()))
+            }
+
+            @Test
+            fun `threads in private organizations are accessible only by org members`() {
+                organization.type = OrganizationType.PRIVATE
+                withRole(nonAdmin, thread = thread, role = null)
+
+                assertFalse (
+                    permissionService.hasAccess(nonAdmin, thrScope()),
+                    "Thread inside of a private organization should not be accessible by non members"
+                )
+
+                withRole(nonAdmin, thread = thread, role = ScopeRole.THR_ASSIGNEE)
+                assertTrue(
+                    permissionService.hasAccess(nonAdmin, thrScope()),
+                    "Threads inside of private organization should be available to THR_ASSIGNEE or higher"
+                )
+            }
+        }
+
+        @Test
+        fun canCreateOrDeleteThread() =
+            testForMinAcceptableRole(ScopeRole.THR_OWNER, thrScope(), permissionService::canDelete)
+
+        @Test
+        fun canUpdateThread() =
+            testForMinAcceptableRole(
+                ScopeRole.THR_ADMIN, thrScope(),permissionService::canUpdate
+            )
+
+        @Test
+        fun canManageThreadAssignees() = testForMinAcceptableRole(
+            ScopeRole.THR_ADMIN, thrScope(),permissionService::canAddAssignees
+        )
+    }
+
+    @Nested
+    inner class DeadlinePermissions {
+        @Nested
+        inner class HasDeadlineAccess {
+            @Test
+            fun `deadlines in public org are accessible by everyone`() {
+                withRole(nonAdmin, deadline = deadline, role = null)
+                assertTrue(permissionService.hasAccess(nonAdmin, ddlScope()))
+            }
+
+            @Test
+            fun `deadline in public organization is available anonymously`() {
+                assertTrue(permissionService.hasAccess(null, ddlScope()))
+            }
+
+            @Test
+            fun `deadline in private organization is not available anonymously`() {
+                organization.type = OrganizationType.PRIVATE
+                assertFalse(permissionService.hasAccess(null, ddlScope()))
+            }
+
+            @Test
+            fun `deadlines in private organizations are only accessible by deadline assignees or higher`() {
+                organization.type = OrganizationType.PRIVATE
+                withRole(nonAdmin, deadline = deadline, role = null)
+
+                assertFalse (permissionService.hasAccess(nonAdmin, ddlScope()))
+
+                withRole(nonAdmin, deadline = deadline, role = ScopeRole.DDL_ASSIGNEE)
+                assertTrue(permissionService.hasAccess(nonAdmin, ddlScope()))
+            }
+        }
+
+        @Test
+        fun canCreateOrDeleteDeadline() = testForMinAcceptableRoleRaw(
+            ScopeRole.THR_ADMIN, thread, permissionService::canCreateDeadline
+        )
+
+        @Test
+        fun canUpdateDeadline() = testForMinAcceptableRole(
+            ScopeRole.THR_ADMIN, ddlScope(), permissionService::canUpdate
+        )
+
+        @Test
+        fun canManageDeadlineAssignees() = testForMinAcceptableRole(
+            ScopeRole.THR_ADMIN, ddlScope(), permissionService::canAddAssignees
+        )
+
+        @Test
+        fun canManageDeadlineAttachments() = testForMinAcceptableRoleRaw(
+            ScopeRole.DDL_ASSIGNEE, deadline, permissionService::canManageDeadlineAttachments
+        )
+    }
+
+    @Nested
+    inner class AnonymousPermissions {
+        @Test
+        fun `anonymous permission payloads are read only`() {
+            assertEquals(
+                OrganizationPermissions(
+                    update = false,
+                    delete = false,
+                    manageRoles = false,
+                    invite = false,
+                    createThreads = false
+                ),
+                permissionService.buildOrganizationPermissions(null, organization.id)
+            )
+            assertEquals(
+                ThreadPermissions(update = false, delete = false, manageAssignees = false, createDeadlines = false),
+                permissionService.buildThreadPermissions(null, thread)
+            )
+            assertEquals(
+                DeadlinePermissions(update = false, delete = false, manageAssignees = false, manageAttachments = false),
+                permissionService.buildDeadlinePermissions(null, deadline)
+            )
+            assertEquals(
+                AttachmentPermissions(update = false, delete = false),
+                permissionService.buildDeadlineAttachmentPermissions(
+                    null,
+                    Attachment(
+                        id = 1,
+                        objectKey = "attachment-key",
+                        filename = "attachment.txt",
+                        mimeType = "text/plain",
+                        sizeBytes = 1,
+                        uploadedBy = nonAdmin,
+                        deadline = deadline,
+                        uploadedAt = Instant.EPOCH
+                    )
+                )
+            )
+        }
+    }
+
+    @Nested
+    inner class OrganizationInvitation {
+        @Test
+        fun canSendOrganizationInvitation() = testForMinAcceptableRoleRaw(
+            ScopeRole.ORG_ADMIN, organization.id, permissionService::canSendOrganizationInvitation
+        )
+    }
+
+    @Nested
+    inner class Integration {
+        @Test
+        fun canLinkAccount() {
+            assertTrue(
+                permissionService.canLinkAccount(
+                    nonAdmin,
+                    maxLinkedAccountsPerMessenger - 1
+                )
+            )
+            assertFalse(
+                permissionService.canLinkAccount(
+                    nonAdmin,
+                    maxLinkedAccountsPerMessenger
+                )
+            )
+        }
+    }
+
+    @Nested
+    inner class Roles {
+        @Test
+        fun canChangeRole() {
+            withRoleScope(nonAdmin, orgScope(), ScopeRole.ORG_OWNER)
+            assertTrue(
+                permissionService.canChangeRole(
+                    nonAdmin, orgScope(), ScopeRole.ORG_ADMIN
+                )
+            )
+
+            withRoleScope(nonAdmin, orgScope(), ScopeRole.ORG_MEMBER)
+            assertFalse(
+                permissionService.canChangeRole(
+                    nonAdmin, orgScope(), ScopeRole.THR_ASSIGNEE
+                )
+            )
+        }
+    }
+}

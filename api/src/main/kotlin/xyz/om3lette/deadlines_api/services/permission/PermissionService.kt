@@ -1,0 +1,363 @@
+package xyz.om3lette.deadlines_api.services.permission
+
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
+import xyz.om3lette.deadlines_api.configs.properties.UsersProperties
+import xyz.om3lette.deadlines_api.data.attachments.model.Attachment
+import xyz.om3lette.deadlines_api.data.attachments.reponse.AttachmentPermissions
+import xyz.om3lette.deadlines_api.data.permissions.dto.DeadlineScope
+import xyz.om3lette.deadlines_api.data.permissions.dto.OrganizationScope
+import xyz.om3lette.deadlines_api.data.permissions.dto.PermissionScope
+import xyz.om3lette.deadlines_api.data.permissions.dto.ThreadScope
+import xyz.om3lette.deadlines_api.data.scopes.deadline.dto.DeadlinePermissions
+import xyz.om3lette.deadlines_api.data.scopes.deadline.model.Deadline
+import xyz.om3lette.deadlines_api.data.scopes.organization.dto.OrganizationPermissions
+import xyz.om3lette.deadlines_api.data.scopes.organization.enums.OrganizationType
+import xyz.om3lette.deadlines_api.data.scopes.organization.model.Organization
+import xyz.om3lette.deadlines_api.data.scopes.organization.model.OrganizationInvitation
+import xyz.om3lette.deadlines_api.data.scopes.thread.dto.ThreadPermissions
+import xyz.om3lette.deadlines_api.data.scopes.thread.model.Thread
+import xyz.om3lette.deadlines_api.data.scopes.userScope.enums.ScopeRole
+import xyz.om3lette.deadlines_api.data.scopes.userScope.enums.ScopeType
+import xyz.om3lette.deadlines_api.data.scopes.userScope.repo.UserScopeRepository
+import xyz.om3lette.deadlines_api.data.user.model.User
+import xyz.om3lette.deadlines_api.util.user.isAdminOr
+import xyz.om3lette.deadlines_api.util.user.isAdminOrHasRoleAnd
+
+@Service
+class PermissionService(
+    private val userScopeRepository: UserScopeRepository,
+    private val permissionContext: PermissionContext,
+    private val usersProperties: UsersProperties
+) {
+    private val logger = LoggerFactory.getLogger(PermissionService::class.java)
+
+    private fun roleForOrganizationLazy(user: User, organizationId: Long): () -> ScopeRole? =
+        {
+            permissionContext.getOrLoadBatch(OrganizationScope(organizationId)) {
+                userScopeRepository.findUserRolesInScope(
+                    userId = user.id, orgId = organizationId, null, null
+                )
+            }
+        }
+
+        private fun roleForThreadLazy(user: User, thread: Thread): () -> ScopeRole? =
+        {
+            permissionContext.getOrLoadBatch(ThreadScope(thread)) {
+                userScopeRepository.findUserRolesInScope(
+                    userId = user.id, orgId = thread.organization.id, thread.id, null
+                )
+            }
+        }
+
+    private fun roleForDeadlineLazy(user: User, deadline: Deadline): () -> ScopeRole? =
+        {
+            permissionContext.getOrLoadBatch(DeadlineScope(deadline)) {
+                userScopeRepository.findUserRolesInScope(
+                    userId = user.id, orgId = deadline.thread.organization.id, deadline.thread.id, deadline.id
+                )
+            }
+        }
+
+    fun findRoleByPermissionScopeLazy(issuer: User, permissionScope: PermissionScope): () -> ScopeRole? =
+        when (permissionScope) {
+            is OrganizationScope -> roleForOrganizationLazy(issuer, permissionScope.orgId)
+            is ThreadScope -> roleForThreadLazy(issuer, permissionScope.thread)
+            is DeadlineScope -> roleForDeadlineLazy(issuer, permissionScope.deadline)
+        }
+
+    /*
+        Organization permissions:
+     */
+    private fun hasOrganizationAccess(issuer: User?, organization: Organization): Boolean {
+        if (organization.type == OrganizationType.PUBLIC) return true
+        if (issuer == null) return false
+        return issuer.isAdminOr { roleForOrganizationLazy(issuer, organization.id)() != null }
+    }
+
+    private fun canDeleteOrganization(issuer: User, organizationId: Long): Boolean =
+        issuer.isAdminOrHasRoleAnd(roleForOrganizationLazy(issuer, organizationId)) { role ->
+            role.isEqualOrHigherThan(ScopeRole.ORG_OWNER)
+        }
+
+    private fun canUpdateOrganization(issuer: User, organizationId: Long): Boolean =
+        issuer.isAdminOrHasRoleAnd(roleForOrganizationLazy(issuer, organizationId)) { role ->
+            role.isEqualOrHigherThan(ScopeRole.ORG_OWNER)
+        }
+
+    fun canChangeOrganizationVisibility(issuer: User, organizationId: Long): Boolean =
+        issuer.isAdminOrHasRoleAnd(roleForOrganizationLazy(issuer, organizationId)) { role ->
+            role.isEqualOrHigherThan(ScopeRole.ORG_OWNER)
+        }
+
+    private fun canManageOrganizationMembers(issuer: User, organizationId: Long): Boolean =
+        issuer.isAdminOrHasRoleAnd(roleForOrganizationLazy(issuer, organizationId)) { role ->
+            role.isEqualOrHigherThan(ScopeRole.ORG_ADMIN)
+        }
+
+    fun prefetchUserRoles(
+        user: User,
+        orgIds: List<Long> = emptyList(),
+        thrIds: List<Long> = emptyList(),
+        ddlIds: List<Long> = emptyList()
+    ) {
+        if (orgIds.isEmpty() && thrIds.isEmpty() && ddlIds.isEmpty()) return
+        permissionContext.putAll(
+            userScopeRepository.findUserRolesInScopes(
+                user.id, orgIds, thrIds, ddlIds
+            )
+        )
+    }
+
+
+    /**
+     * Computes all relevant organization permissions/
+     *
+     * IMPORTANT: if calling for a list of unique organization it is advices to call `prefetchUserRoles` first
+     */
+    fun buildOrganizationPermissions(issuer: User?, organizationId: Long) =
+        if (issuer == null) {
+            OrganizationPermissions(
+                update = false,
+                delete = false,
+                manageRoles = false,
+                invite = false,
+                createThreads = false
+            )
+        } else {
+            OrganizationPermissions(
+                update = canUpdateOrganization(issuer, organizationId),
+                delete = canDeleteOrganization(issuer, organizationId),
+                manageRoles = canManageOrganizationMembers(issuer, organizationId),
+                invite = canSendOrganizationInvitation(issuer, organizationId),
+                createThreads = canCreateThread(issuer, organizationId)
+            )
+        }
+
+    fun buildThreadPermissions(issuer: User?, thread: Thread) =
+        if (issuer == null) {
+            ThreadPermissions(update = false, delete = false, manageAssignees = false, createDeadlines = false)
+        } else {
+            ThreadPermissions(
+                update = canUpdateThread(issuer, thread),
+                delete = canDeleteThread(issuer, thread),
+                manageAssignees = canManageThreadAssignees(issuer, thread),
+                createDeadlines = canCreateDeadline(issuer, thread)
+            )
+        }
+
+    fun buildDeadlinePermissions(issuer: User?, deadline: Deadline) =
+        if (issuer == null) {
+            DeadlinePermissions(update = false, delete = false, manageAssignees = false, manageAttachments = false)
+        } else {
+            DeadlinePermissions(
+                update = canUpdateDeadline(issuer, deadline),
+                delete = canDeleteDeadline(issuer, deadline),
+                manageAssignees = canManageDeadlineAssignees(issuer, deadline),
+                manageAttachments = canManageDeadlineAttachments(issuer, deadline)
+            )
+        }
+
+    fun buildDeadlineAttachmentPermissions(issuer: User?, ddlAttachment: Attachment) =
+        if (issuer == null) {
+            AttachmentPermissions(update = false, delete = false)
+        } else {
+            AttachmentPermissions(
+                update = canUpdateDeadlineAttachment(issuer, ddlAttachment),
+                delete = canDeleteDeadlineAttachment(issuer, ddlAttachment),
+            )
+        }
+
+    /*
+        Thread permissions:
+     */
+    private fun hasThreadAccess(issuer: User?, thread: Thread): Boolean {
+        if (thread.organization.type == OrganizationType.PUBLIC) return true
+        if (issuer == null) return false
+        return issuer.isAdminOrHasRoleAnd(roleForThreadLazy(issuer, thread)) { role ->
+            role.isEqualOrHigherThan(ScopeRole.THR_ASSIGNEE)
+        }
+    }
+
+    fun canCreateThread(issuer: User, organizationId: Long): Boolean =
+        issuer.isAdminOrHasRoleAnd(roleForOrganizationLazy(issuer, organizationId)) { role ->
+            role.isEqualOrHigherThan(ScopeRole.ORG_ADMIN)
+        }
+
+    private fun canDeleteThread(issuer: User, thread: Thread): Boolean =
+        issuer.isAdminOrHasRoleAnd(roleForThreadLazy(issuer, thread)) { role ->
+            role.isEqualOrHigherThan(ScopeRole.THR_OWNER)
+        }
+
+    private fun canUpdateThread(issuer: User, thread: Thread): Boolean =
+        issuer.isAdminOrHasRoleAnd(roleForThreadLazy(issuer, thread)) { role ->
+            role.isEqualOrHigherThan(ScopeRole.THR_ADMIN)
+        }
+
+    private fun canManageThreadAssignees(issuer: User, thread: Thread): Boolean =
+        issuer.isAdminOrHasRoleAnd(roleForThreadLazy(issuer, thread)) { role ->
+            role.isEqualOrHigherThan(ScopeRole.THR_ADMIN)
+        }
+
+    /*
+        Deadline permissions:
+     */
+    private fun hasDeadlineAccess(issuer: User?, deadline: Deadline): Boolean {
+        if (deadline.thread.organization.type == OrganizationType.PUBLIC) return true
+        if (issuer == null) return false
+        return issuer.isAdminOrHasRoleAnd(roleForDeadlineLazy(issuer, deadline)) { role ->
+            role.isEqualOrHigherThan(ScopeRole.DDL_ASSIGNEE)
+        }
+    }
+
+    fun canCreateDeadline(issuer: User, thread: Thread): Boolean =
+        issuer.isAdminOrHasRoleAnd(roleForThreadLazy(issuer, thread)) { role ->
+            role.isEqualOrHigherThan(ScopeRole.THR_ADMIN)
+        }
+
+    private fun canDeleteDeadline(issuer: User, deadline: Deadline): Boolean =
+        issuer.isAdminOrHasRoleAnd(roleForDeadlineLazy(issuer, deadline)) { role ->
+            role.isEqualOrHigherThan(ScopeRole.THR_ADMIN)
+        }
+
+    private fun canUpdateDeadline(issuer: User, deadline: Deadline): Boolean =
+        issuer.isAdminOrHasRoleAnd(roleForDeadlineLazy(issuer, deadline)) { role ->
+            role.isEqualOrHigherThan(ScopeRole.THR_ADMIN)
+        }
+
+    private fun canManageDeadlineAssignees(issuer: User, deadline: Deadline): Boolean =
+        issuer.isAdminOrHasRoleAnd(roleForDeadlineLazy(issuer, deadline)) { role ->
+            role.isEqualOrHigherThan(ScopeRole.THR_ADMIN)
+        }
+
+    // ===========================
+    // Deadlines attachments
+    // ===========================
+    fun canManageDeadlineAttachments(issuer: User, deadline: Deadline): Boolean =
+        issuer.isAdminOrHasRoleAnd(roleForDeadlineLazy(issuer, deadline)) { role ->
+            role.isEqualOrHigherThan(ScopeRole.DDL_ASSIGNEE)
+        }
+
+    fun canUpdateDeadlineAttachment(issuer: User, attachment: Attachment): Boolean =
+        issuer.isAdminOr { issuer.id == attachment.uploadedBy?.id }
+
+    fun canDeleteDeadlineAttachment(issuer: User, attachment: Attachment): Boolean =
+        issuer.isAdminOrHasRoleAnd(roleForDeadlineLazy(issuer, attachment.deadline)) { role ->
+            role.isEqualOrHigherThan(ScopeRole.THR_ADMIN) || issuer.id == attachment.uploadedBy?.id
+        }
+
+    /*
+        Helper wrappers
+     */
+    fun canAddAssignees(issuer: User, permissionScope: PermissionScope) =
+        when (permissionScope) {
+            is OrganizationScope -> canManageOrganizationMembers(issuer, permissionScope.orgId)
+            is ThreadScope -> canManageThreadAssignees(issuer, permissionScope.thread)
+            is DeadlineScope -> canManageDeadlineAssignees(issuer, permissionScope.deadline)
+        }
+
+    fun canRemoveAssignee(issuer: User, permissionScope: PermissionScope, memberRole: ScopeRole): Boolean {
+        if (!canAddAssignees(issuer, permissionScope))
+            return false
+        val userRole: ScopeRole = when (permissionScope) {
+            is OrganizationScope -> roleForOrganizationLazy(issuer, permissionScope.orgId)
+            is ThreadScope -> roleForThreadLazy(issuer, permissionScope.thread)
+            is DeadlineScope -> roleForDeadlineLazy(issuer, permissionScope.deadline)
+        }() ?: return false
+
+        return userRole.isHigherThan(memberRole)
+    }
+
+    /**
+     * Checks if a user has access to a scope.
+     *
+     * **WARNING**: `OrganizationScope.organization` must be provided
+     */
+    fun hasAccess(issuer: User?, permissionScope: PermissionScope) =
+        when (permissionScope) {
+            is OrganizationScope ->
+                if (permissionScope.organization != null) {
+                    hasOrganizationAccess(issuer, permissionScope.organization)
+                } else {
+                    logger.error("Organization field was not provided. Unable to verify organization access")
+                    false
+                }
+            is ThreadScope -> hasThreadAccess(issuer, permissionScope.thread)
+            is DeadlineScope -> hasDeadlineAccess(issuer, permissionScope.deadline)
+        }
+
+    fun canDelete(issuer: User, permissionScope: PermissionScope) =
+        when (permissionScope) {
+            is OrganizationScope -> canDeleteOrganization(issuer, permissionScope.orgId)
+            is ThreadScope -> canDeleteThread(issuer, permissionScope.thread)
+            is DeadlineScope -> canDeleteDeadline(issuer, permissionScope.deadline)
+        }
+
+    fun canUpdate(issuer: User, permissionScope: PermissionScope) =
+        when (permissionScope) {
+            is OrganizationScope -> canUpdateOrganization(issuer, permissionScope.orgId)
+            is ThreadScope -> canUpdateThread(issuer, permissionScope.thread)
+            is DeadlineScope -> canUpdateDeadline(issuer, permissionScope.deadline)
+        }
+
+    /*
+        Invitation permissions:
+    */
+    fun canSendOrganizationInvitation(issuer: User, organizationId: Long): Boolean =
+        issuer.isAdminOrHasRoleAnd(roleForOrganizationLazy(issuer, organizationId)) { role ->
+            role.isEqualOrHigherThan(ScopeRole.ORG_ADMIN)
+        }
+
+    fun canAccessOrganizationInvitation(issuer: User, invitation: OrganizationInvitation): Boolean =
+        issuer.isAdminOr {
+            invitation.invitedBy.id == issuer.id || invitation.invitedUser.id == issuer.id
+        }
+
+    /*
+        Integration permissions
+     */
+    fun canLinkAccount(issuer: User, accountsLinkedForMessenger: Int) =
+        issuer.isAdminOr {
+            accountsLinkedForMessenger < usersProperties.maxLinkedAccountsPerMessenger
+        }
+    
+    fun canManageIntegrationChat(issuer: User, issuerHasMessengerChatAdminRights: Boolean) =
+        issuer.isAdminOr { issuerHasMessengerChatAdminRights }
+
+    /*
+        Roles permissions
+     */
+
+    /**
+     * Checks if issuer's role `issuerCurrentRole` is high enough to assign `roleToAssign`.
+     */
+    private fun canAssignWithCurrentRole(issuerCurrentRole: ScopeRole, roleToAssign: ScopeRole): Boolean {
+        return issuerCurrentRole.isHigherThan(roleToAssign)
+    }
+
+    fun canChangeRole(issuer: User, permissionScope: PermissionScope, newRole: ScopeRole): Boolean {
+            if (!canAddAssignees(issuer, permissionScope)) return false
+            return issuer.isAdminOrHasRoleAnd(findRoleByPermissionScopeLazy(issuer, permissionScope)) { role ->
+                // '<'  Implicitly forbids multiple organization owners
+                canAssignWithCurrentRole(role, newRole)
+            }
+        }
+
+    /**
+     * Calculates whether a user with role `role` can assign each role in `scopeRoles` presuming that he
+     * has canManage permission for the scope
+     */
+    fun canReassignWithTheGivenRole(role: ScopeRole, scopeRoles: List<ScopeRole>): List<Boolean> {
+        val canAssign: MutableList<Boolean> = mutableListOf()
+        for (attemptedRole in scopeRoles) {
+            canAssign.add(canAssignWithCurrentRole(role, attemptedRole))
+        }
+        return canAssign.toList()
+    }
+
+    fun getRole(scopeId: Long, scopeType: ScopeType) = permissionContext.get(scopeId, scopeType)
+
+    fun getMaxRole(keys: List<PermissionContext.PermissionKey>) = keys.mapNotNull {
+        permissionContext.get(it.scopeId, it.scopeType)
+    }.maxBy { it.rank }
+}

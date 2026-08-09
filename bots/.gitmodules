@@ -1,0 +1,3 @@
+[submodule "common/infrastructure/grpc/proto"]
+	path = common/infrastructure/grpc/proto
+	url = https://github.com/Codename-deadline/proto-internal.git

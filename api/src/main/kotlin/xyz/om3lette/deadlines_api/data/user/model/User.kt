@@ -1,0 +1,88 @@
+package xyz.om3lette.deadlines_api.data.user.model
+
+import jakarta.persistence.*
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
+import org.hibernate.annotations.OnDelete
+import org.hibernate.annotations.OnDeleteAction
+import org.springframework.security.core.GrantedAuthority
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.userdetails.UserDetails
+import xyz.om3lette.deadlines_api.data.integration.bot.enums.Language
+import xyz.om3lette.deadlines_api.data.integration.messengerAccount.model.UserMessengerAccount
+import xyz.om3lette.deadlines_api.data.otp.enums.AppAuthority
+import xyz.om3lette.deadlines_api.data.common.validation.IanaTimeZone
+import xyz.om3lette.deadlines_api.data.common.validation.IanaTimeZones
+import xyz.om3lette.deadlines_api.data.user.constraints.UserConstraints
+import xyz.om3lette.deadlines_api.data.user.enums.UserRole
+import xyz.om3lette.deadlines_api.data.user.response.MinimalUserResponse
+import xyz.om3lette.deadlines_api.data.user.response.UserResponse
+import java.time.Instant
+
+@Entity
+@Table(name = "users")
+data class User(
+    @Id
+    @SequenceGenerator(name = "user_seq", sequenceName = "user_sequence", initialValue = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_seq")
+    val id: Long = 0,
+
+    @field:NotBlank
+    @field:Size(min = UserConstraints.USERNAME_MIN, max = UserConstraints.USERNAME_MAX)
+    @Column(name = "username", length = UserConstraints.USERNAME_MAX, nullable = false)
+    var _username: String,
+
+    @Column(nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    val joinedAt: Instant,
+
+    @field:NotBlank
+    @field:Size(min = UserConstraints.FULL_NAME_MIN, max = UserConstraints.FULL_NAME_MAX)
+    @Column(length = UserConstraints.FULL_NAME_MAX, nullable = false)
+    var fullName: String,
+
+    @Column(name = "password", length = 64)
+    var _password: String? = null,
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 3)
+    var language: Language = Language.EN,
+
+    @field:IanaTimeZone
+    @Column(nullable = false, length = IanaTimeZones.MAX_LENGTH)
+    var timeZone: String,
+
+    @Column(nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    var lastPasswordChange: Instant = Instant.EPOCH,
+
+    @Enumerated(value = EnumType.STRING)
+    @Column(nullable = false, length = 16)
+    val role: UserRole = UserRole.USER,
+
+    @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    val messengerAccounts: MutableList<UserMessengerAccount> = mutableListOf()
+
+) : UserDetails {
+    override fun getAuthorities(): MutableCollection<GrantedAuthority> =
+        mutableListOf(SimpleGrantedAuthority(AppAuthority.fromUserRole(role).name))
+
+    override fun getPassword() = _password
+
+    override fun getUsername() = _username
+
+    override fun isAccountNonExpired() = true
+
+    override fun isAccountNonLocked() = true
+
+    override fun isCredentialsNonExpired() = true
+
+    override fun isEnabled() = true
+
+    fun toResponse() = UserResponse(
+        id, username, fullName, joinedAt, language, timeZone
+    )
+
+    fun toMinimalResponse() = MinimalUserResponse(
+        username, fullName
+    )
+}

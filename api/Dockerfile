@@ -1,4 +1,4 @@
-FROM gradle:9.5.1-jdk25 AS builder
+FROM gradle:9.7.1-jdk25 AS builder
 
 WORKDIR /backend
 COPY proto proto

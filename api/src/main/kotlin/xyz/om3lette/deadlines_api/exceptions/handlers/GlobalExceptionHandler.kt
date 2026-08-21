@@ -87,7 +87,7 @@ class GlobalExceptionHandler {
         )
 
     private fun deserializationResponse(): ResponseEntity<GeneralErrorResponse> =
-        ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(
+        ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body(
             GeneralErrorResponse(code = ErrorCode.DESERIALIZATION_ERROR)
         )
 }

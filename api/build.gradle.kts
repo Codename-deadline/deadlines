@@ -1,19 +1,27 @@
 plugins {
-	kotlin("jvm") version "2.3.21"
-	kotlin("plugin.spring") version "2.3.21"
-    kotlin("plugin.jpa") version "2.3.21"
+	kotlin("jvm") version "2.4.20-RC"
+	kotlin("plugin.spring") version "2.4.20-RC"
+    kotlin("plugin.jpa") version "2.4.20-RC"
 	id("org.springframework.boot") version "4.1.0"
 	id("io.spring.dependency-management") version "1.1.7"
     id("com.google.protobuf") version "0.10.0"
+	id("io.github.ben-manes.versions") version "0.61.0"
 }
 
 group = "xyz.om3lette"
 version = "0.0.1-SNAPSHOT"
 
 // Override Spring Boot BOM-managed versions to pick up security fixes.
-extra["netty.version"] = "4.2.16.Final"
-extra["jackson-2-bom.version"] = "2.22.1"
-extra["jackson-bom.version"] = "3.2.1"
+// GHSA-8c42-7qj2-3j46
+extra["netty.version"] = "4.2.17.Final"
+extra["jackson-2-bom.version"] = "2.22.2"
+extra["jackson-bom.version"] = "3.2.2"
+// GHSA-hjcp-jmpx-g3qm
+extra["httpclient5.version"] = "5.6.4"
+// GHSA-hf6x-8p5f-cgmf, GHSA-v3jc-474w-2wm6
+extra["httpcore5.version"] = "5.4.3"
+// GHSA-qv9r-c865-cp47
+extra["log4j2.version"] = "2.25.5"
 
 sourceSets {
     main {
@@ -52,13 +60,13 @@ dependencies {
         exclude(module = "lz4-java")
     }
     // Original package is archived. Community maintained fork.
-    implementation("at.yawk.lz4:lz4-java:1.11.1")
+    implementation("at.yawk.lz4:lz4-java:1.11.2")
 
-    implementation("io.hypersistence:hypersistence-utils-hibernate-73:3.15.4")
-    implementation("tools.jackson.module:jackson-module-kotlin:3.2.1")
+    implementation("io.hypersistence:hypersistence-utils-hibernate-73:3.15.5")
+    implementation("tools.jackson.module:jackson-module-kotlin:3.2.2")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("redis.clients:jedis")
-	implementation(platform("software.amazon.awssdk:bom:2.51.1"))
+	implementation(platform("software.amazon.awssdk:bom:2.54.1"))
 	implementation("software.amazon.awssdk:s3")
 	implementation("software.amazon.awssdk:apache-client")
 	implementation("org.apache.tika:tika-core:3.3.2")
@@ -88,6 +96,10 @@ dependencies {
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
 	compileOnly("jakarta.servlet:jakarta.servlet-api:6.1.0")
+}
+
+dependencyLocking {
+	lockAllConfigurations()
 }
 
 kotlin {

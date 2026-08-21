@@ -104,7 +104,12 @@ dependencyLocking {
 
 kotlin {
 	compilerOptions {
-		freeCompilerArgs.addAll("-Xjsr305=strict")
+		freeCompilerArgs.addAll(
+			"-Xjsr305=strict",
+			// Without this, annotations written on a generic type argument (e.g. List<@Valid Foo>)
+			// are emitted as plain field annotations instead of JVM type annotations
+			"-Xemit-jvm-type-annotations",
+		)
 	}
 }
 

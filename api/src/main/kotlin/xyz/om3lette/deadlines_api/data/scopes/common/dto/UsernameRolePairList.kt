@@ -9,7 +9,6 @@ import xyz.om3lette.deadlines_api.data.scopes.userScope.enums.ScopeType
 
 data class UsernameRolePairList @JsonCreator constructor(
     @get:JsonValue
-    @field:Valid
     @field:Size(max = ScopeInvitationConstraints.MAX_INVITATIONS)
     val usernameRolePairs: List<@Valid UsernameRolePair> = emptyList(),
 ) {

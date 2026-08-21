@@ -18,7 +18,6 @@ data class CreateDeadlineRequest(
 
     val due: Instant,
 
-    @field:Valid
     @field:Size(max = ScopeInvitationConstraints.MAX_INVITATIONS)
     val invitations: List<@Valid UsernameRolePair>
 )

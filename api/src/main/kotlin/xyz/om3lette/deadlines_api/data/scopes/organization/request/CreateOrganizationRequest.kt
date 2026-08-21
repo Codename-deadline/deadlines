@@ -20,7 +20,6 @@ data class CreateOrganizationRequest(
     @field:NotNull
     val type: OrganizationType,
 
-    @field:Valid
     @field:Size(max = ScopeInvitationConstraints.MAX_INVITATIONS)
     val invitations: List<@Valid UsernameRolePair>
 )

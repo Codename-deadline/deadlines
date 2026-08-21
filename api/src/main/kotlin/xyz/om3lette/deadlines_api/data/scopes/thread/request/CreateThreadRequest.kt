@@ -15,7 +15,6 @@ data class CreateThreadRequest(
     @field:Size(max = ScopeTextConstraints.DESCRIPTION_MAX)
     val description: String?,
 
-    @field:Valid
     @field:Size(max = ScopeInvitationConstraints.MAX_INVITATIONS)
     val invitations: List<@Valid UsernameRolePair>
 )

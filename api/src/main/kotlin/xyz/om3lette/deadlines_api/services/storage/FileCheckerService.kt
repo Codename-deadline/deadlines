@@ -22,7 +22,7 @@ class FileCheckerService(
         return !forbiddenSubtypes.contains(subtype)
     }
 
-    fun getAttachmentMimeTypeOr403(fileStream: MultipartFile): String {
+    fun getAttachmentMimeTypeOrError(fileStream: MultipartFile): String {
         val mimeType = TikaInputStream.get(fileStream.inputStream).use { inputStream ->
             tika.detect(inputStream, Metadata().apply {
                 set(TikaCoreProperties.RESOURCE_NAME_KEY, fileStream.originalFilename)

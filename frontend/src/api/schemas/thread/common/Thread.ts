@@ -5,15 +5,17 @@ import { ThreadPermissionsSchema } from "./ThreadPermissions";
 import { ThreadOrOrganizationRoleSchema, ThreadRoleSchema } from "./ThreadRole";
 import { ThreadStatsSchema } from "./ThreadStats";
 
-export const ThreadSchema = z.object({
-  id: z.number(),
-  title: z.string(),
-  description: z.string().optional(),
-  organizationId: z.number(),
-  createdAt: IsoAsMsSchema,
-  stats: ThreadStatsSchema,
-  permissions: ThreadPermissionsSchema,
-});
+export const ThreadSchema = z.compile(
+  z.object({
+    id: z.number(),
+    title: z.string(),
+    description: z.string().optional(),
+    organizationId: z.number(),
+    createdAt: IsoAsMsSchema,
+    stats: ThreadStatsSchema,
+    permissions: ThreadPermissionsSchema,
+  }),
+);
 
 export const PagedThreadSchema = pagedResponseSchema(ThreadSchema);
 export type Thread = z.infer<typeof ThreadSchema>;

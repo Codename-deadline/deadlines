@@ -1,7 +1,7 @@
 plugins {
-	kotlin("jvm") version "2.4.20-RC2"
-	kotlin("plugin.spring") version "2.4.20-RC2"
-    kotlin("plugin.jpa") version "2.4.20-RC2"
+	kotlin("jvm") version "2.4.20-RC3"
+	kotlin("plugin.spring") version "2.4.20-RC3"
+    kotlin("plugin.jpa") version "2.4.20-RC3"
 	id("org.springframework.boot") version "4.1.1"
 	id("io.spring.dependency-management") version "1.1.7"
     id("com.google.protobuf") version "0.10.0"
@@ -36,6 +36,9 @@ repositories {
 	mavenCentral()
 }
 
+// GHSA-9xv2-5v5q-p794, GHSA-h3x4-894j-xpx5, GHSA-gcx9-497g-6cp6
+extra["tomcat.version"] = "11.0.25"
+
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
@@ -62,7 +65,7 @@ dependencies {
     implementation("tools.jackson.module:jackson-module-kotlin:3.2.2")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("redis.clients:jedis")
-	implementation(platform("software.amazon.awssdk:bom:2.54.5"))
+	implementation(platform("software.amazon.awssdk:bom:2.54.11"))
 	implementation("software.amazon.awssdk:s3")
 	implementation("software.amazon.awssdk:apache-client")
 	implementation("org.apache.tika:tika-core:4.0.0")

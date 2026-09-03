@@ -6,13 +6,15 @@ import { OrganizationTypeSchema } from "@/api/schemas/organization/common/Organi
 import { OrganizationPermissionsSchema } from "./OrganizationPermissions";
 import { OrganizationRoleSchema } from "./OrganizationRole";
 
-export const OrganizationSchema = z.object({
-  id: z.number(),
-  title: z.string(),
-  description: z.string().optional(),
-  type: OrganizationTypeSchema,
-  createdAt: IsoAsMsSchema,
-});
+export const OrganizationSchema = z.compile(
+  z.object({
+    id: z.number(),
+    title: z.string(),
+    description: z.string().optional(),
+    type: OrganizationTypeSchema,
+    createdAt: IsoAsMsSchema,
+  }),
+);
 export const OrganizationWithStatsSchema = OrganizationSchema.safeExtend({
   stats: OrganizationStatsSchema,
   permissions: OrganizationPermissionsSchema,

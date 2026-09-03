@@ -6,17 +6,19 @@ import { DeadlinePermissionsSchema } from "./DeadlinePermissions";
 import { DeadlineRoleSchema } from "./DeadlineRole";
 import { DeadlineStatsSchema } from "./DeadlineStats";
 
-export const DeadlineSchema = z.object({
-  id: z.number(),
-  title: z.string(),
-  description: z.string().optional(),
-  threadId: z.number(),
-  createdAt: IsoAsMsSchema,
-  due: IsoAsMsSchema,
-  isCompleted: z.boolean(),
-  stats: DeadlineStatsSchema,
-  permissions: DeadlinePermissionsSchema,
-});
+export const DeadlineSchema = z.compile(
+  z.object({
+    id: z.number(),
+    title: z.string(),
+    description: z.string().optional(),
+    threadId: z.number(),
+    createdAt: IsoAsMsSchema,
+    due: IsoAsMsSchema,
+    isCompleted: z.boolean(),
+    stats: DeadlineStatsSchema,
+    permissions: DeadlinePermissionsSchema,
+  }),
+);
 
 export const PagedDeadlineSchema = pagedResponseSchema(DeadlineSchema);
 export type Deadline = z.infer<typeof DeadlineSchema>;

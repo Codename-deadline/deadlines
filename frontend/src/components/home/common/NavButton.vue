@@ -23,8 +23,6 @@ const iconSize = computed(() => {
   if (width.value < 640 || height.value < 720) return 32;
   return 20;
 })
-
-console.log(globalStateStore.pendingReceivedInvitations)
 </script>
 
 <template>

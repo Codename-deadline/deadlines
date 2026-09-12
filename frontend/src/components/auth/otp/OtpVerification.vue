@@ -40,7 +40,6 @@ const submitAuthForm = async () => {
       console.error("Request id is missing");
       return;
     }
-    console.log(response.data.requestId);
     emit("password-required", response.data.requestId);
   } else {
     const tokenPair = response.data.tokenPair;

@@ -376,6 +376,7 @@
       "nothing-here": "Nothing here yet",
       "name-not-provided": "Name is not provided",
       "deleted-user": "Deleted user",
+      "id": "ID",
       "mention": {
         "placeholder": "username"
       },

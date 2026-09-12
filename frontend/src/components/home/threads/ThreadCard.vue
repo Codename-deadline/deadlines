@@ -7,6 +7,7 @@ import type { ThreadStats } from "@/api/schemas/thread/common/ThreadStats";
 import { hasAnyEditPermission } from "@/utils/permissions";
 import EntityCard from "../common/EntityCard.vue";
 import RoleTag from "../common/RoleTag.vue";
+import ScopeHierarchy from "../common/ScopeHierarchy.vue";
 
 const { t } = useI18n();
 
@@ -41,6 +42,10 @@ const calculateCompletionPercentage = (stats: ThreadStats): number => {
           </n-button>
         </div>
       </div>
+      <ScopeHierarchy
+        class="col-start-2"
+        :scope-id="entity.id"
+      />
     </template>
      <template #body>
       <div class="width-full progress-bar mt-3 description">
@@ -61,7 +66,7 @@ const calculateCompletionPercentage = (stats: ThreadStats): number => {
           ></div>
         </div>
       </div>
-    </template> 
+    </template>
     <template #footer>
       <div class="flex items-center">
         <icon class="mr-2" size="16">

@@ -4,6 +4,7 @@ import { computed } from 'vue';
 import type { DeadlineWithRole } from '@/api/schemas/deadline/common/Deadline';
 import { computeDeadlineState } from '@/utils/state';
 import RoleTag from '../common/RoleTag.vue';
+import ScopeHierarchy from '../common/ScopeHierarchy.vue';
 import DeadlineStateTag from './DeadlineStateTag.vue';
 
 const props = withDefaults(
@@ -43,13 +44,11 @@ const state = computed(() => computeDeadlineState(props.deadline))
       <Paperclip v-if="deadline.stats.attachments > 0" class="description shrink-0" :size="16" />
     </div>
 
-    <p
-      v-if="parentTitles?.organization && parentTitles?.thread"
-      class="col-start-2 row-start-3 space-x-1 text-muted sm:row-start-2"
-    >
-      <span>{{ parentTitles.organization }}</span>
-      <span>&bull;</span>
-      <span>{{ parentTitles.thread }}</span>
-    </p>
+    <ScopeHierarchy
+      class="col-start-2"
+      :scope-id="deadline.id"
+      :organization-title="parentTitles?.organization"
+      :thread-title="parentTitles?.thread"
+    />
   </div>
 </template>

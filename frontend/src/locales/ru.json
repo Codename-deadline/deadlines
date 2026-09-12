@@ -376,6 +376,7 @@
       "nothing-here": "Здесь пока ничего нет",
       "name-not-provided": "Имя не указано",
       "deleted-user": "Удалённый пользователь",
+      "id": "ID",
       "mention": {
         "placeholder": "имя пользователя"
       },

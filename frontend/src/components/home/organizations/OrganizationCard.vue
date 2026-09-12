@@ -6,6 +6,7 @@ import type { OrganizationWithStatsAndRole } from "@/api/schemas/organization/co
 import { hasAnyEditPermission } from "@/utils/permissions";
 import EntityCard from "../common/EntityCard.vue";
 import RoleTag from "../common/RoleTag.vue";
+import ScopeHierarchy from "../common/ScopeHierarchy.vue";
 
 const { t } = useI18n();
 
@@ -52,15 +53,18 @@ const emit = defineEmits<{
       </div>
     </template>
     <template #footer>
-      <div class="flex items-center">
-        <icon class="mr-2" size="16">
-          <UserFriends />
-        </icon>
-        {{entity.stats.members}} {{ t('scopes.common.members').toLowerCase() }}
-      </div>
-      <div>
-        {{entity.stats.threads}} {{ t('scopes.thread.header').toLowerCase() }}
-      </div>
+      <span class="flex space-x-3">
+        <div class="flex items-center">
+          <icon class="mr-2" size="16">
+            <UserFriends />
+          </icon>
+          {{entity.stats.members}} {{ t('scopes.common.members').toLowerCase() }}
+        </div>
+        <div>
+          {{entity.stats.threads}} {{ t('scopes.thread.header').toLowerCase() }}
+        </div>
+      </span>
+      <ScopeHierarchy :scope-id="entity.id" />
     </template>
   </entity-card>
 </template>

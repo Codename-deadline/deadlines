@@ -83,10 +83,12 @@ const { t } = useI18n();
               </template>
               {{ t("actions.preview") }}
             </n-tooltip>
-            <n-popconfirm @positive-click="emit('delete', attachment)">
+              <n-popconfirm
+                v-if="attachment.permissions.delete"
+                @positive-click="emit('delete', attachment)"
+            >
               <template #trigger>
                 <n-button
-                  v-if="attachment.permissions.delete"
                   @click.stop="() => undefined"
                   type="error"
                   role="button"
@@ -103,6 +105,6 @@ const { t } = useI18n();
         </button>
       </div>
     </div>
-     <n-empty v-if="!loading && attachments.length === 0" :description="t('scopes.deadline.no-attachments')"/> 
+     <n-empty v-if="!loading && attachments.length === 0" :description="t('scopes.deadline.no-attachments')"/>
   </n-card>
 </template>

@@ -61,7 +61,7 @@ const handleSave = () => {
 
     const attachment = props.attachment;
     attachment.filename = formModel.value.filename;
-    
+
     const file = formModel.value.file;
     if (file) {
       attachment.mimeType = file.type;
@@ -88,9 +88,17 @@ const readOnlyOptions = computed(() => [
   <n-card :title="t('scopes.deadline.edit-attachment')" closable @close="emit('close')">
     <n-form ref="formRef" :model="formModel" :rules="formRules">
       <n-form-item :label="t('scopes.common.form-labels.filename')" path="filename">
-        <n-input v-model:value="formModel.filename" class="rounded-lg!" />
+        <n-input
+          v-model:value="formModel.filename"
+          :disabled="!attachment.permissions.update"
+          class="rounded-lg!"
+        />
       </n-form-item>
-      <n-form-item :label="t('scopes.common.form-labels.file')" path="file">
+      <n-form-item
+        v-if="attachment.permissions.update"
+        :label="t('scopes.common.form-labels.file')"
+        path="file"
+      >
         <n-upload :file-list="uploadFileList" :max="1" :default-upload="false" @update:file-list="handleFileListUpdate">
           <n-upload-dragger>
             <div class="py-6 text-center description">
@@ -118,7 +126,7 @@ const readOnlyOptions = computed(() => [
         </div>
       </div>
     </n-form>
-    <div class="mt-4 flex justify-end">
+    <div v-if="attachment.permissions.update" class="mt-4 flex justify-end">
       <n-button role="button" type="info" class="rounded-lg!" :loading="isSubmitting" @click="handleSave">
         {{ t("actions.save") }}
       </n-button>

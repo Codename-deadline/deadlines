@@ -23,11 +23,11 @@ export const redirectToOTP = (router: Router, otpId: string, authMethod: AuthMet
 export const isRoleInScope = (role: string, scopeType: ScopeType): boolean => {
   switch (scopeType) {
     case "organization":
-      return OrganizationRoleSchema.safeParse(role).success;
+      return OrganizationRoleSchema.validate(role);
     case "thread":
-      return ThreadRoleSchema.safeParse(role).success;
+      return ThreadRoleSchema.validate(role);
     case "deadline":
-      return DeadlineRoleSchema.safeParse(role).success;
+      return DeadlineRoleSchema.validate(role);
   }
 };
 

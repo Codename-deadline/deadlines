@@ -1,11 +1,11 @@
 plugins {
-	kotlin("jvm") version "2.4.20-RC3"
-	kotlin("plugin.spring") version "2.4.20-RC3"
-    kotlin("plugin.jpa") version "2.4.20-RC3"
+	kotlin("jvm") version "2.4.20"
+	kotlin("plugin.spring") version "2.4.20"
+    kotlin("plugin.jpa") version "2.4.20"
 	id("org.springframework.boot") version "4.1.1"
 	id("io.spring.dependency-management") version "1.1.7"
     id("com.google.protobuf") version "0.10.0"
-	id("io.github.ben-manes.versions") version "0.61.0"
+	id("io.github.ben-manes.versions") version "0.62.0"
 }
 
 group = "xyz.om3lette"
@@ -48,7 +48,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.springframework.boot:spring-boot-starter-grpc-server")
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.0")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")
 
 	implementation("org.springframework.boot:spring-boot-flyway")
 	implementation("org.flywaydb:flyway-core")
@@ -65,9 +65,9 @@ dependencies {
     implementation("tools.jackson.module:jackson-module-kotlin:3.2.2")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("redis.clients:jedis")
-	implementation(platform("software.amazon.awssdk:bom:2.54.11"))
+	implementation(platform("software.amazon.awssdk:bom:2.54.17"))
 	implementation("software.amazon.awssdk:s3")
-	implementation("software.amazon.awssdk:apache-client")
+	implementation("software.amazon.awssdk:apache5-client")
 	implementation("org.apache.tika:tika-core:4.0.0")
     implementation("org.apache.tika:tika-parsers-standard-package:4.0.0")
 

@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Profile
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.core.checksums.RequestChecksumCalculation
-import software.amazon.awssdk.http.apache.ApacheHttpClient
+import software.amazon.awssdk.http.apache5.Apache5HttpClient
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.S3Configuration
@@ -35,7 +35,7 @@ class S3Config(
         .region(Region.of(s3Properties.region))
         .credentialsProvider(credentialsProvider)
         .serviceConfiguration(serviceConfiguration)
-        .httpClientBuilder(ApacheHttpClient.builder())
+        .httpClientBuilder(Apache5HttpClient.builder())
         .requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED)
         .build()
 

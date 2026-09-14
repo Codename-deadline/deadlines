@@ -8,7 +8,7 @@ enum class AppAuthority {
 
     companion object {
         fun fromUserRole(role: UserRole): AppAuthority = when (role) {
-            UserRole.USER -> ROLE_ADMIN
+            UserRole.USER -> ROLE_USER
             UserRole.ADMIN -> ROLE_ADMIN
         }
     }

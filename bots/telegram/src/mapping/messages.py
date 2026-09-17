@@ -1,4 +1,5 @@
 from aiogram import Bot
+from aiogram.enums import ChatType
 from aiogram.types import ChatMemberAdministrator, ChatMemberOwner, Message
 
 from common.application.enums import Language
@@ -18,8 +19,10 @@ def _resolve_language(message: Message) -> Language | None:
 async def to_incoming_message(
     message: Message, bot: Bot, resolve_admin: bool = False
 ) -> IncomingMessage:
-    is_private: bool = message.chat.type == "private"
-    has_chat_admin_rights: bool = False
+    is_private: bool = message.chat.type == ChatType.PRIVATE
+    # When sending DMs to the bot treat a user as an Admin
+    # This allows to register DM chat and receive notifications without creating a group
+    has_chat_admin_rights: bool = is_private
     if resolve_admin and not is_private and message.from_user is not None:
         member = await bot.get_chat_member(message.chat.id, message.from_user.id)
         has_chat_admin_rights = isinstance(

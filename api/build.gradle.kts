@@ -5,7 +5,7 @@ plugins {
 	id("org.springframework.boot") version "4.1.1"
 	id("io.spring.dependency-management") version "1.1.7"
     id("com.google.protobuf") version "0.10.0"
-	id("io.github.ben-manes.versions") version "0.62.0"
+	id("io.github.ben-manes.versions") version "0.64.0"
 }
 
 group = "xyz.om3lette"
@@ -37,7 +37,7 @@ repositories {
 }
 
 // GHSA-9xv2-5v5q-p794, GHSA-h3x4-894j-xpx5, GHSA-gcx9-497g-6cp6
-extra["tomcat.version"] = "11.0.25"
+extra["tomcat.version"] = "11.0.26"
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
@@ -59,13 +59,13 @@ dependencies {
         exclude(module = "lz4-java")
     }
     // Original package is archived. Community maintained fork.
-    implementation("at.yawk.lz4:lz4-java:1.11.2")
+    implementation("at.yawk.lz4:lz4-java:1.12.0")
 
-    implementation("io.hypersistence:hypersistence-utils-hibernate-73:3.15.5")
-    implementation("tools.jackson.module:jackson-module-kotlin:3.2.2")
+    implementation("io.hypersistence:hypersistence-utils-hibernate-73:3.16.0")
+    implementation("tools.jackson.module:jackson-module-kotlin:3.2.3")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("redis.clients:jedis")
-	implementation(platform("software.amazon.awssdk:bom:2.54.17"))
+	implementation(platform("software.amazon.awssdk:bom:2.55.6"))
 	implementation("software.amazon.awssdk:s3")
 	implementation("software.amazon.awssdk:apache5-client")
 	implementation("org.apache.tika:tika-core:4.0.0")

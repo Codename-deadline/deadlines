@@ -39,6 +39,9 @@ repositories {
 // GHSA-9xv2-5v5q-p794, GHSA-h3x4-894j-xpx5, GHSA-gcx9-497g-6cp6
 extra["tomcat.version"] = "11.0.26"
 
+extra["jackson-2-bom.version"] = "2.21.7"
+extra["jackson-bom.version"] = "3.1.7"
+
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")

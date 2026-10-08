@@ -3,7 +3,7 @@ FROM python:3.14-alpine AS builder
 # Build context is the repo root
 WORKDIR /bot
 ARG PLATFORM
-COPY --from=ghcr.io/astral-sh/uv:0.12.15 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.12.24 /uv /uvx /bin/
 
 RUN apk add --no-cache gcc musl-dev zlib-dev
 

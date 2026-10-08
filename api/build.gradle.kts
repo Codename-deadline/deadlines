@@ -1,11 +1,11 @@
 plugins {
-	kotlin("jvm") version "2.4.20"
-	kotlin("plugin.spring") version "2.4.20"
-    kotlin("plugin.jpa") version "2.4.20"
+	kotlin("jvm") version "2.4.21"
+	kotlin("plugin.spring") version "2.4.21"
+    kotlin("plugin.jpa") version "2.4.21"
 	id("org.springframework.boot") version "4.1.1"
 	id("io.spring.dependency-management") version "1.1.7"
     id("com.google.protobuf") version "0.10.0"
-	id("io.github.ben-manes.versions") version "0.64.0"
+	id("io.github.ben-manes.versions") version "0.65.0"
 }
 
 group = "xyz.om3lette"
@@ -65,17 +65,17 @@ dependencies {
     implementation("tools.jackson.module:jackson-module-kotlin:3.2.3")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("redis.clients:jedis")
-	implementation(platform("software.amazon.awssdk:bom:2.55.6"))
+	implementation(platform("software.amazon.awssdk:bom:2.55.13"))
 	implementation("software.amazon.awssdk:s3")
 	implementation("software.amazon.awssdk:apache5-client")
-	implementation("org.apache.tika:tika-core:4.0.0")
-    implementation("org.apache.tika:tika-parsers-standard-package:4.0.0")
+	implementation("org.apache.tika:tika-core:4.1.0")
+    implementation("org.apache.tika:tika-parsers-standard-package:4.1.0")
 
     implementation("io.jsonwebtoken:jjwt-api:0.13.0")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.13.0")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.13.0")
 
-	implementation("org.postgresql:postgresql:42.7.13")
+	implementation("org.postgresql:postgresql:42.7.14")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(module = "mockito-core")

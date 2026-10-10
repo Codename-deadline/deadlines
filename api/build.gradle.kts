@@ -116,12 +116,71 @@ allOpen {
 }
 
 tasks.withType<Test> {
-	useJUnitPlatform {
-		if (providers.gradleProperty("excludeTestcontainersTests").getOrElse("false").toBoolean()) {
-			excludeTags("testcontainers")
-		}
-	}
+	useJUnitPlatform()
 	testLogging {
 		events("SKIPPED", "FAILED")
 	}
+}
+
+tasks.named<Test>("test") {
+    useJUnitPlatform { excludeTags("openapi-export") }
+}
+
+val openApiSnapshot = layout.projectDirectory.file("openapi.json")
+val openApiCandidate = layout.buildDirectory.file("openapi/openapi.json")
+val testSourceSet = sourceSets["test"]
+
+val exportOpenApi = tasks.register<Test>("exportOpenApi") {
+    group = "documentation"
+    description = "Exports the current OpenAPI contract using the application test context (requires Docker)."
+    testClassesDirs = testSourceSet.output.classesDirs
+    classpath = testSourceSet.runtimeClasspath
+    useJUnitPlatform { includeTags("openapi-export") }
+    systemProperty("openapi.output", openApiCandidate.get().asFile.absolutePath)
+    outputs.file(openApiCandidate)
+
+    // Always inspect the current context; never accept a stale or cached export.
+    outputs.upToDateWhen { false }
+    outputs.cacheIf { false }
+    doFirst { openApiCandidate.get().asFile.delete() }
+    doLast {
+        check(openApiCandidate.get().asFile.isFile) {
+            "OpenAPI export did not produce ${openApiCandidate.get().asFile}."
+        }
+    }
+}
+
+tasks.register("updateOpenApi") {
+    group = "documentation"
+    description = "Regenerates the committed openapi.json contract (requires Docker)."
+    dependsOn(exportOpenApi)
+    doLast {
+        openApiCandidate.get().asFile.copyTo(openApiSnapshot.asFile, overwrite = true)
+        logger.lifecycle("Updated openapi.json. Review the contract diff before committing.")
+    }
+}
+
+val checkOpenApi = tasks.register("checkOpenApi") {
+    group = "verification"
+    description = "Verifies that the committed openapi.json matches the API (requires Docker)."
+    dependsOn(exportOpenApi)
+    doLast {
+        val snapshot = openApiSnapshot.asFile
+        val candidate = openApiCandidate.get().asFile
+        if (!snapshot.isFile) {
+            throw GradleException("openapi.json is missing. Run ./gradlew updateOpenApi and commit it.")
+        }
+        if (!snapshot.readBytes().contentEquals(candidate.readBytes())) {
+            val diff = providers.exec {
+                commandLine("git", "diff", "--no-index", "--", snapshot.absolutePath, candidate.absolutePath)
+                isIgnoreExitValue = true
+            }
+            logger.error(diff.standardOutput.asText.get())
+            throw GradleException("openapi.json is out of date. Run ./gradlew updateOpenApi and review the diff.")
+        }
+    }
+}
+
+tasks.named("check") {
+    dependsOn(checkOpenApi)
 }

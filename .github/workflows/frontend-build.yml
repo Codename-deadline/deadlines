@@ -3,8 +3,8 @@ name: "Frontend: Build"
 on:
   push:
     paths:
-      - 'frontend/**'
-      - '.github/workflows/frontend-build.yml'
+      - "frontend/**"
+      - ".github/workflows/frontend-build.yml"
 
 jobs:
   build:

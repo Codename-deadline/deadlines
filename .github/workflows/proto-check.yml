@@ -3,12 +3,12 @@ name: "Proto: Buf lint, format, and breaking checks"
 on:
   push:
     paths:
-      - 'proto/**'
-      - '.github/workflows/proto-check.yml'
+      - "proto/**"
+      - ".github/workflows/proto-check.yml"
   pull_request:
     paths:
-      - 'proto/**'
-      - '.github/workflows/proto-check.yml'
+      - "proto/**"
+      - ".github/workflows/proto-check.yml"
 
 jobs:
   buf:

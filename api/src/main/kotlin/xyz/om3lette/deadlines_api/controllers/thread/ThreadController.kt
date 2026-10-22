@@ -58,6 +58,7 @@ class ThreadController(
 
     @GetMapping("/assignees")
     @Operation(
+        operationId = "getThreadAssignees",
         summary = "Get thread assignees",
         description = "Returns a list of explicit thread assignees. Higher role organization members are not included."
     )
@@ -68,7 +69,7 @@ class ThreadController(
     ) = threadService.getThreadAssignees(user, threadId, pageNumber, 10)
 
     @PostMapping("/assignees")
-    @Operation(summary = "Add thread assignee")
+    @Operation(operationId = "addThreadAssignee", summary = "Add thread assignee")
     fun addAssignees(
         @AuthenticationPrincipal user: User,
         @PathVariable @Positive threadId: Long,
@@ -76,7 +77,7 @@ class ThreadController(
     ) = threadService.addAssignee(user, threadId, request.username, request.role)
 
     @DeleteMapping("/assignees/{assigneeUsername}")
-    @Operation(summary = "Remove assignee")
+    @Operation(operationId = "removeThreadAssignee", summary = "Remove assignee")
     fun removeAssignee(
         @AuthenticationPrincipal user: User,
         @PathVariable @Positive threadId: Long,

@@ -1,5 +1,6 @@
 package xyz.om3lette.deadlines_api.data.scopes.deadline.dto
 
+import io.swagger.v3.oas.annotations.media.Schema
 import java.time.Instant
 
 data class DeadlineDTO(
@@ -7,6 +8,7 @@ data class DeadlineDTO(
 
     val title: String,
 
+    @get:Schema(requiredMode = Schema.RequiredMode.REQUIRED)
     val description: String?,
 
     val createdAt: Instant,

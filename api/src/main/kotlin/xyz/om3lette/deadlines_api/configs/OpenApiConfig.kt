@@ -1,8 +1,8 @@
 package xyz.om3lette.deadlines_api.configs
 
+import io.swagger.v3.core.converter.ModelConverters
 import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.OpenAPI
-import io.swagger.v3.core.converter.ModelConverters
 import io.swagger.v3.oas.models.media.Content
 import io.swagger.v3.oas.models.media.MediaType
 import io.swagger.v3.oas.models.media.Schema
@@ -23,8 +23,6 @@ class OpenApiConfig {
             .type(SecurityScheme.Type.HTTP)
             .scheme("bearer")
             .bearerFormat("JWT")
-            .`in`(SecurityScheme.In.HEADER)
-            .name("Auth")
 
         val authTag = Tag().name("Authentication")
 
@@ -52,6 +50,25 @@ class OpenApiConfig {
                         )
                     )
             )
+        }
+    }
+
+    @Bean
+    fun jsonResponseMediaTypesCustomizer(): OpenApiCustomizer = OpenApiCustomizer { openApi ->
+        // MVC serializes these DTO/primitive bodies as JSON. A wildcard makes generated
+        // Fetch clients treat them as text even when the schema describes an object.
+        openApi.paths?.values?.flatMap { it.readOperations() }?.forEach { operation ->
+            operation.responses.values.forEach responseLoop@{ response ->
+                val content = response.content ?: return@responseLoop
+                val inferred = content["*/*"] ?: return@responseLoop
+                if (inferred.schema != null) {
+                    content.remove("*/*")
+                    content.addMediaType(
+                        org.springframework.http.MediaType.APPLICATION_JSON_VALUE,
+                        inferred
+                    )
+                }
+            }
         }
     }
 }

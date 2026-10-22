@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "types": ["node", "vite/client"],
+    "incremental": false
+  },
+  "include": [
+    "orval.config.ts",
+    "vitest.config.ts",
+    "scripts/**/*.ts",
+    "tests/api/**/*.ts",
+    "src/api/adapters/**/*.ts",
+    "src/api/serialization/**/*.ts",
+    "src/api/downloadAttachment.ts"
+  ]
+}

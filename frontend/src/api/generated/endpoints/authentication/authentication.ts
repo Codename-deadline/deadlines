@@ -22,6 +22,8 @@ import type {
   VerifyOtpRequest,
 } from "../../models";
 
+import { apiRequest } from "../../../transport.ts";
+
 export const getChangePasswordUrl = () => {
   return `${(import.meta.env?.VITE_API_BASE_URL ?? "").replace(/\/$/, "")}/api/auth/change-password`;
 };
@@ -32,7 +34,7 @@ export const getChangePasswordUrl = () => {
  */
 export const changePassword = async (
   changePasswordRequest: ChangePasswordRequest,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<void> => {
   const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -48,23 +50,12 @@ export const changePassword = async (
     }
     return headers;
   };
-  const res = await fetch(getChangePasswordUrl(), {
+  return apiRequest<void>(getChangePasswordUrl(), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
     body: JSON.stringify(changePasswordRequest),
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type ChangePasswordMutationVariables = { changePasswordRequest: Parameters<typeof changePassword>[0] };
@@ -107,7 +98,10 @@ export const getSignInOtpUrl = () => {
  * Sends otp to the user using the channel and identifier provided.
  * @summary Sign in with otp
  */
-export const signInOtp = async (createOtpRequest: CreateOtpRequest, options?: RequestInit): Promise<OtpResponse> => {
+export const signInOtp = async (
+  createOtpRequest: CreateOtpRequest,
+  options?: Parameters<typeof apiRequest>[1],
+): Promise<OtpResponse> => {
   const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
     if (!h) return {};
     if (h instanceof Headers) return Object.fromEntries(h.entries());
@@ -122,23 +116,12 @@ export const signInOtp = async (createOtpRequest: CreateOtpRequest, options?: Re
     }
     return headers;
   };
-  const res = await fetch(getSignInOtpUrl(), {
+  return apiRequest<OtpResponse>(getSignInOtpUrl(), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
     body: JSON.stringify(createOtpRequest),
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: OtpResponse; status?: number } = new globalThis.Error();
-    const data: OtpResponse = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: OtpResponse = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export type SignInOtpMutationVariables = { createOtpRequest: Parameters<typeof signInOtp>[0] };
@@ -182,7 +165,7 @@ export const getVerifyUrl = () => {
  */
 export const verify = async (
   verifyOtpRequest: VerifyOtpRequest,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<Ok | PasswordRequired> => {
   const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -198,23 +181,12 @@ export const verify = async (
     }
     return headers;
   };
-  const res = await fetch(getVerifyUrl(), {
+  return apiRequest<Ok | PasswordRequired>(getVerifyUrl(), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
     body: JSON.stringify(verifyOtpRequest),
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: Ok | PasswordRequired; status?: number } = new globalThis.Error();
-    const data: Ok | PasswordRequired = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: Ok | PasswordRequired = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export type VerifyMutationVariables = { verifyOtpRequest: Parameters<typeof verify>[0] };
@@ -256,22 +228,11 @@ export const getRefreshTokenUrl = () => {
 /**
  * @summary Refresh access token
  */
-export const refreshToken = async (options?: RequestInit): Promise<TokenPair> => {
-  const res = await fetch(getRefreshTokenUrl(), {
+export const refreshToken = async (options?: Parameters<typeof apiRequest>[1]): Promise<TokenPair> => {
+  return apiRequest<TokenPair>(getRefreshTokenUrl(), {
     ...options,
     method: "POST",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: TokenPair; status?: number } = new globalThis.Error();
-    const data: TokenPair = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: TokenPair = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export type RefreshTokenMutationVariables = void;
@@ -315,7 +276,7 @@ export const getRegisterOtpUrl = () => {
  */
 export const registerOtp = async (
   registerOtpRequest: RegisterOtpRequest,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<OtpResponse> => {
   const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -331,23 +292,12 @@ export const registerOtp = async (
     }
     return headers;
   };
-  const res = await fetch(getRegisterOtpUrl(), {
+  return apiRequest<OtpResponse>(getRegisterOtpUrl(), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
     body: JSON.stringify(registerOtpRequest),
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: OtpResponse; status?: number } = new globalThis.Error();
-    const data: OtpResponse = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: OtpResponse = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export type RegisterOtpMutationVariables = { registerOtpRequest: Parameters<typeof registerOtp>[0] };
@@ -389,22 +339,11 @@ export const getSignOutUrl = () => {
 /**
  * @summary Invalidate all user's refresh tokens
  */
-export const signOut = async (options?: RequestInit): Promise<void> => {
-  const res = await fetch(getSignOutUrl(), {
+export const signOut = async (options?: Parameters<typeof apiRequest>[1]): Promise<void> => {
+  return apiRequest<void>(getSignOutUrl(), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export const getSignOutQueryKey = () =>
@@ -446,7 +385,7 @@ export const getCompletePasswordUrl = () => {
  */
 export const completePassword = async (
   completePasswordRequest: CompletePasswordRequest,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<TokenPair> => {
   const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -462,23 +401,12 @@ export const completePassword = async (
     }
     return headers;
   };
-  const res = await fetch(getCompletePasswordUrl(), {
+  return apiRequest<TokenPair>(getCompletePasswordUrl(), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
     body: JSON.stringify(completePasswordRequest),
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: TokenPair; status?: number } = new globalThis.Error();
-    const data: TokenPair = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: TokenPair = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export type CompletePasswordMutationVariables = { completePasswordRequest: Parameters<typeof completePassword>[0] };

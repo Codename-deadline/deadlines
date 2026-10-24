@@ -25,6 +25,7 @@ import type {
   UserScopeResponse,
 } from "../../models";
 
+import { apiRequest } from "../../../transport.ts";
 import { createAttachmentFormData } from "../../../serialization/attachmentFormData.ts";
 
 export const getGetUserDeadlinesUrl = (params: GetUserDeadlinesParams) => {
@@ -48,24 +49,12 @@ export const getGetUserDeadlinesUrl = (params: GetUserDeadlinesParams) => {
  */
 export const getUserDeadlines = async (
   params: GetUserDeadlinesParams,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<PaginationResponseDeadlineResponseWithRole> => {
-  const res = await fetch(getGetUserDeadlinesUrl(params), {
+  return apiRequest<PaginationResponseDeadlineResponseWithRole>(getGetUserDeadlinesUrl(params), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: PaginationResponseDeadlineResponseWithRole; status?: number } =
-      new globalThis.Error();
-    const data: PaginationResponseDeadlineResponseWithRole = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: PaginationResponseDeadlineResponseWithRole = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetUserDeadlinesQueryKey = (params: Parameters<typeof getUserDeadlines>[0]) =>
@@ -112,22 +101,11 @@ export const getDeleteDeadlineUrl = (deadlineId: number) => {
 /**
  * @summary Delete deadline
  */
-export const deleteDeadline = async (deadlineId: number, options?: RequestInit): Promise<void> => {
-  const res = await fetch(getDeleteDeadlineUrl(deadlineId), {
+export const deleteDeadline = async (deadlineId: number, options?: Parameters<typeof apiRequest>[1]): Promise<void> => {
+  return apiRequest<void>(getDeleteDeadlineUrl(deadlineId), {
     ...options,
     method: "DELETE",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type DeleteDeadlineMutationVariables = { deadlineId: Parameters<typeof deleteDeadline>[0] };
@@ -169,22 +147,14 @@ export const getGetDeadlineUrl = (deadlineId: number) => {
 /**
  * @summary Get deadline data
  */
-export const getDeadline = async (deadlineId: number, options?: RequestInit): Promise<DeadlineResponseWithRole> => {
-  const res = await fetch(getGetDeadlineUrl(deadlineId), {
+export const getDeadline = async (
+  deadlineId: number,
+  options?: Parameters<typeof apiRequest>[1],
+): Promise<DeadlineResponseWithRole> => {
+  return apiRequest<DeadlineResponseWithRole>(getGetDeadlineUrl(deadlineId), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: DeadlineResponseWithRole; status?: number } = new globalThis.Error();
-    const data: DeadlineResponseWithRole = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: DeadlineResponseWithRole = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetDeadlineQueryKey = (deadlineId: Parameters<typeof getDeadline>[0]) =>
@@ -234,7 +204,7 @@ export const getPatchDeadlineUrl = (deadlineId: number) => {
 export const patchDeadline = async (
   deadlineId: number,
   patchDeadlineRequest: PatchDeadlineRequest,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<void> => {
   const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -250,23 +220,12 @@ export const patchDeadline = async (
     }
     return headers;
   };
-  const res = await fetch(getPatchDeadlineUrl(deadlineId), {
+  return apiRequest<void>(getPatchDeadlineUrl(deadlineId), {
     ...options,
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
     body: JSON.stringify(patchDeadlineRequest),
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type PatchDeadlineMutationVariables = {
@@ -312,22 +271,14 @@ export const getGetDeadlineAssigneesUrl = (deadlineId: number) => {
  * Returns a list of explicit thread assignees.Higher role users in the organization or thread are not included.
  * @summary Get deadline assignees
  */
-export const getDeadlineAssignees = async (deadlineId: number, options?: RequestInit): Promise<UserScopeResponse[]> => {
-  const res = await fetch(getGetDeadlineAssigneesUrl(deadlineId), {
+export const getDeadlineAssignees = async (
+  deadlineId: number,
+  options?: Parameters<typeof apiRequest>[1],
+): Promise<UserScopeResponse[]> => {
+  return apiRequest<UserScopeResponse[]>(getGetDeadlineAssigneesUrl(deadlineId), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: UserScopeResponse[]; status?: number } = new globalThis.Error();
-    const data: UserScopeResponse[] = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: UserScopeResponse[] = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetDeadlineAssigneesQueryKey = (deadlineId: Parameters<typeof getDeadlineAssignees>[0]) =>
@@ -383,7 +334,7 @@ export const getAddDeadlineAssigneeUrl = (deadlineId: number) => {
 export const addDeadlineAssignee = async (
   deadlineId: number,
   addDeadlineAssigneeRequest: AddDeadlineAssigneeRequest,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<void> => {
   const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -399,23 +350,12 @@ export const addDeadlineAssignee = async (
     }
     return headers;
   };
-  const res = await fetch(getAddDeadlineAssigneeUrl(deadlineId), {
+  return apiRequest<void>(getAddDeadlineAssigneeUrl(deadlineId), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
     body: JSON.stringify(addDeadlineAssigneeRequest),
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type AddDeadlineAssigneeMutationVariables = {
@@ -478,23 +418,12 @@ export const getRemoveDeadlineAssigneeUrl = (deadlineId: number, assigneeUsernam
 export const removeDeadlineAssignee = async (
   deadlineId: number,
   assigneeUsername: string,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<void> => {
-  const res = await fetch(getRemoveDeadlineAssigneeUrl(deadlineId, assigneeUsername), {
+  return apiRequest<void>(getRemoveDeadlineAssigneeUrl(deadlineId, assigneeUsername), {
     ...options,
     method: "DELETE",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type RemoveDeadlineAssigneeMutationVariables = {
@@ -556,23 +485,12 @@ export const getGetDeadlineAttachmentsMetadataUrl = (deadlineId: number) => {
  */
 export const getDeadlineAttachmentsMetadata = async (
   deadlineId: number,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<AttachmentResponse[]> => {
-  const res = await fetch(getGetDeadlineAttachmentsMetadataUrl(deadlineId), {
+  return apiRequest<AttachmentResponse[]>(getGetDeadlineAttachmentsMetadataUrl(deadlineId), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: AttachmentResponse[]; status?: number } = new globalThis.Error();
-    const data: AttachmentResponse[] = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: AttachmentResponse[] = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetDeadlineAttachmentsMetadataQueryKey = (
@@ -630,25 +548,14 @@ export const getCreateAttachmentUrl = (deadlineId: number) => {
 export const createAttachment = async (
   deadlineId: number,
   createAttachmentBody: CreateAttachmentBody,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<AttachmentCreatedResponse> => {
   const formData = createAttachmentFormData(createAttachmentBody);
-  const res = await fetch(getCreateAttachmentUrl(deadlineId), {
+  return apiRequest<AttachmentCreatedResponse>(getCreateAttachmentUrl(deadlineId), {
     ...options,
     method: "POST",
     body: formData,
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: AttachmentCreatedResponse; status?: number } = new globalThis.Error();
-    const data: AttachmentCreatedResponse = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: AttachmentCreatedResponse = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export type CreateAttachmentMutationVariables = {
@@ -723,24 +630,12 @@ export const getGetDeadlinesUrl = (threadId: number, params: GetDeadlinesParams)
 export const getDeadlines = async (
   threadId: number,
   params: GetDeadlinesParams,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<PaginationResponseDeadlineResponseWithRole> => {
-  const res = await fetch(getGetDeadlinesUrl(threadId, params), {
+  return apiRequest<PaginationResponseDeadlineResponseWithRole>(getGetDeadlinesUrl(threadId, params), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: PaginationResponseDeadlineResponseWithRole; status?: number } =
-      new globalThis.Error();
-    const data: PaginationResponseDeadlineResponseWithRole = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: PaginationResponseDeadlineResponseWithRole = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetDeadlinesQueryKey = (
@@ -799,7 +694,7 @@ export const getCreateDeadlineUrl = (threadId: number) => {
 export const createDeadline = async (
   threadId: number,
   createDeadlineRequest: CreateDeadlineRequest,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<DeadlineCreatedResponse> => {
   const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -815,23 +710,12 @@ export const createDeadline = async (
     }
     return headers;
   };
-  const res = await fetch(getCreateDeadlineUrl(threadId), {
+  return apiRequest<DeadlineCreatedResponse>(getCreateDeadlineUrl(threadId), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
     body: JSON.stringify(createDeadlineRequest),
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: DeadlineCreatedResponse; status?: number } = new globalThis.Error();
-    const data: DeadlineCreatedResponse = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: DeadlineCreatedResponse = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export type CreateDeadlineMutationVariables = {

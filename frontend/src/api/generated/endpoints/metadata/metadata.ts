@@ -12,6 +12,8 @@ import type { MaybeRefOrGetter } from "vue";
 
 import type { BotDTO, MetadataResponse } from "../../models";
 
+import { apiRequest } from "../../../transport.ts";
+
 export const getGetMetadataVersionsUrl = () => {
   return `${(import.meta.env?.VITE_API_BASE_URL ?? "").replace(/\/$/, "")}/api/metadata`;
 };
@@ -19,22 +21,11 @@ export const getGetMetadataVersionsUrl = () => {
 /**
  * @summary Metadata SHA-256 hashes
  */
-export const getMetadataVersions = async (options?: RequestInit): Promise<MetadataResponse> => {
-  const res = await fetch(getGetMetadataVersionsUrl(), {
+export const getMetadataVersions = async (options?: Parameters<typeof apiRequest>[1]): Promise<MetadataResponse> => {
+  return apiRequest<MetadataResponse>(getGetMetadataVersionsUrl(), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: MetadataResponse; status?: number } = new globalThis.Error();
-    const data: MetadataResponse = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: MetadataResponse = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetMetadataVersionsQueryKey = () =>
@@ -75,22 +66,11 @@ export const getGetRegisteredBotsUrl = () => {
 /**
  * @summary Get a list of registered bots
  */
-export const getRegisteredBots = async (options?: RequestInit): Promise<BotDTO[]> => {
-  const res = await fetch(getGetRegisteredBotsUrl(), {
+export const getRegisteredBots = async (options?: Parameters<typeof apiRequest>[1]): Promise<BotDTO[]> => {
+  return apiRequest<BotDTO[]>(getGetRegisteredBotsUrl(), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: BotDTO[]; status?: number } = new globalThis.Error();
-    const data: BotDTO[] = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: BotDTO[] = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetRegisteredBotsQueryKey = () =>

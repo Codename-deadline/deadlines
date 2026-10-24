@@ -15,7 +15,7 @@ async function startServer(handler: RequestListener) {
   return `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 }
 
-test("downloads preserve bytes across redirects and drop cross-origin Authorization", async () => {
+test("preserves bytes and strips cross-origin auth", async () => {
   const bytes = new Uint8Array([0, 1, 127, 255]);
   const received = { apiAuthorization: "", storageAuthorization: "", disposition: "" };
 
@@ -25,7 +25,7 @@ test("downloads preserve bytes across redirects and drop cross-origin Authorizat
   });
   const api = await startServer((request, response) => {
     received.apiAuthorization = request.headers.authorization ?? "";
-    received.disposition = new URL(request.url!, "http://localhost").searchParams.get("disposition") ?? "";
+    received.disposition = new URL(request.url ?? "/", "http://localhost").searchParams.get("disposition") ?? "";
     response.writeHead(302, { location: `${storage}/file` }).end();
   });
 
@@ -44,18 +44,20 @@ test("downloads preserve bytes across redirects and drop cross-origin Authorizat
 test.each([
   { format: "JSON", status: 404, body: { code: "not.found" } },
   { format: "text", status: 503, body: "storage unavailable" },
-])("downloads retain status and $format error bodies", async ({ status, body }) => {
+])("preserves $format download errors", async ({ status, body }) => {
   const response = typeof body === "string" ? new Response(body, { status }) : Response.json(body, { status });
   const fetcher = vi.fn().mockResolvedValue(response);
 
-  await expect(downloadAttachment(99, "attachment", {}, fetcher)).rejects.toMatchObject({
+  const pending = downloadAttachment(99, "attachment", {}, fetcher);
+
+  await expect(pending).rejects.toMatchObject({
     name: "AttachmentDownloadError",
     status,
     body,
   });
 });
 
-test("downloads forward cancellation and propagate the original error", async () => {
+test("forwards download cancellation", async () => {
   const signal = AbortSignal.abort();
   const error = new DOMException("Aborted", "AbortError");
   const fetcher = vi.fn().mockRejectedValue(error);

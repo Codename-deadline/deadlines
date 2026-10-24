@@ -1,39 +1,67 @@
-import { createSafeFetch, type NormalizedError } from "@asouei/safe-fetch";
-import { GeneralErrorSchema } from "@/api/common/GeneralError";
-import { useTokenStore } from "@/stores/TokenStore";
+import type { SafeFetchRequest, SafeResult } from "@asouei/safe-fetch";
+import { ApiRequestError, toLegacyApiError } from "./errors";
+import { request } from "./transport";
 
-const env = import.meta.env;
+type LegacyOptions<T> = Omit<SafeFetchRequest<T>, "timeoutMs" | "totalTimeoutMs" | "retries" | "parseAs"> & {
+  parseAs?: "json" | "blob";
+};
 
-export const client = createSafeFetch({
-  baseURL: env.VITE_API_BASE_URL,
-  timeoutMs: 5000,
-  totalTimeoutMs: 30000,
-  retries: {
-    retries: 2,
-    baseDelayMs: 500,
-  },
-  interceptors: {
-    onRequest: (url: RequestInfo, init: RequestInit & { url: string }) => {
-      const store = useTokenStore();
+/** Compatibility only: keep existing schemas/results while sharing the new transport. */
+async function legacyRequest<T>(url: string, options: LegacyOptions<T> = {}): Promise<SafeResult<T>> {
+  const { body, query, validate, parseAs = "json", ...init } = options;
+  if (query) {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(query)) {
+      if (value !== undefined) params.set(key, String(value));
+    }
+    url += `${url.includes("?") ? "&" : "?"}${params}`;
+  }
+  const headers = new Headers(init.headers);
+  const jsonBody =
+    body != null &&
+    typeof body === "object" &&
+    !(body instanceof FormData) &&
+    !(body instanceof Blob) &&
+    !(body instanceof URLSearchParams) &&
+    !(body instanceof ArrayBuffer) &&
+    !ArrayBuffer.isView(body);
+  if (jsonBody && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
 
-      const headers = new Headers(init.headers);
-      const token: string | null = store.accessToken ?? store.refreshToken;
-      if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
+  try {
+    const result = await request<T>(
+      url,
+      {
+        ...init,
+        headers,
+        body: jsonBody ? JSON.stringify(body) : (body as BodyInit | null | undefined),
+      },
+      parseAs,
+    );
+    if (validate) {
+      const parsed = validate(result.data);
+      if (!parsed.success) {
+        throw ApiRequestError.validation("Response validation failed", {
+          response: result.response,
+          body: result.data,
+          cause: parsed.error,
+        });
       }
-      init.headers = headers;
+      return { ok: true, data: parsed.data, response: result.response };
+    }
+    return { ok: true, ...result };
+  } catch (error) {
+    return toLegacyApiError(error);
+  }
+}
 
-      return { input: url, init };
-    },
-    onError: async (error: NormalizedError) => {
-      if (error.name !== "HttpError" || error.status === 401) return;
-
-      const parsed = GeneralErrorSchema.safeParse(error.body);
-      if (parsed.success) {
-        console.error(`[API]: Code: ${parsed.data.code}, details: ${parsed.data.detail ?? "none"}`);
-      } else {
-        console.error(`[API]: Status: ${error.status}, failed to parse: ${parsed.error}`);
-      }
-    },
-  },
-});
+export const client = {
+  get: <T = unknown>(url: string, options?: LegacyOptions<T>) => legacyRequest<T>(url, { ...options, method: "GET" }),
+  delete: <T = unknown>(url: string, options?: LegacyOptions<T>) =>
+    legacyRequest<T>(url, { ...options, method: "DELETE" }),
+  post: <T = unknown>(url: string, body?: unknown, options?: LegacyOptions<T>) =>
+    legacyRequest<T>(url, { ...options, method: "POST", body: body as SafeFetchRequest<T>["body"] }),
+  put: <T = unknown>(url: string, body?: unknown, options?: LegacyOptions<T>) =>
+    legacyRequest<T>(url, { ...options, method: "PUT", body: body as SafeFetchRequest<T>["body"] }),
+  patch: <T = unknown>(url: string, body?: unknown, options?: LegacyOptions<T>) =>
+    legacyRequest<T>(url, { ...options, method: "PATCH", body: body as SafeFetchRequest<T>["body"] }),
+};

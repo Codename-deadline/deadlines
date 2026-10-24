@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useNotification } from "naive-ui";
-import { onMounted } from "vue";
+import { onMounted, onUnmounted } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { getNumberOfPendingInvitations } from "./api/invitation";
@@ -34,6 +34,7 @@ const displayCriticalError = (errorSelector: string) => {
 };
 
 const fetchUser = async () => {
+  const session = tokenStore.sessionSignal();
   if (!tokenStore.accessToken && !tokenStore.refreshToken) {
     userStore.$reset();
     if (isSemiPublicRoute()) return;
@@ -42,6 +43,7 @@ const fetchUser = async () => {
   }
 
   const res = await makeRequest(() => getMe());
+  if (session.aborted) return;
   if (!res.ok) {
     displayCriticalError("failed-to-fetch-user");
     return;
@@ -50,19 +52,18 @@ const fetchUser = async () => {
   userStore.setUser(res.data);
 };
 emitter.on("signUpCompleted", async () => {
+  const session = tokenStore.sessionSignal();
   await fetchUser();
-  router.push({ path: "/" });
+  if (!session.aborted && userStore.isAvailable) router.push({ path: "/" });
 });
 emitter.on("signOut", async () => {
-  userStore.$reset();
   tokenStore.$reset();
-  globalStateStore.$reset();
   router.push({ path: "/auth" });
 })
 
 const fetchGlobalState = async () => {
   if (!userStore.isAvailable) return;
-  
+
   const res = await makeRequest(() => getNumberOfPendingInvitations());
   if (!res.ok) return;
 
@@ -70,8 +71,12 @@ const fetchGlobalState = async () => {
     pendingReceivedInvitations: res.data.pending
   });
 }
+
+let pollTimer: ReturnType<typeof setInterval>;
+onUnmounted(() => clearInterval(pollTimer));
+
 onMounted(async () => {
-  setInterval(async () => {
+  pollTimer = setInterval(async () => {
     // Ideally this is a websocket connection, but the size is negligible ~0.5kb
     // which is fine to occasionally poll
     await fetchGlobalState();
@@ -93,7 +98,6 @@ emitter.on("failedToRefreshToken", () => {
     console.warn("[DEV]: Auth redirect disabled");
     return;
   }
-  userStore.$reset();
   if (isSemiPublicRoute()) return;
   router.push({ path: "/auth" });
 });

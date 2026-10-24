@@ -8,6 +8,7 @@ import { createI18n } from "vue-i18n";
 import { fallbackLocale, getTranslation, Locale } from "@/locales/locales";
 import router from "@/router/router";
 import App from "./App.vue";
+import { installApi } from "./plugins/api";
 import { useLocalizationStore } from "./stores/LocalizationStore";
 
 export const app = createApp(App);
@@ -15,6 +16,7 @@ const pinia = createPinia();
 pinia.use(piniaPersist);
 
 app.use(pinia);
+installApi(app, pinia);
 app.use(router);
 
 const localizationStore = useLocalizationStore();

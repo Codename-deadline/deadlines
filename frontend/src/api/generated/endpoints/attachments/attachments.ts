@@ -17,6 +17,8 @@ import type {
   ReplaceAttachmentBody,
 } from "../../models";
 
+import { apiRequest } from "../../../transport.ts";
+
 export const getDeleteAttachmentUrl = (attachmentId: number) => {
   return `${(import.meta.env?.VITE_API_BASE_URL ?? "").replace(/\/$/, "")}/api/attachments/${attachmentId}`;
 };
@@ -24,22 +26,14 @@ export const getDeleteAttachmentUrl = (attachmentId: number) => {
 /**
  * @summary Delete attachment
  */
-export const deleteAttachment = async (attachmentId: number, options?: RequestInit): Promise<void> => {
-  const res = await fetch(getDeleteAttachmentUrl(attachmentId), {
+export const deleteAttachment = async (
+  attachmentId: number,
+  options?: Parameters<typeof apiRequest>[1],
+): Promise<void> => {
+  return apiRequest<void>(getDeleteAttachmentUrl(attachmentId), {
     ...options,
     method: "DELETE",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type DeleteAttachmentMutationVariables = { attachmentId: Parameters<typeof deleteAttachment>[0] };
@@ -111,23 +105,12 @@ export const getGetAttachmentUrl = (attachmentId: number, params?: GetAttachment
 export const getAttachment = async (
   attachmentId: number,
   params?: GetAttachmentParams,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<unknown> => {
-  const res = await fetch(getGetAttachmentUrl(attachmentId, params), {
+  return apiRequest<unknown>(getGetAttachmentUrl(attachmentId, params), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: unknown; status?: number } = new globalThis.Error();
-    const data: unknown = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: unknown = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetAttachmentQueryKey = (
@@ -186,27 +169,16 @@ export const getReplaceAttachmentUrl = (attachmentId: number) => {
 export const replaceAttachment = async (
   attachmentId: number,
   replaceAttachmentBody: ReplaceAttachmentBody,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<void> => {
   const formData = new FormData();
   formData.append(`file`, replaceAttachmentBody.file);
 
-  const res = await fetch(getReplaceAttachmentUrl(attachmentId), {
+  return apiRequest<void>(getReplaceAttachmentUrl(attachmentId), {
     ...options,
     method: "PUT",
     body: formData,
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type ReplaceAttachmentMutationVariables = {
@@ -268,23 +240,12 @@ export const getGetAttachmentMetadataUrl = (attachmentId: number) => {
  */
 export const getAttachmentMetadata = async (
   attachmentId: number,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<AttachmentResponse> => {
-  const res = await fetch(getGetAttachmentMetadataUrl(attachmentId), {
+  return apiRequest<AttachmentResponse>(getGetAttachmentMetadataUrl(attachmentId), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: AttachmentResponse; status?: number } = new globalThis.Error();
-    const data: AttachmentResponse = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: AttachmentResponse = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetAttachmentMetadataQueryKey = (attachmentId: Parameters<typeof getAttachmentMetadata>[0]) =>
@@ -341,7 +302,7 @@ export const getPatchAttachmentMetadataUrl = (attachmentId: number) => {
 export const patchAttachmentMetadata = async (
   attachmentId: number,
   patchFileMetadataRequest: PatchFileMetadataRequest,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<void> => {
   const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -357,23 +318,12 @@ export const patchAttachmentMetadata = async (
     }
     return headers;
   };
-  const res = await fetch(getPatchAttachmentMetadataUrl(attachmentId), {
+  return apiRequest<void>(getPatchAttachmentMetadataUrl(attachmentId), {
     ...options,
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
     body: JSON.stringify(patchFileMetadataRequest),
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type PatchAttachmentMetadataMutationVariables = {

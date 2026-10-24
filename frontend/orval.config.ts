@@ -16,6 +16,10 @@ export const deadlinesOptions = {
       runtime: '(import.meta.env?.VITE_API_BASE_URL ?? "").replace(/\\/$/, "")',
     },
     override: {
+      mutator: {
+        path: "./src/api/transport.ts",
+        name: "apiRequest",
+      },
       useDates: false,
       useDatesTransform: false,
       fetch: {

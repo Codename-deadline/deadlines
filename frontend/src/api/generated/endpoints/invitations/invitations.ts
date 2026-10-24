@@ -20,6 +20,8 @@ import type {
   PaginationResponseOrganizationInvitationResponse,
 } from "../../models";
 
+import { apiRequest } from "../../../transport.ts";
+
 export const getGetPendingInvitationsByUserUrl = (params: GetPendingInvitationsByUserParams) => {
   const normalizedParams = new URLSearchParams();
 
@@ -41,24 +43,12 @@ export const getGetPendingInvitationsByUserUrl = (params: GetPendingInvitationsB
  */
 export const getPendingInvitationsByUser = async (
   params: GetPendingInvitationsByUserParams,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<PaginationResponseOrganizationInvitationResponse> => {
-  const res = await fetch(getGetPendingInvitationsByUserUrl(params), {
+  return apiRequest<PaginationResponseOrganizationInvitationResponse>(getGetPendingInvitationsByUserUrl(params), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: PaginationResponseOrganizationInvitationResponse; status?: number } =
-      new globalThis.Error();
-    const data: PaginationResponseOrganizationInvitationResponse = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: PaginationResponseOrganizationInvitationResponse = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetPendingInvitationsByUserQueryKey = (params: Parameters<typeof getPendingInvitationsByUser>[0]) =>
@@ -112,24 +102,12 @@ export const getGetNumberOfPendingInvitationUrl = () => {
  * @summary Get number of pending invitations which were sent to the user
  */
 export const getNumberOfPendingInvitation = async (
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<OrganizationInvitationsPendingResponse> => {
-  const res = await fetch(getGetNumberOfPendingInvitationUrl(), {
+  return apiRequest<OrganizationInvitationsPendingResponse>(getGetNumberOfPendingInvitationUrl(), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: OrganizationInvitationsPendingResponse; status?: number } =
-      new globalThis.Error();
-    const data: OrganizationInvitationsPendingResponse = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: OrganizationInvitationsPendingResponse = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetNumberOfPendingInvitationQueryKey = () =>
@@ -189,24 +167,12 @@ export const getGetPendingSentInvitationsByUserUrl = (params: GetPendingSentInvi
  */
 export const getPendingSentInvitationsByUser = async (
   params: GetPendingSentInvitationsByUserParams,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<PaginationResponseOrganizationInvitationResponse> => {
-  const res = await fetch(getGetPendingSentInvitationsByUserUrl(params), {
+  return apiRequest<PaginationResponseOrganizationInvitationResponse>(getGetPendingSentInvitationsByUserUrl(params), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: PaginationResponseOrganizationInvitationResponse; status?: number } =
-      new globalThis.Error();
-    const data: PaginationResponseOrganizationInvitationResponse = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: PaginationResponseOrganizationInvitationResponse = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetPendingSentInvitationsByUserQueryKey = (
@@ -263,23 +229,12 @@ export const getGetInvitationUrl = (invitationId: number) => {
  */
 export const getInvitation = async (
   invitationId: number,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<OrganizationInvitationResponse> => {
-  const res = await fetch(getGetInvitationUrl(invitationId), {
+  return apiRequest<OrganizationInvitationResponse>(getGetInvitationUrl(invitationId), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: OrganizationInvitationResponse; status?: number } = new globalThis.Error();
-    const data: OrganizationInvitationResponse = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: OrganizationInvitationResponse = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetInvitationQueryKey = (invitationId: Parameters<typeof getInvitation>[0]) =>
@@ -328,22 +283,14 @@ export const getAcceptInvitationUrl = (invitationId: number) => {
  * Upon accepting user is added to the organization with a role specified in the invitation.
  * @summary Accept an invitation
  */
-export const acceptInvitation = async (invitationId: number, options?: RequestInit): Promise<void> => {
-  const res = await fetch(getAcceptInvitationUrl(invitationId), {
+export const acceptInvitation = async (
+  invitationId: number,
+  options?: Parameters<typeof apiRequest>[1],
+): Promise<void> => {
+  return apiRequest<void>(getAcceptInvitationUrl(invitationId), {
     ...options,
     method: "POST",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type AcceptInvitationMutationVariables = { invitationId: Parameters<typeof acceptInvitation>[0] };
@@ -400,22 +347,14 @@ export const getDeclineInvitationUrl = (invitationId: number) => {
 /**
  * @summary Decline invitation
  */
-export const declineInvitation = async (invitationId: number, options?: RequestInit): Promise<void> => {
-  const res = await fetch(getDeclineInvitationUrl(invitationId), {
+export const declineInvitation = async (
+  invitationId: number,
+  options?: Parameters<typeof apiRequest>[1],
+): Promise<void> => {
+  return apiRequest<void>(getDeclineInvitationUrl(invitationId), {
     ...options,
     method: "POST",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type DeclineInvitationMutationVariables = { invitationId: Parameters<typeof declineInvitation>[0] };
@@ -472,22 +411,14 @@ export const getRevokeInvitationUrl = (invitationId: number) => {
 /**
  * @summary Revoke invitation
  */
-export const revokeInvitation = async (invitationId: number, options?: RequestInit): Promise<void> => {
-  const res = await fetch(getRevokeInvitationUrl(invitationId), {
+export const revokeInvitation = async (
+  invitationId: number,
+  options?: Parameters<typeof apiRequest>[1],
+): Promise<void> => {
+  return apiRequest<void>(getRevokeInvitationUrl(invitationId), {
     ...options,
     method: "POST",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type RevokeInvitationMutationVariables = { invitationId: Parameters<typeof revokeInvitation>[0] };
@@ -547,7 +478,7 @@ export const getSendInvitationUrl = (organizationId: number) => {
 export const sendInvitation = async (
   organizationId: number,
   memberInvitationRequest: MemberInvitationRequest,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<InvitationCreatedResponse> => {
   const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -563,23 +494,12 @@ export const sendInvitation = async (
     }
     return headers;
   };
-  const res = await fetch(getSendInvitationUrl(organizationId), {
+  return apiRequest<InvitationCreatedResponse>(getSendInvitationUrl(organizationId), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
     body: JSON.stringify(memberInvitationRequest),
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: InvitationCreatedResponse; status?: number } = new globalThis.Error();
-    const data: InvitationCreatedResponse = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: InvitationCreatedResponse = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export type SendInvitationMutationVariables = {

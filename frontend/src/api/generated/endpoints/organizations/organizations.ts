@@ -23,6 +23,8 @@ import type {
   PatchOrganizationRequest,
 } from "../../models";
 
+import { apiRequest } from "../../../transport.ts";
+
 export const getGetOrganizationsByUserUrl = (params: GetOrganizationsByUserParams) => {
   const normalizedParams = new URLSearchParams();
 
@@ -44,24 +46,12 @@ export const getGetOrganizationsByUserUrl = (params: GetOrganizationsByUserParam
  */
 export const getOrganizationsByUser = async (
   params: GetOrganizationsByUserParams,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<PaginationResponseOrganizationResponseWithRole> => {
-  const res = await fetch(getGetOrganizationsByUserUrl(params), {
+  return apiRequest<PaginationResponseOrganizationResponseWithRole>(getGetOrganizationsByUserUrl(params), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: PaginationResponseOrganizationResponseWithRole; status?: number } =
-      new globalThis.Error();
-    const data: PaginationResponseOrganizationResponseWithRole = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: PaginationResponseOrganizationResponseWithRole = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetOrganizationsByUserQueryKey = (params: Parameters<typeof getOrganizationsByUser>[0]) =>
@@ -116,7 +106,7 @@ export const getCreateOrganizationUrl = () => {
  */
 export const createOrganization = async (
   createOrganizationRequest: CreateOrganizationRequest,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<OrganizationCreatedResponse> => {
   const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -132,23 +122,12 @@ export const createOrganization = async (
     }
     return headers;
   };
-  const res = await fetch(getCreateOrganizationUrl(), {
+  return apiRequest<OrganizationCreatedResponse>(getCreateOrganizationUrl(), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
     body: JSON.stringify(createOrganizationRequest),
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: OrganizationCreatedResponse; status?: number } = new globalThis.Error();
-    const data: OrganizationCreatedResponse = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: OrganizationCreatedResponse = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export type CreateOrganizationMutationVariables = {
@@ -207,22 +186,14 @@ export const getDeleteOrganizationUrl = (organizationId: number) => {
 /**
  * @summary Delete an organization
  */
-export const deleteOrganization = async (organizationId: number, options?: RequestInit): Promise<void> => {
-  const res = await fetch(getDeleteOrganizationUrl(organizationId), {
+export const deleteOrganization = async (
+  organizationId: number,
+  options?: Parameters<typeof apiRequest>[1],
+): Promise<void> => {
+  return apiRequest<void>(getDeleteOrganizationUrl(organizationId), {
     ...options,
     method: "DELETE",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type DeleteOrganizationMutationVariables = { organizationId: Parameters<typeof deleteOrganization>[0] };
@@ -281,23 +252,12 @@ export const getGetOrganizationMetadataUrl = (organizationId: number) => {
  */
 export const getOrganizationMetadata = async (
   organizationId: number,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<OrganizationResponse> => {
-  const res = await fetch(getGetOrganizationMetadataUrl(organizationId), {
+  return apiRequest<OrganizationResponse>(getGetOrganizationMetadataUrl(organizationId), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: OrganizationResponse; status?: number } = new globalThis.Error();
-    const data: OrganizationResponse = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: OrganizationResponse = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetOrganizationMetadataQueryKey = (organizationId: Parameters<typeof getOrganizationMetadata>[0]) =>
@@ -354,7 +314,7 @@ export const getPatchOrganizationUrl = (organizationId: number) => {
 export const patchOrganization = async (
   organizationId: number,
   patchOrganizationRequest: PatchOrganizationRequest,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<void> => {
   const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -370,23 +330,12 @@ export const patchOrganization = async (
     }
     return headers;
   };
-  const res = await fetch(getPatchOrganizationUrl(organizationId), {
+  return apiRequest<void>(getPatchOrganizationUrl(organizationId), {
     ...options,
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
     body: JSON.stringify(patchOrganizationRequest),
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type PatchOrganizationMutationVariables = {
@@ -449,7 +398,7 @@ export const getChangeOrganizationVisibilityUrl = (organizationId: number) => {
 export const changeOrganizationVisibility = async (
   organizationId: number,
   changeOrganizationVisibilityRequest: ChangeOrganizationVisibilityRequest,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<void> => {
   const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -465,23 +414,12 @@ export const changeOrganizationVisibility = async (
     }
     return headers;
   };
-  const res = await fetch(getChangeOrganizationVisibilityUrl(organizationId), {
+  return apiRequest<void>(getChangeOrganizationVisibilityUrl(organizationId), {
     ...options,
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
     body: JSON.stringify(changeOrganizationVisibilityRequest),
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type ChangeOrganizationVisibilityMutationVariables = {
@@ -561,24 +499,12 @@ export const getGetMembersUrl = (organizationId: number, params: GetMembersParam
 export const getMembers = async (
   organizationId: number,
   params: GetMembersParams,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<PaginationResponseUserScopeResponse> => {
-  const res = await fetch(getGetMembersUrl(organizationId, params), {
+  return apiRequest<PaginationResponseUserScopeResponse>(getGetMembersUrl(organizationId, params), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: PaginationResponseUserScopeResponse; status?: number } =
-      new globalThis.Error();
-    const data: PaginationResponseUserScopeResponse = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: PaginationResponseUserScopeResponse = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetMembersQueryKey = (
@@ -652,23 +578,12 @@ export const getGetMemberUsernamesStartingWithUrl = (
 export const getMemberUsernamesStartingWith = async (
   organizationId: number,
   params: GetMemberUsernamesStartingWithParams,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<string[]> => {
-  const res = await fetch(getGetMemberUsernamesStartingWithUrl(organizationId, params), {
+  return apiRequest<string[]>(getGetMemberUsernamesStartingWithUrl(organizationId, params), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: string[]; status?: number } = new globalThis.Error();
-    const data: string[] = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: string[] = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetMemberUsernamesStartingWithQueryKey = (
@@ -735,23 +650,12 @@ export const getRemoveMemberUrl = (organizationId: number, memberUsername: strin
 export const removeMember = async (
   organizationId: number,
   memberUsername: string,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<void> => {
-  const res = await fetch(getRemoveMemberUrl(organizationId, memberUsername), {
+  return apiRequest<void>(getRemoveMemberUrl(organizationId, memberUsername), {
     ...options,
     method: "DELETE",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type RemoveMemberMutationVariables = {

@@ -13,6 +13,10 @@
     "scripts/**/*.ts",
     "tests/api/**/*.ts",
     "src/api/adapters/**/*.ts",
+    "src/api/client.ts",
+    "src/api/errors.ts",
+    "src/api/transport.ts",
+    "src/plugins/api.ts",
     "src/api/serialization/**/*.ts",
     "src/api/downloadAttachment.ts"
   ]

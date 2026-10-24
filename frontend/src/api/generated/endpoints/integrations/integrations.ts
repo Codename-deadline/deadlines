@@ -9,6 +9,8 @@ import type { UseMutationOptions } from "@pinia/colada";
 
 import type { LinkMessengerAccountRequest, UnlinkMessengerAccountRequest } from "../../models";
 
+import { apiRequest } from "../../../transport.ts";
+
 export const getUnlinkAccountUrl = () => {
   return `${(import.meta.env?.VITE_API_BASE_URL ?? "").replace(/\/$/, "")}/api/integration/accounts`;
 };
@@ -18,7 +20,7 @@ export const getUnlinkAccountUrl = () => {
  */
 export const unlinkAccount = async (
   unlinkMessengerAccountRequest: UnlinkMessengerAccountRequest,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<number> => {
   const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -34,23 +36,12 @@ export const unlinkAccount = async (
     }
     return headers;
   };
-  const res = await fetch(getUnlinkAccountUrl(), {
+  return apiRequest<number>(getUnlinkAccountUrl(), {
     ...options,
     method: "DELETE",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
     body: JSON.stringify(unlinkMessengerAccountRequest),
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: number; status?: number } = new globalThis.Error();
-    const data: number = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: number = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export type UnlinkAccountMutationVariables = { unlinkMessengerAccountRequest: Parameters<typeof unlinkAccount>[0] };
@@ -94,7 +85,7 @@ export const getLinkAccountUrl = () => {
  */
 export const linkAccount = async (
   linkMessengerAccountRequest: LinkMessengerAccountRequest,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<void> => {
   const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -110,23 +101,12 @@ export const linkAccount = async (
     }
     return headers;
   };
-  const res = await fetch(getLinkAccountUrl(), {
+  return apiRequest<void>(getLinkAccountUrl(), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
     body: JSON.stringify(linkMessengerAccountRequest),
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type LinkAccountMutationVariables = { linkMessengerAccountRequest: Parameters<typeof linkAccount>[0] };

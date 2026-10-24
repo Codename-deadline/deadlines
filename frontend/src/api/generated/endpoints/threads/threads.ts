@@ -23,6 +23,8 @@ import type {
   ThreadResponse,
 } from "../../models";
 
+import { apiRequest } from "../../../transport.ts";
+
 export const getGetThreadsUrl = (organizationId: number, params: GetThreadsParams) => {
   const normalizedParams = new URLSearchParams();
 
@@ -45,24 +47,12 @@ export const getGetThreadsUrl = (organizationId: number, params: GetThreadsParam
 export const getThreads = async (
   organizationId: number,
   params: GetThreadsParams,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<PaginationResponseThreadResponseWithRole> => {
-  const res = await fetch(getGetThreadsUrl(organizationId, params), {
+  return apiRequest<PaginationResponseThreadResponseWithRole>(getGetThreadsUrl(organizationId, params), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: PaginationResponseThreadResponseWithRole; status?: number } =
-      new globalThis.Error();
-    const data: PaginationResponseThreadResponseWithRole = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: PaginationResponseThreadResponseWithRole = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetThreadsQueryKey = (
@@ -121,7 +111,7 @@ export const getCreateThreadUrl = (organizationId: number) => {
 export const createThread = async (
   organizationId: number,
   createThreadRequest: CreateThreadRequest,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<ThreadCreatedResponse> => {
   const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -137,23 +127,12 @@ export const createThread = async (
     }
     return headers;
   };
-  const res = await fetch(getCreateThreadUrl(organizationId), {
+  return apiRequest<ThreadCreatedResponse>(getCreateThreadUrl(organizationId), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
     body: JSON.stringify(createThreadRequest),
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: ThreadCreatedResponse; status?: number } = new globalThis.Error();
-    const data: ThreadCreatedResponse = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: ThreadCreatedResponse = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export type CreateThreadMutationVariables = {
@@ -212,24 +191,12 @@ export const getGetUserThreadsUrl = (params: GetUserThreadsParams) => {
  */
 export const getUserThreads = async (
   params: GetUserThreadsParams,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<PaginationResponseThreadResponseWithRole> => {
-  const res = await fetch(getGetUserThreadsUrl(params), {
+  return apiRequest<PaginationResponseThreadResponseWithRole>(getGetUserThreadsUrl(params), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: PaginationResponseThreadResponseWithRole; status?: number } =
-      new globalThis.Error();
-    const data: PaginationResponseThreadResponseWithRole = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: PaginationResponseThreadResponseWithRole = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetUserThreadsQueryKey = (params: Parameters<typeof getUserThreads>[0]) =>
@@ -272,22 +239,11 @@ export const getDeleteThreadUrl = (threadId: number) => {
 /**
  * @summary Delete thread
  */
-export const deleteThread = async (threadId: number, options?: RequestInit): Promise<void> => {
-  const res = await fetch(getDeleteThreadUrl(threadId), {
+export const deleteThread = async (threadId: number, options?: Parameters<typeof apiRequest>[1]): Promise<void> => {
+  return apiRequest<void>(getDeleteThreadUrl(threadId), {
     ...options,
     method: "DELETE",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type DeleteThreadMutationVariables = { threadId: Parameters<typeof deleteThread>[0] };
@@ -329,22 +285,14 @@ export const getGetThreadUrl = (threadId: number) => {
 /**
  * @summary Get thread data
  */
-export const getThread = async (threadId: number, options?: RequestInit): Promise<ThreadResponse> => {
-  const res = await fetch(getGetThreadUrl(threadId), {
+export const getThread = async (
+  threadId: number,
+  options?: Parameters<typeof apiRequest>[1],
+): Promise<ThreadResponse> => {
+  return apiRequest<ThreadResponse>(getGetThreadUrl(threadId), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: ThreadResponse; status?: number } = new globalThis.Error();
-    const data: ThreadResponse = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: ThreadResponse = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetThreadQueryKey = (threadId: Parameters<typeof getThread>[0]) =>
@@ -394,7 +342,7 @@ export const getPatchThreadUrl = (threadId: number) => {
 export const patchThread = async (
   threadId: number,
   patchThreadRequest: PatchThreadRequest,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<void> => {
   const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -410,23 +358,12 @@ export const patchThread = async (
     }
     return headers;
   };
-  const res = await fetch(getPatchThreadUrl(threadId), {
+  return apiRequest<void>(getPatchThreadUrl(threadId), {
     ...options,
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
     body: JSON.stringify(patchThreadRequest),
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type PatchThreadMutationVariables = {
@@ -487,24 +424,12 @@ export const getGetThreadAssigneesUrl = (threadId: number, params: GetThreadAssi
 export const getThreadAssignees = async (
   threadId: number,
   params: GetThreadAssigneesParams,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<PaginationResponseUserScopeResponse> => {
-  const res = await fetch(getGetThreadAssigneesUrl(threadId, params), {
+  return apiRequest<PaginationResponseUserScopeResponse>(getGetThreadAssigneesUrl(threadId, params), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: PaginationResponseUserScopeResponse; status?: number } =
-      new globalThis.Error();
-    const data: PaginationResponseUserScopeResponse = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: PaginationResponseUserScopeResponse = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetThreadAssigneesQueryKey = (
@@ -567,7 +492,7 @@ export const getAddThreadAssigneeUrl = (threadId: number) => {
 export const addThreadAssignee = async (
   threadId: number,
   addThreadAssigneeRequest: AddThreadAssigneeRequest,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<void> => {
   const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -583,23 +508,12 @@ export const addThreadAssignee = async (
     }
     return headers;
   };
-  const res = await fetch(getAddThreadAssigneeUrl(threadId), {
+  return apiRequest<void>(getAddThreadAssigneeUrl(threadId), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
     body: JSON.stringify(addThreadAssigneeRequest),
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type AddThreadAssigneeMutationVariables = {
@@ -662,23 +576,12 @@ export const getRemoveThreadAssigneeUrl = (threadId: number, assigneeUsername: s
 export const removeThreadAssignee = async (
   threadId: number,
   assigneeUsername: string,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<void> => {
-  const res = await fetch(getRemoveThreadAssigneeUrl(threadId, assigneeUsername), {
+  return apiRequest<void>(getRemoveThreadAssigneeUrl(threadId, assigneeUsername), {
     ...options,
     method: "DELETE",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type RemoveThreadAssigneeMutationVariables = {

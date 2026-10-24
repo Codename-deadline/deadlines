@@ -12,6 +12,8 @@ import type { MaybeRefOrGetter } from "vue";
 
 import type { ChangeOrganizationOwnerRequest, ChangeRoleRequest, RolesMetadataResponse } from "../../models";
 
+import { apiRequest } from "../../../transport.ts";
+
 export const getChangeDeadlineRoleUrl = (deadlineId: number) => {
   return `${(import.meta.env?.VITE_API_BASE_URL ?? "").replace(/\/$/, "")}/api/roles/deadline/${deadlineId}`;
 };
@@ -22,7 +24,7 @@ export const getChangeDeadlineRoleUrl = (deadlineId: number) => {
 export const changeDeadlineRole = async (
   deadlineId: number,
   changeRoleRequest: ChangeRoleRequest,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<void> => {
   const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -38,23 +40,12 @@ export const changeDeadlineRole = async (
     }
     return headers;
   };
-  const res = await fetch(getChangeDeadlineRoleUrl(deadlineId), {
+  return apiRequest<void>(getChangeDeadlineRoleUrl(deadlineId), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
     body: JSON.stringify(changeRoleRequest),
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type ChangeDeadlineRoleMutationVariables = {
@@ -114,22 +105,11 @@ export const getGetMetadataUrl = () => {
 /**
  * @summary Get all roles and assignment permissions
  */
-export const getMetadata = async (options?: RequestInit): Promise<RolesMetadataResponse> => {
-  const res = await fetch(getGetMetadataUrl(), {
+export const getMetadata = async (options?: Parameters<typeof apiRequest>[1]): Promise<RolesMetadataResponse> => {
+  return apiRequest<RolesMetadataResponse>(getGetMetadataUrl(), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: RolesMetadataResponse; status?: number } = new globalThis.Error();
-    const data: RolesMetadataResponse = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: RolesMetadataResponse = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetMetadataQueryKey = () =>
@@ -171,7 +151,7 @@ export const getChangeOrganizationRoleUrl = (organizationId: number) => {
 export const changeOrganizationRole = async (
   organizationId: number,
   changeRoleRequest: ChangeRoleRequest,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<void> => {
   const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -187,23 +167,12 @@ export const changeOrganizationRole = async (
     }
     return headers;
   };
-  const res = await fetch(getChangeOrganizationRoleUrl(organizationId), {
+  return apiRequest<void>(getChangeOrganizationRoleUrl(organizationId), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
     body: JSON.stringify(changeRoleRequest),
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type ChangeOrganizationRoleMutationVariables = {
@@ -267,7 +236,7 @@ export const getChangeOrganizationOwnerUrl = (organizationId: number) => {
 export const changeOrganizationOwner = async (
   organizationId: number,
   changeOrganizationOwnerRequest: ChangeOrganizationOwnerRequest,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<void> => {
   const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -283,23 +252,12 @@ export const changeOrganizationOwner = async (
     }
     return headers;
   };
-  const res = await fetch(getChangeOrganizationOwnerUrl(organizationId), {
+  return apiRequest<void>(getChangeOrganizationOwnerUrl(organizationId), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
     body: JSON.stringify(changeOrganizationOwnerRequest),
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type ChangeOrganizationOwnerMutationVariables = {
@@ -366,7 +324,7 @@ export const getChangeThreadRoleUrl = (threadId: number) => {
 export const changeThreadRole = async (
   threadId: number,
   changeRoleRequest: ChangeRoleRequest,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<void> => {
   const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -382,23 +340,12 @@ export const changeThreadRole = async (
     }
     return headers;
   };
-  const res = await fetch(getChangeThreadRoleUrl(threadId), {
+  return apiRequest<void>(getChangeThreadRoleUrl(threadId), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
     body: JSON.stringify(changeRoleRequest),
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type ChangeThreadRoleMutationVariables = {

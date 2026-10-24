@@ -12,6 +12,8 @@ import type { MaybeRefOrGetter } from "vue";
 
 import type { GetUsernamesStartingWithParams, MessengerAccountDTO, PatchUserRequest, UserResponse } from "../../models";
 
+import { apiRequest } from "../../../transport.ts";
+
 export const getDeleteUserUrl = () => {
   return `${(import.meta.env?.VITE_API_BASE_URL ?? "").replace(/\/$/, "")}/api/user`;
 };
@@ -19,22 +21,11 @@ export const getDeleteUserUrl = () => {
 /**
  * @summary Delete user
  */
-export const deleteUser = async (options?: RequestInit): Promise<void> => {
-  const res = await fetch(getDeleteUserUrl(), {
+export const deleteUser = async (options?: Parameters<typeof apiRequest>[1]): Promise<void> => {
+  return apiRequest<void>(getDeleteUserUrl(), {
     ...options,
     method: "DELETE",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type DeleteUserMutationVariables = void;
@@ -75,22 +66,11 @@ export const getGetUserUrl = () => {
 /**
  * @summary Get public user data
  */
-export const getUser = async (options?: RequestInit): Promise<UserResponse> => {
-  const res = await fetch(getGetUserUrl(), {
+export const getUser = async (options?: Parameters<typeof apiRequest>[1]): Promise<UserResponse> => {
+  return apiRequest<UserResponse>(getGetUserUrl(), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: UserResponse; status?: number } = new globalThis.Error();
-    const data: UserResponse = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: UserResponse = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetUserQueryKey = () =>
@@ -129,7 +109,10 @@ export const getPatchUserUrl = () => {
 /**
  * @summary Update user info
  */
-export const patchUser = async (patchUserRequest: PatchUserRequest, options?: RequestInit): Promise<void> => {
+export const patchUser = async (
+  patchUserRequest: PatchUserRequest,
+  options?: Parameters<typeof apiRequest>[1],
+): Promise<void> => {
   const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
     if (!h) return {};
     if (h instanceof Headers) return Object.fromEntries(h.entries());
@@ -144,23 +127,12 @@ export const patchUser = async (patchUserRequest: PatchUserRequest, options?: Re
     }
     return headers;
   };
-  const res = await fetch(getPatchUserUrl(), {
+  return apiRequest<void>(getPatchUserUrl(), {
     ...options,
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
     body: JSON.stringify(patchUserRequest),
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: void; status?: number } = new globalThis.Error();
-    const data: void = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: void = body ? JSON.parse(body) : undefined;
-  return data;
 };
 
 export type PatchUserMutationVariables = { patchUserRequest: Parameters<typeof patchUser>[0] };
@@ -216,23 +188,12 @@ export const getGetUsernamesStartingWithUrl = (params: GetUsernamesStartingWithP
  */
 export const getUsernamesStartingWith = async (
   params: GetUsernamesStartingWithParams,
-  options?: RequestInit,
+  options?: Parameters<typeof apiRequest>[1],
 ): Promise<string[]> => {
-  const res = await fetch(getGetUsernamesStartingWithUrl(params), {
+  return apiRequest<string[]>(getGetUsernamesStartingWithUrl(params), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: string[]; status?: number } = new globalThis.Error();
-    const data: string[] = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: string[] = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetUsernamesStartingWithQueryKey = (params: Parameters<typeof getUsernamesStartingWith>[0]) =>
@@ -281,22 +242,13 @@ export const getGetMessengerAccountsUrl = () => {
 /**
  * @summary Get user's linked messenger accounts
  */
-export const getMessengerAccounts = async (options?: RequestInit): Promise<MessengerAccountDTO[]> => {
-  const res = await fetch(getGetMessengerAccountsUrl(), {
+export const getMessengerAccounts = async (
+  options?: Parameters<typeof apiRequest>[1],
+): Promise<MessengerAccountDTO[]> => {
+  return apiRequest<MessengerAccountDTO[]>(getGetMessengerAccountsUrl(), {
     ...options,
     method: "GET",
   });
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  if (!res.ok) {
-    const err: globalThis.Error & { info?: MessengerAccountDTO[]; status?: number } = new globalThis.Error();
-    const data: MessengerAccountDTO[] = body ? JSON.parse(body) : {};
-    err.info = data;
-    err.status = res.status;
-    throw err;
-  }
-  const data: MessengerAccountDTO[] = body ? JSON.parse(body) : {};
-  return data;
 };
 
 export const getGetMessengerAccountsQueryKey = () =>

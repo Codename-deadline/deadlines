@@ -2,14 +2,12 @@
 import { type FormInst, type FormRules, NButton, NCard, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import type { PatchUserRequest } from "@/api/schemas/user/patch/PatchUserRequest";
-import { patchUser } from "@/api/user";
+import type { PatchUserRequest } from "@/api/generated/models";
 import LanguageTooltip from "@/components/common/LanguageTooltip.vue";
 import TimezoneSelect from "@/components/common/TimezoneSelect.vue";
-import { useApi } from "@/composables/useApi";
-import { useLoading } from "@/composables/useLoading";
+import { useCurrentUser, useUpdateCurrentUser } from "@/composables/useCurrentUser";
+import { useRequestError } from "@/composables/useRequestError";
 import { tLanguageOptions } from "@/locales/utils";
-import { useUserStore } from "@/stores/UserStore";
 import { Language } from "@/types/Language";
 import { normalizeUsername } from "@/utils/validation";
 
@@ -19,11 +17,11 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const message = useMessage();
-const { makeRequest } = useApi();
-const userStore = useUserStore();
-const { isLoading: isSaving, withLoading } = useLoading();
+const { user } = useCurrentUser();
+const { mutateAsync: updateUser, isLoading: isSaving } = useUpdateCurrentUser();
+const displayRequestError = useRequestError();
 
-type ProfileFormModel = PatchUserRequest & {
+type ProfileFormModel = {
   fullName: string;
   username: string;
   language: Language;
@@ -32,10 +30,10 @@ type ProfileFormModel = PatchUserRequest & {
 
 const formRef = ref<FormInst | null>(null);
 const formModel = ref<ProfileFormModel>({
-  fullName: userStore.user?.fullName ?? "",
-  username: normalizeUsername(userStore.user?.username ?? ""),
-  language: userStore.user?.language ?? Language.ENGLISH,
-  timeZone: userStore.user?.timeZone ?? "",
+  fullName: user.value?.fullName ?? "",
+  username: normalizeUsername(user.value?.username ?? ""),
+  language: user.value?.language ?? Language.ENGLISH,
+  timeZone: user.value?.timeZone ?? "",
 });
 const formRules: FormRules = {
   fullName: [
@@ -67,6 +65,7 @@ const handleUsernameUpdate = (value: string) => {
 };
 
 const handleSave = () => {
+  if (isSaving.value) return;
   formRef.value?.validate(async (errors) => {
     if (errors) return;
 
@@ -75,12 +74,13 @@ const handleSave = () => {
       fullName: formModel.value.fullName?.trim(),
       username: formModel.value.username?.trim(),
     };
-    const response = await withLoading(() => makeRequest(() => patchUser(request)));
-    if (!response.ok) return;
-
-    userStore.updateProfile(request);
-    message.success(t("profile.form.updated"));
-    emit("close");
+    try {
+      await updateUser(request);
+      message.success(t("profile.form.updated"));
+      emit("close");
+    } catch (error) {
+      displayRequestError(error);
+    }
   });
 };
 </script>

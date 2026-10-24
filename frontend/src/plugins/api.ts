@@ -5,14 +5,19 @@ import { useCurrentScopeStore } from "@/stores/CurrentScopeStore";
 import { useGlobalStateStore } from "@/stores/GlobalStateStore";
 import { type ListType, useInfiniteListStore } from "@/stores/InfiniteListStore";
 import { useTokenStore } from "@/stores/TokenStore";
-import { useUserStore } from "@/stores/UserStore";
+import { sessionMutationGuard } from "./pinia/sessionMutations";
 
 // Empty state as described in https://pinia-colada.esm.dev/guide/queries.html
-const QUERY_EMPTY_PENDING_STATE: DataState<undefined, null> = { status: "pending", data: undefined, error: null };
+export const QUERY_EMPTY_PENDING_STATE: DataState<undefined, null> = {
+  status: "pending",
+  data: undefined,
+  error: null,
+};
 
 export function installApi(app: App, pinia: Pinia) {
   const tokens = useTokenStore(pinia);
   app.use(PiniaColada, {
+    plugins: [sessionMutationGuard()],
     queryOptions: {
       staleTime: 30_000,
       // Public queries can explicitly opt in with enabled: true.
@@ -40,7 +45,6 @@ export function installApi(app: App, pinia: Pinia) {
         mutations.remove(entry);
       }
 
-      useUserStore(pinia).$reset();
       useCurrentScopeStore(pinia).$reset();
       useGlobalStateStore(pinia).$reset();
 

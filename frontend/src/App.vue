@@ -17,14 +17,14 @@ import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 import CurrentScopeResolver from "./components/CurrentScopeResolver.vue";
 import ThemeSemanticVars from "./components/ThemeSemanticVars.vue";
+import { useCurrentUser } from "./composables/useCurrentUser";
 import { SEMI_PUBLIC_ROUTES } from "./constants/app";
 import GlobalEventHandler from "./GlobalEventHandler.vue";
 import { useLocalizationStore } from "./stores/LocalizationStore";
 import { useTokenStore } from "./stores/TokenStore";
-import { useUserStore } from "./stores/UserStore";
 import { Language } from "./types/Language";
 
-const userStore = useUserStore();
+const { user } = useCurrentUser();
 const tokenStore = useTokenStore();
 const localizationStore = useLocalizationStore();
 const { locale } = useI18n();
@@ -59,7 +59,7 @@ const canShowRoute = computed(
     || route.path.startsWith("/auth")
     || SEMI_PUBLIC_ROUTES.includes(String(route.name)),
 );
-if (route.path.includes("auth") && userStore.isAvailable) {
+if (route.path.includes("auth") && user.value) {
   router.push({ path: "/" });
 }
 

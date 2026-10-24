@@ -16,15 +16,15 @@ import LinkMessengerAccountDialog from '@/components/profile/dialogs/LinkMesseng
 import MessengerAccountCard from '@/components/profile/MessengerAccountCard.vue';
 import SubHeader from '@/components/SubHeader.vue';
 import { useApi } from '@/composables/useApi';
+import { useCurrentUser } from '@/composables/useCurrentUser';
 import { useLoading } from '@/composables/useLoading';
 import { tActionConfirmation } from '@/locales/utils';
 import emitter from '@/plugins/emitter';
-import { useUserStore } from '@/stores/UserStore';
 import { getAvatarText } from '@/utils/strings';
 
 const { t } = useI18n();
 const message = useMessage();
-const userStore = useUserStore();
+const { user } = useCurrentUser();
 const { makeRequest } = useApi();
 const { isLoading: isLoadingAccounts, withLoading: withAccountsLoading } = useLoading();
 
@@ -76,14 +76,14 @@ onMounted(fetchLinkedAccounts);
   <main class="my-8 flex w-full justify-center">
     <div class="w-9/10 sm:w-4/6 md:w-1/2 xl:w-3/8">
       <sub-header/>
-      <section v-if="userStore.user" class="space-y-6 mt-4">
+      <section v-if="user" class="space-y-6 mt-4">
         <n-card class="card">
           <div class="flex justify-center">
             <div class="flex flex-col items-center gap-4">
-              <n-avatar round class="w-24! h-24! text-3xl!">{{ getAvatarText(userStore.user.fullName) }}</n-avatar>
+              <n-avatar round class="w-24! h-24! text-3xl!">{{ getAvatarText(user.fullName) }}</n-avatar>
               <div class="text-center">
-                <h2 class="text-2xl">{{ userStore.user.fullName }}</h2>
-                <p class="w-full font-medium description mb-3">@{{ userStore.user.username }}</p>
+                <h2 class="text-2xl">{{ user.fullName }}</h2>
+                <p class="w-full font-medium description mb-3">@{{ user.username }}</p>
                 <n-button role="button" class="rounded-lg!" @click="dialogState = 'profile'">
                   {{ t('profile.edit') }}
                 </n-button>
@@ -117,17 +117,17 @@ onMounted(fetchLinkedAccounts);
         </card-with-header>
         <card-with-header header-selector="profile.account-info">
           <property-value property-selector="profile.properties.language" :add-divider="true">
-            <b>{{ t(`language.${userStore.user.language.toLowerCase()}`) }}</b>
+            <b>{{ t(`language.${user.language.toLowerCase()}`) }}</b>
           </property-value>
           <property-value property-selector="profile.properties.time-zone" :add-divider="true">
-            <b>{{ userStore.user.timeZone }}</b>
+            <b>{{ user.timeZone }}</b>
           </property-value>
           <property-value property-selector="profile.properties.joined">
             <b>
               <short-long-time-display
                 :long-format="true"
-                :time="userStore.user.joinedAt"
-                :time-zone="userStore.user.timeZone"
+                :time="user.joinedAt"
+                :time-zone="user.timeZone"
               />
             </b>
           </property-value>

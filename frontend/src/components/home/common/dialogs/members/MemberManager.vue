@@ -7,11 +7,11 @@ import type { AnyRole } from '@/api/common/AnyRole';
 import type { MemberWithRole } from '@/api/schemas/common/Member';
 import type { RolesMetadata } from '@/api/schemas/roles/metadata';
 import RoleDropdown from '@/components/home/common/forms/RoleDropdown.vue';
+import { useCurrentUser } from '@/composables/useCurrentUser';
 import { PAGE_SIZE_KEY } from '@/constants/providerKeys';
 import { ORG_OWNER_ROLE } from '@/constants/roles';
 import { tActionConfirmation } from '@/locales/utils';
 import { useMetadataStore } from '@/stores/MetadataStore';
-import { useUserStore } from '@/stores/UserStore';
 import type { ScopeType } from '@/types/scope';
 import { injectOrThrow } from '@/utils';
 import UserAvatar from '../../UserAvatar.vue';
@@ -29,7 +29,7 @@ const emit = defineEmits<{
   removeMember: [member: MemberWithRole]
 }>();
 const { t } = useI18n();
-const userStore = useUserStore();
+const { user } = useCurrentUser();
 
 const pageSize = injectOrThrow<number>(PAGE_SIZE_KEY);
 
@@ -60,12 +60,12 @@ const canUserAssignY = (roleX: AnyRole, _: ScopeType): boolean => {
     return false;
   if (roleX === ORG_OWNER_ROLE)
     return false;
-    
+
   const xIdx: number = rolesMetadata.roles.indexOf(roleX);
   // It is guaranteed that the matrix contains all roles and is quadratic NxN.
   return rolesMetadata.matrix[userRoleIdx]?.[xIdx] ?? false;
 }
-const isMe = (member: MemberWithRole) => member.user.id === userStore.user?.id;
+const isMe = (member: MemberWithRole) => member.user.id === user.value?.id;
 const isOrganizationOwner = (member: MemberWithRole) => member.role === ORG_OWNER_ROLE;
 </script>
 

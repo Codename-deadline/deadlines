@@ -16,14 +16,14 @@ import DeadlineDescriptionCard from '@/components/scopes/deadline/cards/Deadline
 import DeadlineDetailsCard from '@/components/scopes/deadline/cards/DeadlineDetailsCard.vue';
 import EditDeadlineAttachmentDialog from '@/components/scopes/deadline/EditDeadlineAttachmentDialog.vue';
 import { useApi } from '@/composables/useApi';
+import { useCurrentUser } from '@/composables/useCurrentUser';
 import { useLoading } from '@/composables/useLoading';
 import emitter from '@/plugins/emitter';
 import { useCurrentScopeStore } from '@/stores/CurrentScopeStore';
-import { useUserStore } from '@/stores/UserStore';
 
 const { makeRequest } = useApi();
 const currentScopeStore = useCurrentScopeStore();
-const userStore = useUserStore();
+const { user } = useCurrentUser();
 
 const { deadline } = storeToRefs(currentScopeStore);
 const assignees = ref<MemberWithRole[]>([]);
@@ -96,8 +96,8 @@ const handleAttachmentCreated = (attachmentId: number, filename: string, file: F
       mimeType: file.type,
       sizeBytes: file.size,
       uploadedBy: {
-        username: userStore.user?.username ?? "",
-        fullName: userStore.user?.fullName ?? "",
+        username: user.value?.username ?? "",
+        fullName: user.value?.fullName ?? "",
       },
       attachedTo: deadlineId.value,
       uploadedAt: Date.now(),

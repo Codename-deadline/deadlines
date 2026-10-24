@@ -7,8 +7,8 @@ import { changeOrganizationOwner } from "@/api/roles";
 import type { OrganizationWithStatsAndRole } from "@/api/schemas/organization/common/Organization";
 import UsernameInput from "@/components/home/common/forms/UsernameInput.vue";
 import { useApi } from "@/composables/useApi";
+import { useCurrentUser } from "@/composables/useCurrentUser";
 import { useLoading } from "@/composables/useLoading";
-import { useUserStore } from "@/stores/UserStore";
 import { normalizeUsername } from "@/utils/validation";
 
 const props = defineProps<{
@@ -23,7 +23,7 @@ const { t } = useI18n();
 const message = useMessage();
 const { makeRequest } = useApi();
 const { isLoading: isTransferring, withLoading } = useLoading();
-const userStore = useUserStore();
+const { user } = useCurrentUser();
 
 const formRef = ref<FormInst | null>(null);
 const formModel = ref({ newOwnerUsername: "@" });
@@ -35,7 +35,7 @@ const formRules: FormRules = {
     },
     {
       validator: (_, value: string) =>
-        normalizeUsername(value).toLowerCase() !== userStore.user?.username.toLowerCase(),
+        normalizeUsername(value).toLowerCase() !== user.value?.username.toLowerCase(),
       renderMessage: () => t("scopes.organization.ownership.validation.self"),
       trigger: ["input", "blur"],
     },

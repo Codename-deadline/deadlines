@@ -1,19 +1,19 @@
 <script setup lang="ts">
 import { useNotification } from "naive-ui";
-import { onMounted, onUnmounted } from "vue";
+import { onMounted, onUnmounted, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
+import { isCancellation } from "./api/errors";
 import { getNumberOfPendingInvitations } from "./api/invitation";
-import { getMe } from "./api/user";
 import { useApi } from "./composables/useApi";
+import { useCurrentUser } from "./composables/useCurrentUser";
 import { useMetadataResolver } from "./composables/useMetadataResolver";
 import { SEMI_PUBLIC_ROUTES } from "./constants/app";
 import emitter from "./plugins/emitter";
 import { useGlobalStateStore } from "./stores/GlobalStateStore";
 import { useTokenStore } from "./stores/TokenStore";
-import { useUserStore } from "./stores/UserStore";
 
-const userStore = useUserStore();
+const { user, error: userError, refresh: refreshUser } = useCurrentUser();
 const tokenStore = useTokenStore();
 const globalStateStore = useGlobalStateStore();
 
@@ -33,36 +33,36 @@ const displayCriticalError = (errorSelector: string) => {
   });
 };
 
+watch(userError, (error) => {
+  if (error && !isCancellation(error)) displayCriticalError("failed-to-fetch-user");
+}, { immediate: true });
+
 const fetchUser = async () => {
-  const session = tokenStore.sessionSignal();
   if (!tokenStore.accessToken && !tokenStore.refreshToken) {
-    userStore.$reset();
     if (isSemiPublicRoute()) return;
     router.push({ path: "/auth" });
     return;
   }
 
-  const res = await makeRequest(() => getMe());
-  if (session.aborted) return;
-  if (!res.ok) {
-    displayCriticalError("failed-to-fetch-user");
-    return;
-  }
-
-  userStore.setUser(res.data);
+  await refreshUser();
 };
-emitter.on("signUpCompleted", async () => {
+const handleSignUpCompleted = async () => {
   const session = tokenStore.sessionSignal();
   await fetchUser();
-  if (!session.aborted && userStore.isAvailable) router.push({ path: "/" });
-});
-emitter.on("signOut", async () => {
+  if (!session.aborted && user.value) {
+    router.push({ path: "/" });
+    await fetchGlobalState();
+  }
+};
+const handleSignOut = () => {
   tokenStore.$reset();
   router.push({ path: "/auth" });
-})
+};
+emitter.on("signUpCompleted", handleSignUpCompleted);
+emitter.on("signOut", handleSignOut);
 
 const fetchGlobalState = async () => {
-  if (!userStore.isAvailable) return;
+  if (!user.value) return;
 
   const res = await makeRequest(() => getNumberOfPendingInvitations());
   if (!res.ok) return;
@@ -73,7 +73,12 @@ const fetchGlobalState = async () => {
 }
 
 let pollTimer: ReturnType<typeof setInterval>;
-onUnmounted(() => clearInterval(pollTimer));
+onUnmounted(() => {
+  clearInterval(pollTimer);
+  emitter.off("signUpCompleted", handleSignUpCompleted);
+  emitter.off("signOut", handleSignOut);
+  emitter.off("failedToRefreshToken", handleRefreshFailure);
+});
 
 onMounted(async () => {
   pollTimer = setInterval(async () => {
@@ -92,7 +97,7 @@ onMounted(async () => {
 });
 
 const env = import.meta.env;
-emitter.on("failedToRefreshToken", () => {
+const handleRefreshFailure = () => {
   console.log("Failed to refresh token");
   if (env.VITE_NO_AUTH_REDIRECT?.toLowerCase() === "true") {
     console.warn("[DEV]: Auth redirect disabled");
@@ -100,7 +105,8 @@ emitter.on("failedToRefreshToken", () => {
   }
   if (isSemiPublicRoute()) return;
   router.push({ path: "/auth" });
-});
+};
+emitter.on("failedToRefreshToken", handleRefreshFailure);
 </script>
 
 <template>

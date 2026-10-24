@@ -1,3 +1,4 @@
+import { Language } from "@/types/Language";
 import { normalizeTimeZone } from "@/utils/timeZone";
 import type {
   ChangeOrganizationOwnerRequest,
@@ -9,7 +10,12 @@ import type {
 import { toTimestamp } from "./common";
 
 export function toUser(dto: UserResponse) {
-  return { ...dto, joinedAt: toTimestamp(dto.joinedAt), timeZone: normalizeTimeZone(dto.timeZone) };
+  return {
+    ...dto,
+    joinedAt: toTimestamp(dto.joinedAt),
+    timeZone: normalizeTimeZone(dto.timeZone),
+    language: dto.language === "RU" ? Language.RUSSIAN : Language.ENGLISH,
+  };
 }
 
 export type UserModel = ReturnType<typeof toUser>;

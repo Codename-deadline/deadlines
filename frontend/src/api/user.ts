@@ -7,21 +7,7 @@ import {
   type PagedOrganizationWithStatsAndRole,
   PagedOrganizationWithStatsAndRoleSchema,
 } from "./schemas/organization/common/Organization";
-import { type User, UserSchema } from "./schemas/user/common/User";
-import { type PatchUserRequest, PatchUserRequestSchema } from "./schemas/user/patch/PatchUserRequest";
 import { validateAndRequest, validateWith } from "./utils";
-
-export const getMe = async () =>
-  validateAndRequest(EmptySchema, {}, () =>
-    client.get<User>(getEndpoint("USER_ME"), {
-      validate: validateWith(UserSchema),
-    }),
-  );
-
-export const patchUser = async (request: PatchUserRequest) =>
-  validateAndRequest(PatchUserRequestSchema, request, (validated) =>
-    client.patch<undefined>(getEndpoint("USER_PATCH"), validated),
-  );
 
 export const getLinkedMessengerAccounts = async () =>
   validateAndRequest(EmptySchema, {}, () =>

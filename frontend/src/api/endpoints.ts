@@ -18,12 +18,6 @@ const endpoints = {
   AUTH_REFRESH_TOKEN: {
     path: "/auth/refresh-token",
   },
-  USER_ME: {
-    path: "/user",
-  },
-  USER_PATCH: {
-    path: "/user",
-  },
   USER_LINKED_ACCOUNTS: {
     path: "/user/linked-accounts",
   },

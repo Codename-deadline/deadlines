@@ -3,8 +3,8 @@ import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import OtpVerification from "@/components/auth/otp/OtpVerification.vue";
 import PasswordVerification from "@/components/auth/otp/PasswordVerification.vue";
+import { useCurrentUser } from "@/composables/useCurrentUser";
 import emitter from "@/plugins/emitter";
-import { useUserStore } from "@/stores/UserStore";
 import { AuthMethod } from "@/types/api";
 
 const route = useRoute();
@@ -28,8 +28,8 @@ const _updatePasswordRequestId = (requestId: string) => {
   passwordRequestId.value = requestId;
 };
 
-const userStore = useUserStore();
-if (route.path.includes("auth") && userStore.isAvailable) {
+const { user } = useCurrentUser();
+if (route.path.includes("auth") && user.value) {
   router.push({ path: "/" });
 }
 </script>

@@ -45,7 +45,7 @@ export function installApi(app: App, pinia: Pinia) {
     () => tokens.sessionVersion,
     (version) => {
       for (const entry of queries.getEntries()) {
-        if (!entry.meta.sessionBound) {
+        if (entry.meta.sessionBound === false) {
           if (entry.pending) {
             // The transport aborts all requests from the previous session, including public ones.
             interruptedPublic.add(entry);
@@ -83,7 +83,7 @@ export function installApi(app: App, pinia: Pinia) {
         for (const entry of queries.getEntries({ active: true })) {
           if (stopped || tokens.sessionVersion !== version) break;
 
-          const isPublic = !entry.meta.sessionBound;
+          const isPublic = entry.meta.sessionBound === false;
           if (isPublic ? !publicEntries.has(entry) : !(tokens.accessToken || tokens.refreshToken)) continue;
           if (entry.options && toValue(entry.options.enabled)) {
             // Failures remain visible in query state, as with useQuery's automatic refresh.

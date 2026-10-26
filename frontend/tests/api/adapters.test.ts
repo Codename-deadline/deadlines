@@ -4,6 +4,7 @@ import {
   toAttachment,
   toChangeOrganizationOwnerRequest,
   toCreateDeadlineRequest,
+  toCreateOtpRequest,
   toDeadline,
   toInvitation,
   toMember,
@@ -234,6 +235,15 @@ test("toRegisterOtpRequest normalizes the time zone", () => {
   const result = toRegisterOtpRequest(input);
 
   expect(result.timeZone).toBe("Etc/UTC");
+});
+
+test("toCreateOtpRequest normalizes usernames immutably", () => {
+  const input = { username: "@@user ", identifier: "123", channel: "TELEGRAM" as const };
+
+  const result = toCreateOtpRequest(input);
+
+  expect(result).toEqual({ ...input, username: "user" });
+  expect(input.username).toBe("@@user ");
 });
 
 test("toCreateDeadlineRequest serializes the due date", () => {

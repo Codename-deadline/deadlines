@@ -2,18 +2,15 @@
 import { type FormInst, type FormRules, NForm, NFormItem, NInput } from "naive-ui";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
-import * as apiAuth from "@/api/auth";
-import { useApi } from "@/composables/useApi";
+import { usePasswordVerification } from "@/composables/useAuthentication";
+import { useRequestError } from "@/composables/useRequestError";
 import { tFormError } from "@/locales/utils";
-import emitter from "@/plugins/emitter";
-import { useTokenStore } from "@/stores/TokenStore";
 import type { AuthMethod } from "@/types/api";
-import { displayApiError, displayFormErrors } from "@/utils";
 import BaseAuthForm from "../common/BaseAuthForm.vue";
 
 const { t } = useI18n();
-const { makeRequest } = useApi();
-const tokenStore = useTokenStore();
+const { mutateAsync: verifyPassword, isLoading: isSubmitting } = usePasswordVerification();
+const displayRequestError = useRequestError();
 
 const props = defineProps<{
   requestId: string;
@@ -30,25 +27,26 @@ const passwordFormData = ref<{ password: string }>({
   password: "",
 });
 
-const submitAuthForm = async () => {
+const submitAuthForm = () => {
+  if (isSubmitting.value) return;
   passwordFormRef.value?.validate(async (errors) => {
     if (errors) return;
-    const response = await makeRequest(
-      () => apiAuth.verifyPassword({ id: props.requestId, password: passwordFormData.value.password }),
-      displayFormErrors,
-      displayApiError,
-    );
-    if (!response.ok) return;
-  
-    tokenStore.updateTokens(response.data);
-    emitter.emit("signUpCompleted");
-  })
+
+    try {
+      await verifyPassword({
+        completePasswordRequest: { id: props.requestId, password: passwordFormData.value.password },
+      });
+    } catch (error) {
+      displayRequestError(error);
+    }
+  });
 };
 </script>
 
 <template>
   <BaseAuthForm
     @submit="submitAuthForm"
+    :is-loading="isSubmitting"
     :is-sign-in="true"
     :auth-method="authMethod"
     button-selector="auth.password.action"

@@ -4,18 +4,20 @@ import { type FormInst, type FormRules, NForm, NFormItem, NInput } from "naive-u
 import { type Ref, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
-import * as apiAuth from "@/api/auth";
-import type { SignInRequest } from "@/api/schemas/auth/SignInRequest";
+import { toCreateOtpRequest } from "@/api/adapters/auth";
+import { useSignInOtp } from "@/api/generated/endpoints/authentication/authentication";
+import type { CreateOtpRequest } from "@/api/generated/models";
 import BaseAuthForm from "@/components/auth/common/BaseAuthForm.vue";
-import { useApi } from "@/composables/useApi";
+import { useRequestError } from "@/composables/useRequestError";
 import { tFormError, tFormLabel } from "@/locales/utils";
 import type { AuthMethod } from "@/types/api";
-import { displayApiError, displayFormErrors, redirectToOTP } from "@/utils";
-import { isDigitOnlySequence, normalizeUsername } from "@/utils/validation";
+import { redirectToOTP } from "@/utils";
+import { isDigitOnlySequence } from "@/utils/validation";
 
 const { t } = useI18n();
 const router = useRouter();
-const { makeRequest } = useApi();
+const { mutateAsync: signIn, isLoading: isSubmitting } = useSignInOtp();
+const displayRequestError = useRequestError();
 
 const props = defineProps<{
   method: AuthMethod;
@@ -37,29 +39,33 @@ const signInFormRules: FormRules = {
   ],
   username: [{ required: true, renderMessage: () => tFormError(t, "username"), trigger: ["input", "blur"] }],
 };
-const signInData = ref<SignInRequest>({
+const signInData = ref<CreateOtpRequest>({
   identifier: "",
-  channel: "",
+  channel: props.method,
   username: "",
 });
 
-const submitSignInForm = async () => {
+const submitSignInForm = () => {
+  if (isSubmitting.value) return;
   signInFormRef.value?.validate(async (errors) => {
     if (errors) return;
-    signInData.value.username = normalizeUsername(signInData.value.username)
-    signInData.value.channel = authMethod.value.valueOf();
-  
-    const response = await makeRequest(() => apiAuth.signIn(signInData.value), displayFormErrors, displayApiError);
-    if (!response.ok) return;
-  
-    redirectToOTP(router, response.data.otpId, authMethod.value);
-  })
+
+    try {
+      const response = await signIn({
+        createOtpRequest: toCreateOtpRequest({ ...signInData.value, channel: authMethod.value }),
+      });
+      redirectToOTP(router, response.otpId, authMethod.value);
+    } catch (error) {
+      displayRequestError(error);
+    }
+  });
 };
 </script>
 
 <template>
   <BaseAuthForm
     @submit="submitSignInForm"
+    :is-loading="isSubmitting"
     :is-sign-in="true"
     :auth-method="authMethod"
     button-selector="auth.sign-in.action"

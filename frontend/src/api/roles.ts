@@ -1,7 +1,5 @@
 import { client } from "@/api/client";
 import { getEndpoint } from "@/api/endpoints";
-import { EmptySchema } from "@/api/schemas/common/Empty";
-import { type RolesMetadata, RolesMetadataSchema } from "./schemas/roles/metadata";
 import {
   type ChangeDeadlineRoleRequest,
   ChangeDeadlineRoleRequestSchema,
@@ -18,14 +16,7 @@ import {
   type ChangeThreadRoleRequest,
   ChangeThreadRoleRequestSchema,
 } from "./schemas/roles/requests/ChangeThreadRoleRequest";
-import { validateAndRequest, validateWith } from "./utils";
-
-export const getRolesMetadata = async () =>
-  validateAndRequest(EmptySchema, {}, () =>
-    client.get<RolesMetadata>(getEndpoint("ROLES_METADATA"), {
-      validate: validateWith(RolesMetadataSchema),
-    }),
-  );
+import { validateAndRequest } from "./utils";
 
 export const changeOrganizationMemberRole = async (organizationId: number, request: ChangeOrganizationRoleRequest) =>
   validateAndRequest(ChangeOrganizationRoleRequestSchema, request, () =>

@@ -1,7 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import type { BotsMetadata } from "@/api/schemas/metadata/BotsMetadata";
-import type { RolesMetadata } from "@/api/schemas/roles/metadata";
+import type { BotDTO, RolesMetadataResponse } from "@/api/generated/models";
 
 type MetadataWithVersion<T> = {
   value: T;
@@ -9,8 +8,8 @@ type MetadataWithVersion<T> = {
 };
 
 export type Metadata = {
-  roles: RolesMetadata;
-  bots: BotsMetadata;
+  roles: RolesMetadataResponse;
+  bots: BotDTO[];
 };
 
 type MetadataState = {
@@ -38,7 +37,7 @@ export const useMetadataStore = defineStore(
   {
     persist: {
       key: "metadata-store",
-      storage: localStorage,
+      storage: typeof localStorage === "undefined" ? undefined : localStorage,
     },
   },
 );

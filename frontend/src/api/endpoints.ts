@@ -1,20 +1,5 @@
 const endpointPrefix: string = "/api";
 const endpoints = {
-  AUTH_SIGN_UP: {
-    path: "/auth/register-otp",
-  },
-  AUTH_SIGN_IN: {
-    path: "/auth/otp",
-  },
-  AUTH_VERIFY_OTP: {
-    path: "/auth/otp/verify",
-  },
-  AUTH_VERIFY_PASSWORD: {
-    path: "/auth/verify-password",
-  },
-  AUTH_REFRESH_TOKEN: {
-    path: "/auth/refresh-token",
-  },
   USER_MY_ORGANIZATIONS: {
     path: "/organizations",
     queryParams: {} as { page: number },
@@ -136,10 +121,6 @@ const endpoints = {
     path: "/deadlines/{ddlId}/assignees/{username}",
     pathParams: {} as { ddlId: number; username: string },
   },
-  ROLES_METADATA: {
-    path: "/roles/metadata",
-    pathParams: {} as never,
-  },
   ROLES_CHANGE_ORGANIZATION: {
     path: "/roles/organization/{orgId}",
     pathParams: {} as { orgId: number },
@@ -156,13 +137,6 @@ const endpoints = {
     path: "/roles/deadline/{deadlineId}",
     pathParams: {} as { deadlineId: number },
   },
-  METADATA_GET: {
-    path: "/metadata",
-    pathParams: {} as never,
-  },
-  METADATA_BOTS_GET: {
-    path: "/metadata/bots",
-  },
   INVITATION_ACCEPT: {
     path: "/invitation/{invitationId}/accept",
     pathParams: {} as { invitationId: number },
@@ -170,10 +144,6 @@ const endpoints = {
   INVITATION_DECLINE: {
     path: "/invitation/{invitationId}/decline",
     pathParams: {} as { invitationId: number },
-  },
-  INVITATION_USER_PENDING_RECEIVED_NUMBER: {
-    path: "/invitation/me/pending-received-number",
-    queryParams: {} as { page: number },
   },
   INVITATION_USER_PENDING_RECEIVED: {
     path: "/invitation/me/pending-received",

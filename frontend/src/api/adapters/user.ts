@@ -3,7 +3,6 @@ import { normalizeTimeZone } from "@/utils/timeZone";
 import type {
   ChangeOrganizationOwnerRequest,
   PatchUserRequest,
-  RegisterOtpRequest,
   UserResponse,
   UserScopeResponse,
 } from "../generated/models";
@@ -26,10 +25,6 @@ export function toMember(dto: UserScopeResponse) {
 }
 
 export type MemberModel = ReturnType<typeof toMember>;
-
-export function toRegisterOtpRequest(dto: RegisterOtpRequest): RegisterOtpRequest {
-  return { ...dto, timeZone: normalizeTimeZone(dto.timeZone) };
-}
 
 export function toPatchUserRequest(dto: PatchUserRequest): PatchUserRequest {
   const request = { ...dto };

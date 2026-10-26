@@ -1,4 +1,4 @@
-import { type TokenPair, TokenPairSchema } from "@/api/schemas/auth/common/TokenPair";
+import type { TokenPair } from "@/api/generated/models";
 import emitter from "@/plugins/emitter";
 import { useTokenStore } from "@/stores/TokenStore";
 import { ApiRequestError } from "./errors";
@@ -118,7 +118,7 @@ export function refreshSession(): Promise<RequestResult<TokenPair>> {
       });
     }
     try {
-      const result = await send<unknown>(
+      const result = await send<TokenPair>(
         apiUrl("/api/auth/refresh-token"),
         { method: "POST" },
         tokens.refreshToken,
@@ -126,18 +126,9 @@ export function refreshSession(): Promise<RequestResult<TokenPair>> {
         "json",
       );
 
-      const parsed = TokenPairSchema.safeParse(result.data);
-      if (!parsed.success) {
-        throw ApiRequestError.validation("Invalid token response", {
-          response: result.response,
-          body: result.data,
-          cause: parsed.error,
-        });
-      }
-
       session.throwIfAborted();
-      tokens.updateTokens(parsed.data, false);
-      return { ...result, data: parsed.data };
+      tokens.updateTokens(result.data, false);
+      return result;
     } catch (error) {
       if (
         !session.aborted &&

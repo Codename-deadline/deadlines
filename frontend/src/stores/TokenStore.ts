@@ -1,14 +1,13 @@
 import { defineStore } from "pinia";
 import type {} from "pinia-plugin-persistedstate";
 import { ref } from "vue";
-import type { TokenPair } from "@/api/schemas/auth/common/TokenPair";
-import type { JWT } from "@/api/schemas/common/JWT";
+import type { TokenPair } from "@/api/generated/models";
 
 export const useTokenStore = defineStore(
   "tokens",
   () => {
-    const accessToken = ref<JWT | null>(null);
-    const refreshToken = ref<JWT | null>(null);
+    const accessToken = ref<string | null>(null);
+    const refreshToken = ref<string | null>(null);
     const sessionVersion = ref<number>(0);
 
     let controller = new AbortController();

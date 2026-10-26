@@ -4,8 +4,8 @@ import { NButton, NPagination, NPopconfirm, NSkeleton } from 'naive-ui';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { AnyRole } from '@/api/common/AnyRole';
+import type { RolesMetadataResponse } from '@/api/generated/models';
 import type { MemberWithRole } from '@/api/schemas/common/Member';
-import type { RolesMetadata } from '@/api/schemas/roles/metadata';
 import RoleDropdown from '@/components/home/common/forms/RoleDropdown.vue';
 import { useCurrentUser } from '@/composables/useCurrentUser';
 import { PAGE_SIZE_KEY } from '@/constants/providerKeys';
@@ -49,7 +49,7 @@ const membersToRender = computed<MemberWithRole[]>(
 const placeholdersToRender = computed<number>(() => pageSize - membersToRender.value.length);
 
 const metadataStore = useMetadataStore();
-const rolesMetadata: RolesMetadata | undefined = metadataStore.metadata.roles?.value;
+const rolesMetadata: RolesMetadataResponse | undefined = metadataStore.metadata.roles?.value;
 if (!rolesMetadata) {
   throw new Error("MemberManager: Unable to retrieve roles metadata");
 }

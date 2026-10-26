@@ -3,6 +3,11 @@ import { onScopeDispose } from "vue";
 import { useTokenStore } from "@/stores/TokenStore";
 import { QUERY_EMPTY_PENDING_STATE } from "../api";
 
+export type SessionMutationContext = {
+  sessionSignal: AbortSignal;
+  sessionVersion: number;
+};
+
 declare module "@pinia/colada" {
   interface TypesConfig {
     mutationMeta: {
@@ -12,10 +17,7 @@ declare module "@pinia/colada" {
     };
   }
 
-  interface UseMutationGlobalContext {
-    sessionSignal: AbortSignal;
-    sessionVersion: number;
-  }
+  interface UseMutationGlobalContext extends SessionMutationContext {}
 }
 
 type Session = {

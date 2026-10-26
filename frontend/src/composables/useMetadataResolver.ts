@@ -1,14 +1,15 @@
 import { useNotification } from "naive-ui";
 import { useI18n } from "vue-i18n";
-import { getApplicationMetadataVersions, getBotsMetadata } from "@/api/metadata";
-import { getRolesMetadata } from "@/api/roles";
+import { isCancellation } from "@/api/errors";
+import { getMetadataVersions, getRegisteredBots } from "@/api/generated/endpoints/metadata/metadata";
+import { getMetadata } from "@/api/generated/endpoints/roles/roles";
+import type { MetadataResponse } from "@/api/generated/models";
 import { type Metadata, useMetadataStore } from "@/stores/MetadataStore";
-import type { OperationResult } from "@/types/OperationResult";
-import { useApi } from "./useApi";
+import { useTokenStore } from "@/stores/TokenStore";
 
 export function useMetadataResolver() {
   const metadataStore = useMetadataStore();
-  const { makeRequest } = useApi();
+  const tokens = useTokenStore();
   const { t } = useI18n();
   const notification = useNotification();
 
@@ -23,29 +24,34 @@ export function useMetadataResolver() {
   const resolveMetadata = async <Key extends keyof Metadata>(
     key: Key,
     version: string,
-    fetch: () => Promise<OperationResult<Metadata[Key]>>,
+    fetch: () => Promise<Metadata[Key]>,
+    session: AbortSignal,
   ) => {
     if (metadataStore.metadata[key]?.version === version) return;
 
-    const result = await fetch();
-    if (!result.ok) {
-      displayCriticalError("failed-to-fetch-metadata");
-      return;
+    try {
+      const value = await fetch();
+      session.throwIfAborted();
+      metadataStore.update(key, value, version);
+    } catch (error) {
+      if (!session.aborted && !isCancellation(error)) displayCriticalError("failed-to-fetch-metadata");
     }
-
-    metadataStore.update(key, result.data, version);
   };
 
   const resolveOutdatedMetadata = async () => {
-    const result = await makeRequest(() => getApplicationMetadataVersions());
-    if (!result.ok) {
-      displayCriticalError("failed-to-fetch-metadata-versions");
+    const session = tokens.sessionSignal();
+    let versions: MetadataResponse;
+    try {
+      versions = await getMetadataVersions();
+      session.throwIfAborted();
+    } catch (error) {
+      if (!session.aborted && !isCancellation(error)) displayCriticalError("failed-to-fetch-metadata-versions");
       return;
     }
 
     await Promise.all([
-      resolveMetadata("roles", result.data.rolesMetadataVersion, () => makeRequest(() => getRolesMetadata())),
-      resolveMetadata("bots", result.data.botsMetadataVersion, () => makeRequest(() => getBotsMetadata())),
+      resolveMetadata("roles", versions.rolesMetadataVersion, getMetadata, session),
+      resolveMetadata("bots", versions.botsMetadataVersion, getRegisteredBots, session),
     ]);
   };
 

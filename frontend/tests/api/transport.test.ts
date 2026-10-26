@@ -156,15 +156,6 @@ test("preserves sessions on refresh failure", async () => {
   expect(fetcher).toHaveBeenCalledTimes(2);
 });
 
-test("rejects invalid refresh tokens", async () => {
-  fetcher.mockResolvedValue(Response.json({ accessToken: "invalid", refreshToken: "invalid" }));
-
-  const pending = refreshSession();
-
-  await expect(pending).rejects.toMatchObject({ name: "ValidationError" });
-  expect(useTokenStore().accessToken).toBe(oldTokens.accessToken);
-});
-
 test.each(["register-otp", "otp", "otp/verify", "verify-password"])(
   "skips refresh for public auth %s",
   async (path) => {

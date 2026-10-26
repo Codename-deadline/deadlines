@@ -4,10 +4,10 @@ import { onMounted, onUnmounted, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { isCancellation } from "./api/errors";
-import { getNumberOfPendingInvitations } from "./api/invitation";
-import { useApi } from "./composables/useApi";
+import { getNumberOfPendingInvitation } from "./api/generated/endpoints/invitations/invitations";
 import { useCurrentUser } from "./composables/useCurrentUser";
 import { useMetadataResolver } from "./composables/useMetadataResolver";
+import { useRequestError } from "./composables/useRequestError";
 import { SEMI_PUBLIC_ROUTES } from "./constants/app";
 import emitter from "./plugins/emitter";
 import { useGlobalStateStore } from "./stores/GlobalStateStore";
@@ -18,7 +18,7 @@ const tokenStore = useTokenStore();
 const globalStateStore = useGlobalStateStore();
 
 const { t } = useI18n();
-const { makeRequest } = useApi();
+const displayRequestError = useRequestError();
 const { resolveOutdatedMetadata } = useMetadataResolver();
 
 const notification = useNotification();
@@ -64,12 +64,14 @@ emitter.on("signOut", handleSignOut);
 const fetchGlobalState = async () => {
   if (!user.value) return;
 
-  const res = await makeRequest(() => getNumberOfPendingInvitations());
-  if (!res.ok) return;
-
-  globalStateStore.$patch({
-    pendingReceivedInvitations: res.data.pending
-  });
+  const session = tokenStore.sessionSignal();
+  try {
+    const result = await getNumberOfPendingInvitation();
+    session.throwIfAborted();
+    globalStateStore.$patch({ pendingReceivedInvitations: result.pending });
+  } catch (error) {
+    displayRequestError(error);
+  }
 }
 
 let pollTimer: ReturnType<typeof setInterval>;

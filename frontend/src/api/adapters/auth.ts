@@ -1,4 +1,20 @@
-import type { ChangePasswordRequest, Ok, PasswordRequired } from "../generated/models";
+import { normalizeTimeZone } from "@/utils/timeZone";
+import { normalizeUsername } from "@/utils/validation";
+import type {
+  ChangePasswordRequest,
+  CreateOtpRequest,
+  Ok,
+  PasswordRequired,
+  RegisterOtpRequest,
+} from "../generated/models";
+
+export function toCreateOtpRequest(request: CreateOtpRequest): CreateOtpRequest {
+  return { ...request, username: normalizeUsername(request.username) };
+}
+
+export function toRegisterOtpRequest(request: RegisterOtpRequest): RegisterOtpRequest {
+  return { ...request, timeZone: normalizeTimeZone(request.timeZone) };
+}
 
 export function toChangePasswordRequest(request: ChangePasswordRequest): ChangePasswordRequest {
   return { ...request, oldPassword: request.oldPassword?.trim() ? request.oldPassword : null };

@@ -2,19 +2,11 @@ import z from "zod";
 import { client } from "./client";
 import { getEndpoint } from "./endpoints";
 import { EmptySchema } from "./schemas/common/Empty";
-import { type MessengerAccount, MessengerAccountsSchema } from "./schemas/integration/MessengerAccount";
 import {
   type PagedOrganizationWithStatsAndRole,
   PagedOrganizationWithStatsAndRoleSchema,
 } from "./schemas/organization/common/Organization";
 import { validateAndRequest, validateWith } from "./utils";
-
-export const getLinkedMessengerAccounts = async () =>
-  validateAndRequest(EmptySchema, {}, () =>
-    client.get<MessengerAccount[]>(getEndpoint("USER_LINKED_ACCOUNTS"), {
-      validate: validateWith(MessengerAccountsSchema),
-    }),
-  );
 
 export const getOrganizations = async (page: number) =>
   validateAndRequest(EmptySchema, {}, () =>
@@ -39,9 +31,3 @@ export const getUsersWithUsernameStartingWith = async (startsWith: string) =>
       },
     ),
   );
-
-export const signOut = async () =>
-  validateAndRequest(EmptySchema, {}, () => client.get<undefined>(getEndpoint("USER_SIGN_OUT")));
-
-export const deleteUser = async () =>
-  validateAndRequest(EmptySchema, {}, () => client.delete(getEndpoint("USER_DELETE")));

@@ -2,14 +2,14 @@
 import { Telegram, TrashAlt } from "@vicons/fa";
 import { NButton, NCard, NIcon, NPopconfirm } from "naive-ui";
 import { useI18n } from "vue-i18n";
-import type { MessengerAccount } from "@/api/schemas/integration/MessengerAccount";
+import type { MessengerAccountDTO } from "@/api/generated/models";
 
 const props = defineProps<{
-  account: MessengerAccount;
+  account: MessengerAccountDTO;
   unlinking?: boolean;
 }>();
 const emit = defineEmits<{
-  unlink: [account: MessengerAccount];
+  unlink: [account: MessengerAccountDTO];
 }>();
 
 const { t } = useI18n();

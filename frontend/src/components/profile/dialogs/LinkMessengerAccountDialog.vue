@@ -2,10 +2,9 @@
 import { type FormInst, type FormRules, NButton, NCard, NForm, NFormItem, NInput, NSelect, useMessage } from "naive-ui";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { linkMessengerAccount } from "@/api/integration/accounts";
-import { type Messenger, MessengerSchema } from "@/api/schemas/integration/MessengerAccount";
-import { useApi } from "@/composables/useApi";
-import { useLoading } from "@/composables/useLoading";
+import { LinkMessengerAccountRequestMessenger } from "@/api/generated/models";
+import { useLinkMessengerAccount } from "@/composables/useLinkedAccounts";
+import { useRequestError } from "@/composables/useRequestError";
 import { isDigitOnlySequence } from "@/utils/validation";
 
 const emit = defineEmits<{
@@ -14,11 +13,11 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const message = useMessage();
-const { makeRequest } = useApi();
-const { isLoading: isLinking, withLoading } = useLoading();
+const { mutateAsync: linkAccount, isLoading: isLinking } = useLinkMessengerAccount();
+const displayRequestError = useRequestError();
 
 const formRef = ref<FormInst | null>(null);
-const formModel = ref<{ accountId: string; messenger: Messenger }>({
+const formModel = ref<{ accountId: string; messenger: LinkMessengerAccountRequestMessenger }>({
   accountId: "",
   messenger: "TELEGRAM",
 });
@@ -49,28 +48,29 @@ const formRules: FormRules = {
 };
 
 const messengerOptions = computed(() =>
-  MessengerSchema.options.map((messenger) => ({
+  Object.values(LinkMessengerAccountRequestMessenger).map((messenger) => ({
     label: t(`profile.accounts.messengers.${messenger.toLowerCase()}`),
     value: messenger,
   })),
 );
 
 const handleLink = () => {
+  if (isLinking.value) return;
   formRef.value?.validate(async (errors) => {
     if (errors) return;
 
-    const response = await withLoading(() =>
-      makeRequest(() =>
-        linkMessengerAccount({
+    try {
+      await linkAccount({
+        linkMessengerAccountRequest: {
           accountId: Number(formModel.value.accountId),
           messenger: formModel.value.messenger,
-        }),
-      ),
-    );
-    if (!response.ok) return;
-
-    message.success(t("profile.accounts.confirmation-sent"));
-    emit("close");
+        },
+      });
+      message.success(t("profile.accounts.confirmation-sent"));
+      emit("close");
+    } catch (error) {
+      displayRequestError(error);
+    }
   });
 };
 </script>

@@ -1,6 +1,5 @@
 import { client } from "./client";
 import { getEndpoint } from "./endpoints";
-import { type ChangePasswordRequest, ChangePasswordRequestSchema } from "./schemas/auth/ChangePasswordRequest";
 import { RefreshTokenRequestSchema } from "./schemas/auth/RefreshTokenRequest";
 import { RefreshTokenResponseSchema } from "./schemas/auth/RefreshTokenResponse";
 import { type SignInRequest, SignInRequestSchema } from "./schemas/auth/SignInRequest";
@@ -39,11 +38,6 @@ export const verifyPassword = async (data: VerifyPasswordRequest) =>
     client.post(getEndpoint("AUTH_VERIFY_PASSWORD"), validated, {
       validate: validateWith(VerifyPasswordResponseSchema),
     }),
-  );
-
-export const changePassword = async (data: ChangePasswordRequest) =>
-  validateAndRequest(ChangePasswordRequestSchema, data, (validated) =>
-    client.post(getEndpoint("AUTH_CHANGE_PASSWORD"), validated),
   );
 
 export const refreshToken = async () =>

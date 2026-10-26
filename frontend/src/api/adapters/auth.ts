@@ -1,4 +1,8 @@
-import type { Ok, PasswordRequired } from "../generated/models";
+import type { ChangePasswordRequest, Ok, PasswordRequired } from "../generated/models";
+
+export function toChangePasswordRequest(request: ChangePasswordRequest): ChangePasswordRequest {
+  return { ...request, oldPassword: request.oldPassword?.trim() ? request.oldPassword : null };
+}
 
 type OtpVerificationInput = (Omit<Ok, "passwordRequired"> | Omit<PasswordRequired, "passwordRequired">) & {
   passwordRequired?: boolean;

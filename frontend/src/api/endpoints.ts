@@ -12,14 +12,8 @@ const endpoints = {
   AUTH_VERIFY_PASSWORD: {
     path: "/auth/verify-password",
   },
-  AUTH_CHANGE_PASSWORD: {
-    path: "/auth/change-password",
-  },
   AUTH_REFRESH_TOKEN: {
     path: "/auth/refresh-token",
-  },
-  USER_LINKED_ACCOUNTS: {
-    path: "/user/linked-accounts",
   },
   USER_MY_ORGANIZATIONS: {
     path: "/organizations",
@@ -28,18 +22,6 @@ const endpoints = {
   USER_USERNAME_HINTS: {
     path: "/user/hints",
     queryParams: {} as { startsWith: string },
-  },
-  USER_SIGN_OUT: {
-    path: "/auth/sign-out",
-  },
-  USER_DELETE: {
-    path: "/user",
-  },
-  INTEGRATION_ACCOUNT_LINK: {
-    path: "/integration/accounts",
-  },
-  INTEGRATION_ACCOUNT_UNLINK: {
-    path: "/integration/accounts",
   },
   ORGANIZATION_GET: {
     path: "/organizations/{orgId}",

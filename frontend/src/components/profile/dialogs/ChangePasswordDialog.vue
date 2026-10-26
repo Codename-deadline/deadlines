@@ -2,10 +2,9 @@
 import { type FormInst, type FormRules, NAlert, NButton, NCard, NForm, NFormItem, NInput, useMessage } from "naive-ui";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { changePassword } from "@/api/auth";
-import type { ChangePasswordRequest } from "@/api/schemas/auth/ChangePasswordRequest";
-import { useApi } from "@/composables/useApi";
-import { useLoading } from "@/composables/useLoading";
+import { toChangePasswordRequest } from "@/api/adapters/auth";
+import { useChangePassword } from "@/api/generated/endpoints/authentication/authentication";
+import { useRequestError } from "@/composables/useRequestError";
 import { tFormError } from "@/locales/utils";
 import emitter from "@/plugins/emitter";
 
@@ -15,11 +14,11 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const message = useMessage();
-const { makeRequest } = useApi();
-const { isLoading: isSaving, withLoading } = useLoading();
+const { mutateAsync: changePassword, isLoading: isSaving } = useChangePassword();
+const displayRequestError = useRequestError();
 
 const formRef = ref<FormInst | null>(null);
-const formModel = ref<ChangePasswordRequest>({
+const formModel = ref({
   newPassword: "",
   oldPassword: ""
 });
@@ -37,17 +36,18 @@ const formRules: FormRules = {
 };
 
 const handleSave = () => {
+  if (isSaving.value) return;
   formRef.value?.validate(async (errors) => {
     if (errors) return;
 
-    const response = await withLoading(() => makeRequest(() => changePassword({
-      newPassword: formModel.value.newPassword,
-      oldPassword: !formModel.value.oldPassword?.trim() ? null : formModel.value.oldPassword
-    })));
-    if (!response.ok) return;
-
-    message.success(t("profile.password.updated"));
-    emitter.emit("signOut");
+    try {
+      await changePassword({ changePasswordRequest: toChangePasswordRequest(formModel.value) });
+      message.success(t("profile.password.updated"));
+      // End the local session only after the session-bound mutation has completed.
+      emitter.emit("signOut");
+    } catch (error) {
+      displayRequestError(error);
+    }
   });
 };
 </script>

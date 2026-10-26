@@ -1,6 +1,7 @@
 import { type DataState, PiniaColada, type UseQueryEntry, useMutationCache, useQueryCache } from "@pinia/colada";
 import type { Pinia } from "pinia";
 import { type App, nextTick, toValue, watch } from "vue";
+import { useDefaultQueryEnabled } from "@/composables/useDefaultQueryEnabled";
 import { useCurrentScopeStore } from "@/stores/CurrentScopeStore";
 import { useGlobalStateStore } from "@/stores/GlobalStateStore";
 import { type ListType, useInfiniteListStore } from "@/stores/InfiniteListStore";
@@ -26,12 +27,13 @@ export const QUERY_EMPTY_PENDING_STATE: DataState<undefined, null> = {
 
 export function installApi(app: App, pinia: Pinia) {
   const tokens = useTokenStore(pinia);
+  const defaultEnabled = useDefaultQueryEnabled(pinia);
   app.use(PiniaColada, {
     plugins: [sessionMutationGuard()],
     queryOptions: {
       staleTime: 30_000,
       // Public queries can explicitly opt in with enabled: true.
-      enabled: () => Boolean(tokens.accessToken || tokens.refreshToken),
+      enabled: defaultEnabled,
     },
   });
 
@@ -84,7 +86,7 @@ export function installApi(app: App, pinia: Pinia) {
           if (stopped || tokens.sessionVersion !== version) break;
 
           const isPublic = entry.meta.sessionBound === false;
-          if (isPublic ? !publicEntries.has(entry) : !(tokens.accessToken || tokens.refreshToken)) continue;
+          if (isPublic ? !publicEntries.has(entry) : !defaultEnabled()) continue;
           if (entry.options && toValue(entry.options.enabled)) {
             // Failures remain visible in query state, as with useQuery's automatic refresh.
             void queries.refresh(entry).catch(() => {});

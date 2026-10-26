@@ -9,7 +9,7 @@ import {
   useGetMembers,
   useGetOrganizationMetadata,
 } from "@/api/generated/endpoints/organizations/organizations";
-import { useTokenStore } from "@/stores/TokenStore";
+import { useDefaultQueryEnabled } from "./useDefaultQueryEnabled";
 
 export const organizationsListPrefix = getGetOrganizationsByUserQueryKey({ page: 0 }).slice(0, -1);
 export const organizationsListKey = [...organizationsListPrefix, "infinite"] as const;
@@ -19,7 +19,7 @@ function isOrgIdValid(organizationId: MaybeRefOrGetter<number>): boolean {
 }
 
 export function useOrganizations() {
-  const tokens = useTokenStore();
+  const defaultEnabled = useDefaultQueryEnabled();
   const query = useInfiniteQuery({
     key: organizationsListKey,
     initialPageParam: 0,
@@ -39,20 +39,14 @@ export function useOrganizations() {
   });
 
   const loadMore = async () => {
-    if (
-      !(tokens.accessToken || tokens.refreshToken) ||
-      query.isLoading.value ||
-      query.error.value ||
-      !query.hasNextPage.value
-    )
-      return;
+    if (!defaultEnabled() || query.isLoading.value || query.error.value || !query.hasNextPage.value) return;
 
     await query.loadNextPage({ cancelRefetch: false });
     nextPageError.value = query.error.value;
   };
 
   const retry = async () => {
-    if (!(tokens.accessToken || tokens.refreshToken) || query.isLoading.value) return;
+    if (!defaultEnabled() || query.isLoading.value) return;
 
     if (nextPageError.value && nextPageError.value === query.error.value && query.data.value) {
       await query.loadNextPage({ cancelRefetch: false });
@@ -66,9 +60,9 @@ export function useOrganizations() {
 }
 
 export function useOrganization(organizationId: MaybeRefOrGetter<number>) {
-  const tokens = useTokenStore();
+  const defaultEnabled = useDefaultQueryEnabled();
   const query = useGetOrganizationMetadata(organizationId, () => ({
-    query: { enabled: isOrgIdValid(organizationId) && Boolean(tokens.accessToken || tokens.refreshToken) },
+    query: { enabled: isOrgIdValid(organizationId) && defaultEnabled() },
   }));
 
   return {
@@ -89,12 +83,12 @@ export function useOrganizationMembers(
   page: MaybeRefOrGetter<number>,
   size: MaybeRefOrGetter<number>,
 ) {
-  const tokens = useTokenStore();
+  const defaultEnabled = useDefaultQueryEnabled();
   const query = useGetMembers(
     organizationId,
     () => ({ page: toValue(page), size: toValue(size) }),
     () => ({
-      query: { enabled: isOrgIdValid(organizationId) && Boolean(tokens.accessToken || tokens.refreshToken) },
+      query: { enabled: isOrgIdValid(organizationId) && defaultEnabled() },
     }),
   );
 

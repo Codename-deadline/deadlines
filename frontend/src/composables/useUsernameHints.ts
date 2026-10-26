@@ -1,7 +1,7 @@
 import { computed, type MaybeRefOrGetter, toValue } from "vue";
 import { useGetMemberUsernamesStartingWith } from "@/api/generated/endpoints/organizations/organizations";
 import { useGetUsernamesStartingWith } from "@/api/generated/endpoints/user/user";
-import { useTokenStore } from "@/stores/TokenStore";
+import { useDefaultQueryEnabled } from "./useDefaultQueryEnabled";
 
 /**
  * useUsernameHints resolves usernames starting with a substring.
@@ -14,8 +14,8 @@ export function useUsernameHints(
   search: MaybeRefOrGetter<string>,
   organizationId?: MaybeRefOrGetter<number | undefined>,
 ) {
-  const tokens = useTokenStore();
-  const enabled = () => Boolean(tokens.accessToken || tokens.refreshToken) && toValue(search).length >= 2;
+  const defaultEnabled = useDefaultQueryEnabled();
+  const enabled = () => defaultEnabled() && toValue(search).length >= 2;
   const params = () => ({ startsWith: toValue(search) });
 
   const global = useGetUsernamesStartingWith(params, () => ({

@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getMyDeadlines, getThreadDeadlines } from '@/api/deadline';
 import type { DeadlineWithRole } from '@/api/schemas/deadline/common/Deadline';
-import PageLayout from '@/components/home/common/PageLayout.vue';
+import PageLayout from '@/components/home/common/LegacyPageLayout.vue';
 import CreateDeadlineDialog from '@/components/home/deadlines/CreateDeadlineDialog.vue';
 import DeadlineCard from '@/components/home/deadlines/DeadlineCard.vue';
 import EditDeadlineDialog from '@/components/home/deadlines/EditDeadlineDialog.vue';

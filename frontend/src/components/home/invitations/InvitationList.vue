@@ -5,7 +5,7 @@ import { useI18n } from "vue-i18n";
 import type { PagedResponse } from "@/api/common/PaginationResponse";
 import type { OrganizationInvitation } from "@/api/schemas/organization/invitation/Invitation";
 import SkeletonGrid from "@/components/home/common/SkeletonGrid.vue";
-import { useInfiniteVirtualList } from "@/composables/useInfiniteVirtualList";
+import { useLegacyInfiniteVirtualList } from "@/composables/useLegacyInfiniteVirtualList";
 import { tEntitiesNotFound } from "@/locales/utils";
 import type { SafeApiCall } from "@/types/api";
 import InvitationCard from "./InvitationCard.vue";
@@ -28,7 +28,7 @@ const itemsPerRow = computed(() => {
 const listType = props.variant === "received" ? "invitations_received" : "invitations_sent";
 
 const { containerProps, wrapperProps, virtualItems, showSkeleton, $reset } =
-  useInfiniteVirtualList<OrganizationInvitation>(listType, props.fetcher, {
+  useLegacyInfiniteVirtualList<OrganizationInvitation>(listType, props.fetcher, {
     itemsPerRow,
     itemHeight: CARD_HEIGHT,
   });

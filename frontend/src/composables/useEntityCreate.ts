@@ -1,69 +1,46 @@
 import { type FormInst, type FormRules, useMessage } from "naive-ui";
-import { type Ref, ref } from "vue";
+import { type MaybeRefOrGetter, type Ref, ref, toValue } from "vue";
 import { useI18n } from "vue-i18n";
-import type { AnyRole } from "@/api/common/AnyRole";
-import { useApi } from "@/composables/useApi";
 import { tEntityToastAction, tFormError } from "@/locales/utils";
 import emitter from "@/plugins/emitter";
-import type { ListType } from "@/stores/InfiniteListStore";
-import { useInfiniteListStore } from "@/stores/InfiniteListStore";
-import type { SafeApiCall } from "@/types/api";
 import type { ScopeType } from "@/types/scope";
-import { deduplicateInvitationsByUsername } from "@/utils";
+import { useRequestError } from "./useRequestError";
 
-type InvitationEntry = { username: string; role: AnyRole };
-
-export function useEntityCreate<TFormModel extends object, TEntity extends { id: number }, TResponse>(config: {
+export function useEntityCreate<T extends object>(config: {
   scopeType: ScopeType;
-  listType: ListType;
-  defaultInvitationRole: AnyRole;
-  invitationPlaceholder: string;
   formRef: Ref<FormInst | null>;
-  invitationFormRef: Ref<FormInst | null>;
-  createApiCall: (formData: TFormModel, invitations: InvitationEntry[]) => Promise<SafeApiCall<TResponse>>;
-  buildEntity: (response: TResponse, formData: TFormModel) => TEntity;
-  initialFormModel: TFormModel;
+  initialFormModel: T;
   extraFormRules?: FormRules;
+  isLoading: MaybeRefOrGetter<boolean>;
+  create: (model: T, invitations: { username: string; role: string }[]) => Promise<unknown>;
 }) {
   const { t } = useI18n();
-  const { makeRequest } = useApi();
   const message = useMessage();
-  const { addOne } = useInfiniteListStore();
+  const displayError = useRequestError();
 
-  const formModel = ref<TFormModel>(config.initialFormModel);
-
-  const defaultFormRules: FormRules = {
+  const formModel = ref(config.initialFormModel);
+  const invitationFormModel = ref<{ username: string; role: string }[]>([]);
+  const formRules: FormRules = {
     title: [{ required: true, renderMessage: () => tFormError(t, "title"), trigger: ["input", "blur"] }],
+    ...config.extraFormRules,
   };
-  const formRules: FormRules = { ...defaultFormRules, ...config.extraFormRules };
 
-  const invitationFormModel = ref<InvitationEntry[]>([]);
-
-  const validateFormData = (nextStep: () => void) => {
+  const validateFormData = (next: () => void) =>
     config.formRef.value?.validate((errors) => {
-      if (errors) {
-        console.error(errors);
-        return;
-      }
-      nextStep();
+      if (!errors) next();
     });
-  };
 
   const handleCreation = async () => {
-    const uniqueInvitations = deduplicateInvitationsByUsername(invitationFormModel.value);
-    const res = await makeRequest(() => config.createApiCall(formModel.value, uniqueInvitations));
-    if (!res.ok) return;
+    if (toValue(config.isLoading)) return;
 
-    message.success(tEntityToastAction(t, config.scopeType, "created"));
-    emitter.emit("closeCreateEntityDialog");
-    addOne<TEntity>(config.listType, config.buildEntity(res.data, formModel.value));
+    try {
+      await config.create(formModel.value as T, invitationFormModel.value);
+      message.success(tEntityToastAction(t, config.scopeType, "created"));
+      emitter.emit("closeCreateEntityDialog");
+    } catch (error) {
+      displayError(error);
+    }
   };
 
-  return {
-    formModel,
-    formRules,
-    invitationFormModel,
-    validateFormData,
-    handleCreation,
-  };
+  return { formModel, invitationFormModel, formRules, validateFormData, handleCreation };
 }

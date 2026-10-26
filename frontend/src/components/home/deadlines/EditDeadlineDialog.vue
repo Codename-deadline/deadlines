@@ -3,15 +3,14 @@ import { type FormInst, type FormRules, NButton, NForm, NFormItem, NInput, NPopc
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { addDeadlineAssignee, deleteDeadline, getAllDeadlineAssignees, patchDeadline, removeDeadlineAssignee } from "@/api/deadline";
-import { getOrganizationMembersWithUsernameStartingWith } from "@/api/organization";
 import { changeDeadlineAssigneeRole } from "@/api/roles";
 import type { DeadlineWithRole } from "@/api/schemas/deadline/common/Deadline";
 import { getThread } from "@/api/thread";
 import EntityDialoglayout from "@/components/home/common/dialogs/EntityDialoglayout.vue";
-import MembersTab from "@/components/home/common/dialogs/members/MembersTab.vue";
+import MembersTab from "@/components/home/common/dialogs/members/LegacyMembersTab.vue";
 import UserInvitationInput from "@/components/home/common/forms/UserInvitationInput.vue";
 import { useApi } from "@/composables/useApi";
-import { useEntityEdit } from "@/composables/useEntityEdit";
+import { useLegacyEntityEdit } from "@/composables/useLegacyEntityEdit";
 import { MIN_DEADLINE_DURATION_MS } from "@/constants/forms";
 import { tEntityActionConfirmation, tFormError } from "@/locales/utils";
 import emitter from "@/plugins/emitter";
@@ -90,7 +89,7 @@ const {
   canInvite,
   myRoles,
   membersToLoad,
-} = useEntityEdit<DeadlineEditFormModel>({
+} = useLegacyEntityEdit<DeadlineEditFormModel>({
   scopeType: "deadline",
   listType: "deadlines",
   entity: props.entity,
@@ -214,7 +213,7 @@ const {
         <n-form-item :label="t('scopes.common.form-labels.username')" path="username">
           <UserInvitationInput
             :show-invitation-button="true"
-            :usernames-fetcher="(usernamePrefix) => getOrganizationMembersWithUsernameStartingWith(organizationId!, usernamePrefix)"
+            :organization-id="organizationId ?? 0"
             v-model:username="invitationFormModel.username"
             v-model:role="invitationFormModel.role"
             @click="handleInvitationSubmission"

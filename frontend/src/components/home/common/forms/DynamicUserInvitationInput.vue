@@ -2,13 +2,12 @@
 import { NDynamicInput } from 'naive-ui';
 import type { AnyRole } from '@/api/common/AnyRole';
 import { MAX_ORGANIZATION_CREATION_INVITATIONS } from '@/constants/forms';
-import type { SafeApiCall } from '@/types/api';
 import UserInvitationInput from './UserInvitationInput.vue';
 
 const props = defineProps<{
   defaultRole: AnyRole;
   placeholder: string;
-  usernamesFetcher: (startsWith: string) => Promise<SafeApiCall<string[]>>;
+  organizationId?: number;
 }>();
 
 const emit = defineEmits<{
@@ -34,7 +33,7 @@ const onCreate = (): { username: string; role: AnyRole } => {
       <UserInvitationInput
         v-model:username="value.username"
         v-model:role="value.role"
-        :usernames-fetcher="usernamesFetcher"
+        :organization-id="organizationId"
         @click="emit('click')"
       />
     </template>

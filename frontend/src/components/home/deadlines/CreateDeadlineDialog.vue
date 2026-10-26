@@ -5,14 +5,13 @@ import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 import { createDeadline } from "@/api/deadline";
-import { getOrganizationMembersWithUsernameStartingWith } from "@/api/organization";
 import type { DeadlineWithRole } from "@/api/schemas/deadline/common/Deadline";
 import type { DeadlineRole } from "@/api/schemas/deadline/common/DeadlineRole";
 import type { CreateDeadlineResponse } from "@/api/schemas/deadline/create/CreateDeadlineResponse";
 import EntityCreationDialogLayout from "@/components/home/common/dialogs/EntityCreationDialogLayout.vue";
 import DynamicUserInvitationInput from "@/components/home/common/forms/DynamicUserInvitationInput.vue";
 import Step from "@/components/home/common/stepper/Step.vue";
-import { useEntityCreate } from "@/composables/useEntityCreate";
+import { useLegacyEntityCreate } from "@/composables/useLegacyEntityCreate";
 import { MIN_DEADLINE_DURATION_MS } from "@/constants/forms";
 import { tFormError } from "@/locales/utils";
 import emitter from "@/plugins/emitter";
@@ -54,7 +53,7 @@ const extraFormRules: FormRules = {
     },
   ],
 };
-const { formModel, formRules, invitationFormModel, validateFormData, handleCreation } = useEntityCreate<
+const { formModel, formRules, invitationFormModel, validateFormData, handleCreation } = useLegacyEntityCreate<
   DeadlineFormModel,
   DeadlineWithRole,
   CreateDeadlineResponse
@@ -142,7 +141,7 @@ const { formModel, formRules, invitationFormModel, validateFormData, handleCreat
             v-model="invitationFormModel"
             :default-role="defaultInvitationRole"
             :placeholder="t('scopes.deadline.no-assignees')"
-            :usernames-fetcher="(usernamePrefix) => getOrganizationMembersWithUsernameStartingWith(currentScopeStore.organization!.id, usernamePrefix)"
+            :organization-id="currentScopeStore.organization?.id ?? 0"
           />
         </n-form-item>
       </n-form>

@@ -1,26 +1,29 @@
 <script setup lang="ts">
+import { useQueryCache } from "@pinia/colada";
 import { ref, watch } from "vue";
 import { type LocationQueryValue, useRoute } from "vue-router";
 import { getDeadline } from "@/api/deadline";
-import { getOrganization } from "@/api/organization";
 import { getThread } from "@/api/thread";
 import { useApi } from "@/composables/useApi";
+import { resolveOrganization as resolveOrganizationQuery } from "@/composables/useOrganizations";
+import { useRequestError } from "@/composables/useRequestError";
 import { type ScopeHierarchy, useCurrentScopeStore } from "@/stores/CurrentScopeStore";
+import { useTokenStore } from "@/stores/TokenStore";
 import { parsePositiveRouteId } from "@/utils/route";
 
 const route = useRoute();
 const { makeRequest } = useApi();
 const currentScopeStore = useCurrentScopeStore();
+const cache = useQueryCache();
+const tokens = useTokenStore();
+const displayError = useRequestError();
 const ready = ref(false);
 let resolutionGeneration: number = 0;
 
 const resolveOrganization = async (organizationId: number) => {
-  if (currentScopeStore.organization?.id === organizationId) {
-    return currentScopeStore.organization;
-  }
-
-  const response = await makeRequest(() => getOrganization(organizationId));
-  return response.ok ? response.data : null;
+  if (!tokens.accessToken && !tokens.refreshToken) return null;
+  try { return await resolveOrganizationQuery(organizationId, cache); }
+  catch (error) { displayError(error); return null; }
 };
 
 const resolveThread = async (threadId: number) => {
@@ -48,9 +51,10 @@ const resolveScopeByRoute = async <T>(
 ): Promise<boolean> => {
   const entityId = parsePositiveRouteId(queryId);
   if (!entityId) return false;
-  
+
+  const session = tokens.sessionSignal();
   const scope = await resolver(entityId);
-  if (scope && generation === resolutionGeneration) {
+  if (scope && generation === resolutionGeneration && !session.aborted) {
     currentScopeStore.replaceScope(scopeMapper(scope));
   }
   return scope !== null;
@@ -60,6 +64,7 @@ watch(
   () => route.fullPath,
   async () => {
     const generation = ++resolutionGeneration;
+    const session = tokens.sessionSignal();
     ready.value = false;
     let resolved: boolean = false;
 
@@ -83,7 +88,7 @@ watch(
       }
     }
 
-    if (generation !== resolutionGeneration) return;
+    if (generation !== resolutionGeneration || session.aborted) return;
     if (!resolved) currentScopeStore.$reset();
     ready.value = true;
   },

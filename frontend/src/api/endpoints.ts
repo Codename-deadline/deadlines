@@ -1,51 +1,5 @@
 const endpointPrefix: string = "/api";
 const endpoints = {
-  USER_MY_ORGANIZATIONS: {
-    path: "/organizations",
-    queryParams: {} as { page: number },
-  },
-  USER_USERNAME_HINTS: {
-    path: "/user/hints",
-    queryParams: {} as { startsWith: string },
-  },
-  ORGANIZATION_GET: {
-    path: "/organizations/{orgId}",
-    pathParams: {} as { orgId: number },
-  },
-  ORGANIZATION_CREATE: {
-    path: "/organizations",
-    pathParams: {} as { orgId: number },
-  },
-  ORGANIZATION_DELETE: {
-    path: "/organizations/{orgId}",
-    pathParams: {} as { orgId: number },
-  },
-  ORGANIZATION_PATCH: {
-    path: "/organizations/{orgId}",
-    pathParams: {} as { orgId: number },
-  },
-  ORGANIZATION_CHANGE_VISIBILITY: {
-    path: "/organizations/{orgId}/change-visibility",
-    pathParams: {} as { orgId: number },
-  },
-  ORGANIZATION_MEMBERS: {
-    path: "/organizations/{orgId}/members",
-    pathParams: {} as { orgId: number },
-    queryParams: {} as { page: number; size: number },
-  },
-  ORGANIZATION_INVITE_MEMBER: {
-    path: "/organizations/{orgId}/invitations",
-    pathParams: {} as { orgId: number },
-  },
-  ORGANIZATION_REMOVE_MEMBER: {
-    path: "/organizations/{orgId}/members/{username}",
-    pathParams: {} as { orgId: number; username: string },
-  },
-  ORGANIZATION_MEMBER_HINTS: {
-    path: "/organizations/{orgId}/members/hints",
-    pathParams: {} as { orgId: number },
-    queryParams: {} as { startsWith: string },
-  },
   ORGANIZATION_THREADS: {
     path: "/organizations/{orgId}/threads",
     pathParams: {} as { orgId: number },
@@ -120,14 +74,6 @@ const endpoints = {
   DEADLINE_REMOVE_ASSIGNEE: {
     path: "/deadlines/{ddlId}/assignees/{username}",
     pathParams: {} as { ddlId: number; username: string },
-  },
-  ROLES_CHANGE_ORGANIZATION: {
-    path: "/roles/organization/{orgId}",
-    pathParams: {} as { orgId: number },
-  },
-  ROLES_CHANGE_ORGANIZATION_OWNER: {
-    path: "/roles/organization/{orgId}/change-owner",
-    pathParams: {} as { orgId: number },
   },
   ROLES_CHANGE_THREAD: {
     path: "/roles/thread/{threadId}",

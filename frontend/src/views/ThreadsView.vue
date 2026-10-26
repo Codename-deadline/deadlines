@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import type { ThreadWithRole } from '@/api/schemas/thread/common/Thread';
 import { getMyThreads, getOrganizationThreads } from '@/api/thread';
-import PageLayout from '@/components/home/common/PageLayout.vue';
+import PageLayout from '@/components/home/common/LegacyPageLayout.vue';
 import CreateThreadDialog from '@/components/home/threads/CreateThreadDialog.vue';
 import EditThreadDialog from '@/components/home/threads/EditThreadDialog.vue';
 import ThreadCard from '@/components/home/threads/ThreadCard.vue';

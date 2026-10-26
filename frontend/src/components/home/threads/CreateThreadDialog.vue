@@ -4,7 +4,6 @@ import { type FormInst, NButton, NForm, NFormItem, NIcon, NInput } from "naive-u
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
-import { getOrganizationMembersWithUsernameStartingWith } from "@/api/organization";
 import type { ThreadWithRole } from "@/api/schemas/thread/common/Thread";
 import type { ThreadRole } from "@/api/schemas/thread/common/ThreadRole";
 import type { CreateThreadResponse } from "@/api/schemas/thread/create/CreateThreadResponse";
@@ -12,7 +11,7 @@ import { createThread } from "@/api/thread";
 import EntityCreationDialogLayout from "@/components/home/common/dialogs/EntityCreationDialogLayout.vue";
 import DynamicUserInvitationInput from "@/components/home/common/forms/DynamicUserInvitationInput.vue";
 import Step from "@/components/home/common/stepper/Step.vue";
-import { useEntityCreate } from "@/composables/useEntityCreate";
+import { useLegacyEntityCreate } from "@/composables/useLegacyEntityCreate";
 import emitter from "@/plugins/emitter";
 import { useCurrentScopeStore } from "@/stores/CurrentScopeStore";
 import { parsePositiveRouteId } from "@/utils/route";
@@ -36,7 +35,7 @@ const formRef = ref<FormInst | null>(null);
 const invitationFormRef = ref<FormInst | null>(null);
 
 const defaultInvitationRole: ThreadRole = "THR_ASSIGNEE"
-const { formModel, formRules, invitationFormModel, validateFormData, handleCreation } = useEntityCreate<
+const { formModel, formRules, invitationFormModel, validateFormData, handleCreation } = useLegacyEntityCreate<
   ThreadFormModel,
   ThreadWithRole,
   CreateThreadResponse
@@ -105,7 +104,7 @@ const { formModel, formRules, invitationFormModel, validateFormData, handleCreat
             v-model="invitationFormModel"
             :default-role="defaultInvitationRole"
             :placeholder="t('scopes.thread.no-assignees')"
-            :usernames-fetcher="(usernamePrefix) => getOrganizationMembersWithUsernameStartingWith(organizationId, usernamePrefix)"
+            :organization-id="organizationId"
           />
         </n-form-item>
       </n-form>

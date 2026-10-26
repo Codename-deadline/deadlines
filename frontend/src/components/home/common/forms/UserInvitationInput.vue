@@ -2,14 +2,14 @@
 import { Envelope } from '@vicons/fa';
 import { NButton, NIcon } from 'naive-ui';
 import type { AnyRole } from '@/api/common/AnyRole';
-import type { SafeApiCall } from '@/types/api';
 import RoleDropdown from './RoleDropdown.vue';
 import UsernameInput from './UsernameInput.vue';
 
 const props = withDefaults(
   defineProps<{
-    usernamesFetcher: (startsWith: string) => Promise<SafeApiCall<string[]>>
+    organizationId?: number;
     showInvitationButton?: boolean;
+    isLoading?: boolean;
   }>(),
   {
     showInvitationButton: false,
@@ -31,14 +31,14 @@ const handleClick = (e: MouseEvent) => {
 
 <template>
   <div class="flex space-x-1! flex-1">
-    <username-input v-model="modelUsername" :usernames-fetcher="usernamesFetcher" />
+    <username-input v-model="modelUsername" :organization-id="organizationId" />
     <RoleDropdown
       @select="(role: AnyRole) => modelRole = role"
       :button-role="modelRole"
       :filter="(role: AnyRole) => !role.endsWith('OWNER')"
       size="medium"
     />
-    <n-button role="button" v-if="showInvitationButton" @click="handleClick" class="rounded-lg!" type="info">
+    <n-button role="button" v-if="showInvitationButton" :loading="isLoading" :disabled="isLoading" @click="handleClick" class="rounded-lg!" type="info">
       <template #icon>
         <n-icon :size="14">
           <Envelope />

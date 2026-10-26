@@ -1,83 +1,44 @@
 <script setup lang="ts">
-import { useMessage } from 'naive-ui';
-import { onMounted, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-import type { AnyRole } from '@/api/common/AnyRole';
-import type { PagedResponse } from '@/api/common/PaginationResponse';
-import type { MemberWithRole } from '@/api/schemas/common/Member';
-import { useApi } from '@/composables/useApi';
-import { useLoading } from '@/composables/useLoading';
-import type { SafeApiCall } from '@/types/api';
-import MemberManager from './MemberManager.vue';
+import { useI18n } from "vue-i18n";
+import type { MemberModel } from "@/api/adapters/user";
+import type { AnyRole } from "@/api/common/AnyRole";
+import QueryError from "../../QueryError.vue";
+import MemberManager from "./MemberManager.vue";
 
 const props = defineProps<{
-  fetcher: (page: number) => Promise<SafeApiCall<PagedResponse<MemberWithRole> | MemberWithRole[]>>;
-  updateMemberRole: (request: { subjectUsername: string; newRole: AnyRole }) => Promise<SafeApiCall<unknown>>;
-  removeMember: (username: string) => Promise<SafeApiCall<unknown>>;
+  members: MemberModel[];
+  page: number;
+  totalPages: number;
+  loading: boolean;
+  error: unknown;
+  isSaving?: boolean;
   membersStats: number;
   canManageRoles: boolean;
   myRole?: AnyRole;
 }>();
-
-const members = ref<MemberWithRole[]>([]);
-const totalPages = ref<number>(1);
-
-const { makeRequest } = useApi();
-
-const { isLoading: isLoadingMembers, withLoading } = useLoading();
-const loadMembers = async (page: number) => {
-  const res = await withLoading(() => makeRequest(() => props.fetcher(page)));
-  if (!res.ok) return;
-
-  if (Array.isArray(res.data)) {
-    // One time load of all members
-    members.value = res.data;
-    totalPages.value = 1;
-  } else {
-    // Page load
-    members.value = members.value.concat(res.data.data);
-    totalPages.value = res.data.totalPages;
-  }
-};
-
-const message = useMessage();
+const emit = defineEmits<{
+  pageChange: [page: number];
+  updateRole: [member: MemberModel, role: AnyRole];
+  removeMember: [member: MemberModel];
+  retry: [];
+}>();
 const { t } = useI18n();
-const handleRoleUpdate = async (member: MemberWithRole, newRole: AnyRole) => {
-  if (newRole === member.role) return;
-  const res = await makeRequest(() => props.updateMemberRole({ subjectUsername: member.user.username, newRole }));
-
-  if (!res.ok) return;
-
-  member.role = newRole;
-  message.success(t("scopes.toasts.role-assigned"));
-};
-
-const handleRemoveMember = async (member: MemberWithRole) => {
-  const res = await makeRequest(() => props.removeMember(member.user.username));
-  if (!res.ok) return;
-
-  members.value = members.value.filter(m => m.user.username !== member.user.username);
-  // TODO: Decrement total pages if members.value.length % pageSize === 0
-  message.success(t("scopes.toasts.member-removed"));
-};
-
-onMounted(async () => {
-  await loadMembers(0);
-})
 </script>
 
 <template>
   <div>
-    <div>{{ t("scopes.common.members") }} ({{ membersStats }})</div>
-    <member-manager
-      @loadMore="loadMembers"
-      @updateRole="handleRoleUpdate"
-      @removeMember="handleRemoveMember"
+    <div>{{ t('scopes.common.members') }} ({{ membersStats }})</div>
+    <QueryError :error="error" :loading="loading" @retry="emit('retry')" />
+    <MemberManager
       :members="members"
-      :is-loading-members="isLoadingMembers"
+      :page="page"
       :total-pages="totalPages"
-      :can-manage-roles="canManageRoles"
-      :my-role="myRole"
+      :is-loading-members="loading && members.length === 0"
+      :is-saving="isSaving"
+      :can-manage-roles="canManageRoles" :my-role="myRole"
+      @page-change="(value) => emit('pageChange', value)"
+      @update-role="(member, role) => emit('updateRole', member, role)"
+      @remove-member="(member) => emit('removeMember', member)"
     />
   </div>
 </template>

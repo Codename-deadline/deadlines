@@ -2,7 +2,6 @@
 import { type FormInst, NButton, NForm, NFormItem, NInput, NPopconfirm, NTabPane } from "naive-ui";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { getOrganizationMembersWithUsernameStartingWith } from "@/api/organization";
 import { changeThreadAssigneeRole } from "@/api/roles";
 import type { ThreadWithRole } from "@/api/schemas/thread/common/Thread";
 import {
@@ -13,9 +12,9 @@ import {
     removeThreadAssignee,
 } from "@/api/thread";
 import EntityDialoglayout from "@/components/home/common/dialogs/EntityDialoglayout.vue";
-import MembersTab from "@/components/home/common/dialogs/members/MembersTab.vue";
+import MembersTab from "@/components/home/common/dialogs/members/LegacyMembersTab.vue";
 import UserInvitationInput from "@/components/home/common/forms/UserInvitationInput.vue";
-import { useEntityEdit } from "@/composables/useEntityEdit";
+import { useLegacyEntityEdit } from "@/composables/useLegacyEntityEdit";
 import { tEntityActionConfirmation } from "@/locales/utils";
 import emitter from "@/plugins/emitter";
 
@@ -47,7 +46,7 @@ const {
   canInvite,
   myRoles,
   membersToLoad,
-} = useEntityEdit({
+} = useLegacyEntityEdit({
   scopeType: "thread",
   listType: "threads",
   entity: props.entity,
@@ -142,7 +141,7 @@ const {
         <n-form-item :label="t('scopes.common.form-labels.username')" path="username">
           <UserInvitationInput
             :show-invitation-button="true"
-            :usernames-fetcher="(usernamePrefix) => getOrganizationMembersWithUsernameStartingWith(entity.organizationId, usernamePrefix)"
+            :organization-id="entity.organizationId"
             v-model:username="invitationFormModel.username"
             v-model:role="invitationFormModel.role"
             @click="handleInvitationSubmission"

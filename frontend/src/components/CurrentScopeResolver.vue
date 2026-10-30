@@ -2,8 +2,7 @@
 import { useQueryCache } from "@pinia/colada";
 import { ref, watch } from "vue";
 import { type LocationQueryValue, useRoute } from "vue-router";
-import { getDeadline } from "@/api/deadline";
-import { useApi } from "@/composables/useApi";
+import { resolveDeadline as resolveDeadlineQuery } from "@/composables/useDeadlines";
 import { useDefaultQueryEnabled } from "@/composables/useDefaultQueryEnabled";
 import { resolveOrganization as resolveOrganizationQuery } from "@/composables/useOrganizations";
 import { useRequestError } from "@/composables/useRequestError";
@@ -13,7 +12,6 @@ import { useTokenStore } from "@/stores/TokenStore";
 import { parsePositiveRouteId } from "@/utils/route";
 
 const route = useRoute();
-const { makeRequest } = useApi();
 const currentScopeStore = useCurrentScopeStore();
 const cache = useQueryCache();
 const tokens = useTokenStore();
@@ -25,6 +23,7 @@ let resolutionGeneration: number = 0;
 
 const resolveOrganization = async (organizationId: number) => {
   if (!defaultEnabled()) return null;
+
   try {
     return await resolveOrganizationQuery(organizationId, cache);
   }
@@ -36,6 +35,7 @@ const resolveOrganization = async (organizationId: number) => {
 
 const resolveThread = async (threadId: number) => {
   if (!defaultEnabled()) return null;
+
   try {
     const thread = await resolveThreadQuery(threadId, cache);
     if (!thread) return null;
@@ -49,13 +49,18 @@ const resolveThread = async (threadId: number) => {
 };
 
 const resolveDeadline = async (deadlineId: number) => {
-  const deadline = currentScopeStore.deadline?.id === deadlineId
-    ? currentScopeStore.deadline
-    : await makeRequest(() => getDeadline(deadlineId)).then((response) => response.ok ? response.data : null);
-  if (!deadline) return null;
+  if (!defaultEnabled()) return null;
 
-  const parentScope = await resolveThread(deadline.threadId);
-  return parentScope ? { ...parentScope, deadline } : null;
+  try {
+    const deadline = await resolveDeadlineQuery(deadlineId, cache);
+    if (!deadline) return null;
+
+    const parentScope = await resolveThread(deadline.threadId);
+    return parentScope ? { ...parentScope, deadline } : null;
+  } catch (error) {
+    displayError(error);
+    return null;
+  }
 };
 
 const resolveScopeByRoute = async <T>(

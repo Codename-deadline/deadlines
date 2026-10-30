@@ -1,46 +1,5 @@
 const endpointPrefix: string = "/api";
 const endpoints = {
-  THREAD_DEADLINES: {
-    path: "/threads/{thrId}/deadlines",
-    pathParams: {} as { thrId: number },
-    queryParams: {} as { page: number },
-  },
-  DEADLINE_CREATE: {
-    path: "/threads/{thrId}/deadlines",
-    pathParams: {} as { thrId: number },
-  },
-  DEADLINE_GET: {
-    path: "/deadlines/{ddlId}",
-    pathParams: {} as { ddlId: number },
-  },
-  DEADLINE_GET_MY: {
-    path: "/deadlines/me",
-    queryParams: {} as { page: number },
-  },
-  DEADLINE_DELETE: {
-    path: "/deadlines/{ddlId}",
-    pathParams: {} as { ddlId: number },
-  },
-  DEADLINE_PATCH: {
-    path: "/deadlines/{ddlId}",
-    pathParams: {} as { ddlId: number },
-  },
-  DEADLINE_ASSIGNEES: {
-    path: "/deadlines/{ddlId}/assignees",
-    pathParams: {} as { ddlId: number },
-  },
-  DEADLINE_ADD_ASSIGNEE: {
-    path: "/deadlines/{ddlId}/assignees",
-    pathParams: {} as { ddlId: number },
-  },
-  DEADLINE_REMOVE_ASSIGNEE: {
-    path: "/deadlines/{ddlId}/assignees/{username}",
-    pathParams: {} as { ddlId: number; username: string },
-  },
-  ROLES_CHANGE_DEADLINE: {
-    path: "/roles/deadline/{deadlineId}",
-    pathParams: {} as { deadlineId: number },
-  },
   INVITATION_ACCEPT: {
     path: "/invitation/{invitationId}/accept",
     pathParams: {} as { invitationId: number },
@@ -60,31 +19,6 @@ const endpoints = {
   INVITATION_REVOKE: {
     path: "/invitation/{invitationId}/revoke",
     pathParams: {} as { invitationId: number },
-  },
-  DEADLINE_ATTACHMENTS_METADATA_GET: {
-    path: "/deadlines/{ddlId}/attachments",
-    pathParams: {} as { ddlId: number },
-  },
-  DEADLINE_ATTACHMENT_POST: {
-    path: "/deadlines/{ddlId}/attachments",
-    pathParams: {} as { ddlId: number },
-  },
-  DEADLINE_ATTACHMENT_GET: {
-    path: "/attachments/{attachmentId}",
-    pathParams: {} as { attachmentId: number },
-    queryParams: {} as { disposition: string },
-  },
-  DEADLINE_ATTACHMENT_METADATA_PATCH: {
-    path: "/attachments/{attachmentId}/metadata",
-    pathParams: {} as { attachmentId: number },
-  },
-  DEADLINE_ATTACHMENT_PUT: {
-    path: "/attachments/{attachmentId}",
-    pathParams: {} as { attachmentId: number },
-  },
-  DEADLINE_ATTACHMENT_DELETE: {
-    path: "/attachments/{attachmentId}",
-    pathParams: {} as { attachmentId: number },
   },
 } as const;
 

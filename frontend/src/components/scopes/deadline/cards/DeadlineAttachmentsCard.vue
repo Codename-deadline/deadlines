@@ -2,21 +2,21 @@
 import { Download, Eye, Paperclip, Plus, TrashAlt } from '@vicons/fa';
 import { NButton, NCard, NEmpty, NIcon, NPopconfirm, NTag, NTooltip } from 'naive-ui';
 import { useI18n } from 'vue-i18n';
-import type { DeadlineAttachment } from '@/api/schemas/deadline-attachment/common/DeadlineAttachment';
+import type { AttachmentModel } from '@/api/adapters/attachment';
 import SkeletonGrid from '@/components/home/common/SkeletonGrid.vue';
 import { formatBytes } from '@/utils/files';
 
 defineProps<{
   canCreateAttachments: boolean;
-  attachments: DeadlineAttachment[];
+  attachments: AttachmentModel[];
   loading?: boolean;
 }>()
 const emit = defineEmits<{
   create: [];
-  edit: [attachment: DeadlineAttachment];
-  download: [attachment: DeadlineAttachment];
-  preview: [attachment: DeadlineAttachment];
-  delete: [attachment: DeadlineAttachment];
+  edit: [attachment: AttachmentModel];
+  download: [attachment: AttachmentModel];
+  preview: [attachment: AttachmentModel];
+  delete: [attachment: AttachmentModel];
 }>();
 const { t } = useI18n();
 </script>

@@ -1,146 +1,94 @@
 <script setup lang="ts">
-import { Cog } from '@vicons/fa';
-import { NButton, NIcon } from 'naive-ui';
-import { storeToRefs } from 'pinia';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
-import { getAllDeadlineAssignees, patchDeadline } from '@/api/deadline';
-import { deleteDeadlineAttachment, getAllDeadlineAttachments, getDeadlineAttachment } from '@/api/deadline-attachments';
-import type { MemberWithRole } from '@/api/schemas/common/Member';
-import type { DeadlineAttachment } from '@/api/schemas/deadline-attachment/common/DeadlineAttachment';
-import GlobalHeader from '@/components/home/common/GlobalHeader.vue';
-import EditDeadlineDialog from '@/components/home/deadlines/EditDeadlineDialog.vue';
-import SubHeader from '@/components/SubHeader.vue';
-import CreateDeadlineAttachmentDialog from '@/components/scopes/deadline/CreateDeadlineAttachmentDialog.vue';
-import DeadlineAttachmentsCard from '@/components/scopes/deadline/cards/DeadlineAttachmentsCard.vue';
-import DeadlineDescriptionCard from '@/components/scopes/deadline/cards/DeadlineDescriptionCard.vue';
-import DeadlineDetailsCard from '@/components/scopes/deadline/cards/DeadlineDetailsCard.vue';
-import EditDeadlineAttachmentDialog from '@/components/scopes/deadline/EditDeadlineAttachmentDialog.vue';
-import { useApi } from '@/composables/useApi';
-import { useCurrentUser } from '@/composables/useCurrentUser';
-import { useLoading } from '@/composables/useLoading';
-import emitter from '@/plugins/emitter';
-import { useCurrentScopeStore } from '@/stores/CurrentScopeStore';
+import { Cog } from "@vicons/fa";
+import { NButton, NIcon } from "naive-ui";
+import { computed, onUnmounted, ref } from "vue";
+import { useRoute } from "vue-router";
+import type { AttachmentModel } from "@/api/adapters/attachment";
+import GlobalHeader from "@/components/home/common/GlobalHeader.vue";
+import QueryError from "@/components/home/common/QueryError.vue";
+import EditDeadlineDialog from "@/components/home/deadlines/EditDeadlineDialog.vue";
+import SubHeader from "@/components/SubHeader.vue";
+import CreateDeadlineAttachmentDialog from "@/components/scopes/deadline/CreateDeadlineAttachmentDialog.vue";
+import DeadlineAttachmentsCard from "@/components/scopes/deadline/cards/DeadlineAttachmentsCard.vue";
+import DeadlineDescriptionCard from "@/components/scopes/deadline/cards/DeadlineDescriptionCard.vue";
+import DeadlineDetailsCard from "@/components/scopes/deadline/cards/DeadlineDetailsCard.vue";
+import EditDeadlineAttachmentDialog from "@/components/scopes/deadline/EditDeadlineAttachmentDialog.vue";
+import { useAttachmentDownload, useAttachmentMutations, useDeadlineAttachments } from "@/composables/useDeadlineAttachments";
+import { useDeadlineMutations } from "@/composables/useDeadlineMutations";
+import { useDeadline, useDeadlineAssignees } from "@/composables/useDeadlines";
+import { useRequestError } from "@/composables/useRequestError";
+import { MINUTE_MS } from "@/constants/time";
+import emitter from "@/plugins/emitter";
+import { useTokenStore } from "@/stores/TokenStore";
+import { parsePositiveRouteId } from "@/utils/route";
 
-const { makeRequest } = useApi();
-const currentScopeStore = useCurrentScopeStore();
-const { user } = useCurrentUser();
+const route = useRoute();
+const displayError = useRequestError();
+const tokens = useTokenStore();
 
-const { deadline } = storeToRefs(currentScopeStore);
-const assignees = ref<MemberWithRole[]>([]);
-const attachments = ref<DeadlineAttachment[]>([]);
+const deadlineId = computed(() => parsePositiveRouteId(route.query.ddlId) ?? 0);
+const detail = useDeadline(deadlineId);
+const deadline = detail.deadline;
+const assignees = useDeadlineAssignees(deadlineId);
+const attachments = useDeadlineAttachments(deadlineId);
+
+const mutations = useDeadlineMutations(() => deadline.value?.threadId ?? 0);
+const handleDeadlineStatusChange = async (currentStatus: boolean) => {
+  if (!deadline.value || mutations.patch.isLoading.value) return;
+
+  try {
+    await mutations.patch.mutateAsync({ deadlineId: deadlineId.value, patchDeadlineRequest: { isCompleted: !currentStatus } });
+  } catch (error) {
+    displayError(error);
+  }
+};
 
 const isEditingDeadline = ref<boolean>(false);
-const isCreatingAttachment = ref<boolean>(false);
-const attachmentToEdit = ref<DeadlineAttachment | null>(null);
-
-const deadlineId = computed(() => deadline.value?.id ?? null);
-
-const { isLoading: isLoadingAssignees, withLoading: withAssigneesLoading } = useLoading();
-const fetchAssignees = async (ddlId: number) => {
-  const res = await withAssigneesLoading(() => makeRequest(() => getAllDeadlineAssignees(ddlId)));
-  if (!res.ok) return;
-  assignees.value = res.data;
-}
-
-const { isLoading: isLoadingAttachments, withLoading: withAttachmentsLoading } = useLoading();
-const fetchAttachments = async (ddlId: number) => {
-  const res = await withAttachmentsLoading(() => makeRequest(() => getAllDeadlineAttachments(ddlId)));
-  if (!res.ok) return;
-  attachments.value = res.data;
-}
-
-const fetchAttachmentBlob = async (attachment: DeadlineAttachment, disposition: "attachment" | "inline") => {
-  const res = await makeRequest(() => getDeadlineAttachment(attachment.id, disposition));
-  return res.ok ? res.data : null;
-};
-
-const handleDownload = async (attachment: DeadlineAttachment) => {
-  const blob = await fetchAttachmentBlob(attachment, "attachment");
-  if (!blob) return;
-
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = attachment.filename;
-  link.click();
-  URL.revokeObjectURL(url);
-};
-
-const handlePreview = async (attachment: DeadlineAttachment) => {
-  const blob = await fetchAttachmentBlob(attachment, "inline");
-  if (!blob) return;
-
-  const url = URL.createObjectURL(blob);
-  window.open(url, "_blank", "noopener,noreferrer");
-  window.setTimeout(() => URL.revokeObjectURL(url), 60000);
-};
-
-const handleDeleteAttachment = async (attachment: DeadlineAttachment) => {
-  const res = await makeRequest(() => deleteDeadlineAttachment(attachment.id));
-  if (!res.ok) return;
-
-  attachments.value = attachments.value.filter((item) => item.id !== attachment.id);
-  if (deadline.value) {
-    deadline.value.stats.attachments = Math.max(0, deadline.value.stats.attachments - 1);
-  }
-};
-
-const handleAttachmentCreated = (attachmentId: number, filename: string, file: File) => {
-  isCreatingAttachment.value = false;
-  if (!deadlineId.value) return;
-
-  attachments.value = [
-    {
-      id: attachmentId,
-      filename,
-      mimeType: file.type,
-      sizeBytes: file.size,
-      uploadedBy: {
-        username: user.value?.username ?? "",
-        fullName: user.value?.fullName ?? "",
-      },
-      attachedTo: deadlineId.value,
-      uploadedAt: Date.now(),
-      permissions: {
-        update: true,
-        delete: true
-      }
-    },
-    ...attachments.value,
-  ];
-  if (deadline.value) {
-    deadline.value.stats.attachments++;
-  }
-};
-
-const { isLoading: isLoadingStatusChange, withLoading: withStatusLoading } = useLoading();
-const handleDeadlineStatusChange = async (currentStatus: boolean) => {
-  if (!deadlineId.value || !deadline.value) return;
-
-  const res = await withStatusLoading(() =>
-    makeRequest(() => patchDeadline(deadlineId.value!, {
-      isCompleted: !currentStatus
-    }))
-  )
-  if (!res.ok) return;
-
-  deadline.value.isCompleted = !deadline.value.isCompleted;
-}
-
-const handleCloseEditEntityDialog = () => {
-  isEditingDeadline.value = false;
-};
-
+const handleCloseEditEntityDialog = () => { isEditingDeadline.value = false; };
 emitter.on("closeEditEntityDialog", handleCloseEditEntityDialog);
-onUnmounted(() => {
-  emitter.off("closeEditEntityDialog", handleCloseEditEntityDialog);
-});
+onUnmounted(() => emitter.off("closeEditEntityDialog", handleCloseEditEntityDialog));
 
-onMounted(async () => {
-  if (!deadlineId.value) return;
+const isCreatingAttachment = ref<boolean>(false);
+const attachmentToEditId = ref<number | null>(null);
+const attachmentToEdit = computed(() => attachments.attachments.value.find((item) => item.id === attachmentToEditId.value));
 
-  await Promise.all([fetchAssignees(deadlineId.value), fetchAttachments(deadlineId.value)]);
-})
+const attachmentMutations = useAttachmentMutations(deadlineId);
+const handleDeleteAttachment = async (attachment: AttachmentModel) => {
+  if (attachmentMutations.remove.isLoading.value) return;
+
+  try {
+    await attachmentMutations.remove.mutateAsync({ attachmentId: attachment.id });
+  } catch (error) {
+    displayError(error);
+  }
+};
+
+const download = useAttachmentDownload();
+const lifetime = new AbortController();
+onUnmounted(() => lifetime.abort());
+
+const handleAttachmentFile = async (attachment: AttachmentModel, disposition: "attachment" | "inline") => {
+  const signal = AbortSignal.any([tokens.sessionSignal(), lifetime.signal]);
+
+  try {
+    const blob = await download.mutateAsync({ attachmentId: attachment.id, disposition, signal });
+    signal.throwIfAborted();
+
+    const url = URL.createObjectURL(blob);
+    if (disposition === "attachment") {
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = attachment.filename;
+      link.click();
+      URL.revokeObjectURL(url);
+    } else {
+      window.open(url, "_blank", "noopener,noreferrer");
+      window.setTimeout(() => URL.revokeObjectURL(url), MINUTE_MS);
+    }
+  } catch (error) {
+    displayError(error);
+  }
+};
 </script>
 
 <template>
@@ -157,23 +105,26 @@ onMounted(async () => {
           </template>
         </n-button>
       </sub-header>
+      <QueryError :error="detail.error.value" :loading="detail.isLoading.value" @retry="detail.refetch()" />
       <section v-if="deadline" class="space-y-6 mt-4">
+        <QueryError :error="assignees.error.value" :loading="assignees.isLoading.value" @retry="assignees.refetch()" />
         <deadline-details-card
           @status-change="handleDeadlineStatusChange"
           :deadline="deadline"
-          :assignees="assignees"
-          :is-loading-assignees="isLoadingAssignees"
-          :is-loading-status-change="isLoadingStatusChange"
+          :assignees="assignees.members.value"
+          :is-loading-assignees="assignees.isLoading.value"
+          :is-loading-status-change="mutations.patch.isLoading.value"
         />
-        <deadline-description-card :description="deadline?.description"/>
+        <deadline-description-card :description="deadline.description ?? undefined"/>
+        <QueryError :error="attachments.error.value" :loading="attachments.isLoading.value" @retry="attachments.refetch()" />
         <deadline-attachments-card
-          :attachments="attachments"
-          :loading="isLoadingAttachments"
+          :attachments="attachments.attachments.value"
+          :loading="attachments.isLoading.value"
           :can-create-attachments="deadline.permissions.manageAttachments"
           @create="isCreatingAttachment = true"
-          @edit="attachmentToEdit = $event"
-          @download="handleDownload"
-          @preview="handlePreview"
+          @edit="attachmentToEditId = $event.id"
+          @download="handleAttachmentFile($event, 'attachment')"
+          @preview="handleAttachmentFile($event, 'inline')"
           @delete="handleDeleteAttachment"
         />
       </section>
@@ -194,7 +145,7 @@ onMounted(async () => {
       <button
         type="button"
         class="absolute inset-0 bg-black/30 backdrop-blur-sm"
-        @click="isEditingDeadline = false; isCreatingAttachment = false; attachmentToEdit = null"
+        @click="isEditingDeadline = false; isCreatingAttachment = false; attachmentToEditId = null"
       />
       <edit-deadline-dialog
         v-if="isEditingDeadline"
@@ -206,13 +157,13 @@ onMounted(async () => {
         class="relative min-w-1/3! w-fit! h-fit! rounded-xl!"
         :ddl-id="deadlineId"
         @close="isCreatingAttachment = false"
-        @created="handleAttachmentCreated"
+        @created="isCreatingAttachment = false"
       />
       <edit-deadline-attachment-dialog
         v-if="attachmentToEdit"
         class="relative min-w-1/3! w-fit! h-fit! rounded-xl!"
         :attachment="attachmentToEdit"
-        @close="attachmentToEdit = null"
+        @close="attachmentToEditId = null"
       />
     </div>
   </Transition>

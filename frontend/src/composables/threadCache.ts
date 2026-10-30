@@ -2,6 +2,7 @@ import { type EntryKey, setInfiniteQueryData, type UseInfiniteQueryData, type us
 import { getGetThreadAssigneesQueryKey, getGetThreadQueryKey } from "@/api/generated/endpoints/threads/threads";
 import type { PaginationResponseThreadResponseWithRole, ThreadResponse } from "@/api/generated/models";
 import { QUERY_EMPTY_PENDING_STATE } from "@/plugins/api";
+import { clearThreadDeadlines, refreshDeadlineAccess } from "./deadlineCache";
 import { organizationThreadsPrefix, userAssignedThreadsPrefix } from "./useThreads";
 
 type QueryCache = ReturnType<typeof useQueryCache>;
@@ -15,6 +16,7 @@ export function refreshOrganizationThreads(cache: QueryCache, organizationId: nu
   });
 
   return Promise.all([
+    refreshDeadlineAccess(cache),
     cache.invalidateQueries({ key: userAssignedThreadsPrefix }).catch(() => {}),
     cache.invalidateQueries({ key: organizationThreadsPrefix(organizationId) }).catch(() => {}),
     ...details.map((entry) => cache.invalidateQueries({ key: entry.key, exact: true }, "all").catch(() => {})),
@@ -23,9 +25,27 @@ export function refreshOrganizationThreads(cache: QueryCache, organizationId: nu
 
 export function clearOrganizationThreads(cache: QueryCache, organizationId: number) {
   const keys: EntryKey[] = [organizationThreadsPrefix(organizationId)];
+  const threadIds = new Set<number>();
+
+  for (const prefix of [organizationThreadsPrefix(organizationId), userAssignedThreadsPrefix]) {
+    for (const entry of cache.getEntries({
+      key: prefix,
+      predicate: (entry) => entry.key[entry.key.length - 1] === "infinite",
+    })) {
+      const list = entry.state.value.data as
+        | UseInfiniteQueryData<PaginationResponseThreadResponseWithRole, number>
+        | undefined;
+      for (const page of list?.pages ?? []) {
+        for (const thread of page.data) {
+          if (thread.organizationId === organizationId) threadIds.add(thread.id);
+        }
+      }
+    }
+  }
   for (const entry of cache.getEntries({ key: threadPrefix })) {
     const dto = entry.state.value.data as ThreadResponse | undefined;
     if (dto?.organizationId === organizationId) {
+      threadIds.add(dto.id);
       keys.push([...getGetThreadQueryKey(dto.id)], getGetThreadAssigneesQueryKey(dto.id, { page: 0 }).slice(0, -1));
     }
   }
@@ -59,5 +79,8 @@ export function clearOrganizationThreads(cache: QueryCache, organizationId: numb
         })),
       });
   }
-  return cache.invalidateQueries({ key: userAssignedThreadsPrefix }).catch(() => {});
+  return Promise.all([
+    cache.invalidateQueries({ key: userAssignedThreadsPrefix }).catch(() => {}),
+    ...[...threadIds].map((id) => clearThreadDeadlines(cache, id)),
+  ]);
 }

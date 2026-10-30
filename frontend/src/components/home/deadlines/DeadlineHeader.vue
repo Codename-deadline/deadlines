@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { CircleAlert, CircleCheck, CircleDot, Paperclip } from '@lucide/vue';
 import { computed } from 'vue';
-import type { DeadlineWithRole } from '@/api/schemas/deadline/common/Deadline';
+import type { DeadlineModel } from '@/api/adapters/deadline';
 import { computeDeadlineState } from '@/utils/state';
 import RoleTag from '../common/RoleTag.vue';
 import ScopeHierarchy from '../common/ScopeHierarchy.vue';
@@ -9,7 +9,7 @@ import DeadlineStateTag from './DeadlineStateTag.vue';
 
 const props = withDefaults(
   defineProps<{
-    deadline: DeadlineWithRole
+    deadline: DeadlineModel
     parentTitles?: { organization?: string, thread?: string },
     headerType: "h1" | "h3"
     iconSize?: number

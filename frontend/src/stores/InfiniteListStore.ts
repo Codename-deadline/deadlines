@@ -1,12 +1,11 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import type { PagedResponse } from "@/api/common/PaginationResponse";
-import type { DeadlineWithRole } from "@/api/schemas/deadline/common/Deadline";
 import type { OrganizationInvitation } from "@/api/schemas/organization/invitation/Invitation";
 import { DETAULT_ENTITIES_PAGE_SIZE as DEFAULT_ENTITIES_PAGE_SIZE } from "@/constants/defaults";
 import type { OperationResult } from "@/types/OperationResult";
 
-export type ListType = "deadlines" | "invitations_received" | "invitations_sent";
+export type ListType = "invitations_received" | "invitations_sent";
 
 type InfiniteListState<T extends { id: number }> = {
   items: T[];
@@ -29,8 +28,7 @@ const initialState = <T extends { id: number }>(pageSize: number): InfiniteListS
 });
 
 export const useInfiniteListStore = defineStore("infiniteList", () => {
-  const stateMap = ref<Record<ListType, InfiniteListState<DeadlineWithRole | OrganizationInvitation>>>({
-    deadlines: initialState<DeadlineWithRole>(DEFAULT_ENTITIES_PAGE_SIZE),
+  const stateMap = ref<Record<ListType, InfiniteListState<OrganizationInvitation>>>({
     invitations_received: initialState<OrganizationInvitation>(DEFAULT_ENTITIES_PAGE_SIZE),
     invitations_sent: initialState<OrganizationInvitation>(DEFAULT_ENTITIES_PAGE_SIZE),
   });

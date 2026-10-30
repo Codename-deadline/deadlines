@@ -1,8 +1,22 @@
 import { once } from "node:events";
 import { createServer, type RequestListener } from "node:http";
 import type { AddressInfo } from "node:net";
-import { expect, onTestFinished, test, vi } from "vitest";
+import { createPinia, disposePinia, setActivePinia } from "pinia";
+import { afterEach, beforeEach, expect, onTestFinished, test, vi } from "vitest";
 import { downloadAttachment } from "@/api/downloadAttachment";
+import { useTokenStore } from "@/stores/TokenStore";
+
+beforeEach(() => {
+  const pinia = createPinia();
+  setActivePinia(pinia);
+  useTokenStore(pinia).updateTokens({ accessToken: "access", refreshToken: "refresh" });
+  onTestFinished(() => disposePinia(pinia));
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+});
 
 async function startServer(handler: RequestListener) {
   const server = createServer(handler).listen(0, "127.0.0.1");
@@ -29,12 +43,9 @@ test("preserves bytes and strips cross-origin auth", async () => {
     response.writeHead(302, { location: `${storage}/file` }).end();
   });
 
-  const blob = await downloadAttachment(
-    99,
-    "inline",
-    { headers: { Authorization: "Bearer access" } },
-    (input, options) => fetch(new URL(String(input), api), options),
-  );
+  vi.stubEnv("VITE_API_BASE_URL", api);
+
+  const blob = await downloadAttachment(99, "inline");
 
   expect(new Uint8Array(await blob.arrayBuffer())).toEqual(bytes);
   expect(blob.type).toBe("application/octet-stream");
@@ -45,25 +56,29 @@ test.each([
   { format: "JSON", status: 404, body: { code: "not.found" } },
   { format: "text", status: 503, body: "storage unavailable" },
 ])("preserves $format download errors", async ({ status, body }) => {
-  const response = typeof body === "string" ? new Response(body, { status }) : Response.json(body, { status });
-  const fetcher = vi.fn().mockResolvedValue(response);
+  const fetcher = vi
+    .fn()
+    .mockImplementation(async () =>
+      typeof body === "string" ? new Response(body, { status }) : Response.json(body, { status }),
+    );
+  vi.stubGlobal("fetch", fetcher);
 
-  const pending = downloadAttachment(99, "attachment", {}, fetcher);
+  const pending = downloadAttachment(99);
 
   await expect(pending).rejects.toMatchObject({
-    name: "AttachmentDownloadError",
+    name: "HttpError",
     status,
     body,
   });
 });
 
-test("forwards download cancellation", async () => {
+test("cancellation prevents the download request", async () => {
   const signal = AbortSignal.abort();
-  const error = new DOMException("Aborted", "AbortError");
-  const fetcher = vi.fn().mockRejectedValue(error);
+  const fetcher = vi.fn();
+  vi.stubGlobal("fetch", fetcher);
 
-  const result = downloadAttachment(99, "attachment", { signal }, fetcher);
+  const result = downloadAttachment(99, "attachment", { signal });
 
-  await expect(result).rejects.toBe(error);
-  expect(fetcher).toHaveBeenCalledWith(expect.any(String), { signal, redirect: "follow", method: "GET" });
+  await expect(result).rejects.toBe(signal.reason);
+  expect(fetcher).not.toHaveBeenCalled();
 });

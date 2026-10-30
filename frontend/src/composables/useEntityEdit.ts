@@ -10,6 +10,7 @@ export function useEntityEdit<T extends { title: string }>(config: {
   scopeType: ScopeType;
   formRef: Ref<FormInst | null>;
   initialFormModel: T;
+  extraFormRules?: FormRules;
   isLoading: MaybeRefOrGetter<boolean>;
   patch: (model: T) => Promise<unknown>;
 }) {
@@ -20,6 +21,7 @@ export function useEntityEdit<T extends { title: string }>(config: {
   const patchFormModel = ref(config.initialFormModel);
   const patchFormRules: FormRules = {
     title: [{ required: true, renderMessage: () => tFormError(t, "title"), trigger: ["input", "blur"] }],
+    ...config.extraFormRules,
   };
 
   const handlePatch = () => {

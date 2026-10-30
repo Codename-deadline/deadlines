@@ -2,24 +2,24 @@
 import { type FormInst, type FormRules, NButton, NCard, NForm, NFormItem, NInput, NUpload, NUploadDragger, type UploadFileInfo, useMessage } from "naive-ui";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { createDeadlineAttachment } from "@/api/deadline-attachments";
-import { useApi } from "@/composables/useApi";
-import { useLoading } from "@/composables/useLoading";
+import { useAttachmentMutations } from "@/composables/useDeadlineAttachments";
+import { useRequestError } from "@/composables/useRequestError";
 import { tFormError } from "@/locales/utils";
 
 const props = defineProps<{
   ddlId: number;
 }>();
 const emit = defineEmits<{
-  created: [attachmentId: number, filename: string, file: File];
+  created: [];
   close: [];
 }>();
 
 const { t } = useI18n();
 const message = useMessage();
-const { makeRequest } = useApi();
+const displayError = useRequestError();
 
-const { isLoading: isSubmitting, withLoading } = useLoading();
+const { create } = useAttachmentMutations(() => props.ddlId);
+const isSubmitting = create.isLoading;
 
 const formRef = ref<FormInst | null>(null);
 const formModel = ref<{ filename: string; file: File | null }>({ filename: "", file: null });
@@ -50,21 +50,21 @@ const handleFileListUpdate = (files: UploadFileInfo[]) => {
 };
 
 const handleCreate = () => {
+  if (isSubmitting.value) return;
+
   formRef.value?.validate(async (errors) => {
-    if (errors) return;
+    if (errors || !formModel.value.file) return;
 
-    const res = await withLoading(() =>
-      makeRequest(() =>
-        createDeadlineAttachment(props.ddlId, {
-          meta: { filename: formModel.value.filename },
-          file: formModel.value.file!,
-        }),
-      ),
-    );
-    if (!res.ok) return;
-
-    message.success(t("scopes.deadline.attachment-created"));
-    emit("created", res.data.attachmentId, formModel.value.filename, formModel.value.file!);
+    try {
+      await create.mutateAsync({
+        deadlineId: props.ddlId,
+        createAttachmentBody: { meta: { filename: formModel.value.filename }, file: formModel.value.file },
+      });
+      message.success(t("scopes.deadline.attachment-created"));
+      emit("created");
+    } catch (error) {
+      displayError(error);
+    }
   });
 };
 </script>
@@ -91,7 +91,7 @@ const handleCreate = () => {
       </n-form-item>
     </n-form>
     <div class="mt-4 flex justify-end">
-      <n-button role="button" type="info" class="rounded-lg!" :loading="isSubmitting" @click="handleCreate">
+      <n-button role="button" type="info" class="rounded-lg!" :loading="isSubmitting" :disabled="isSubmitting" @click="handleCreate">
         {{ t("actions.create") }}
       </n-button>
     </div>

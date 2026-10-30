@@ -14,6 +14,7 @@ import {
 import type { PaginationResponseThreadResponseWithRole } from "@/api/generated/models";
 import { QUERY_EMPTY_PENDING_STATE } from "@/plugins/api";
 import { useCurrentScopeStore } from "@/stores/CurrentScopeStore";
+import { clearThreadDeadlines, refreshDeadlineAccess } from "./deadlineCache";
 import { organizationsListPrefix } from "./useOrganizations";
 import { organizationThreadsPrefix, threadPrefix, userAssignedThreadsPrefix } from "./useThreads";
 
@@ -35,7 +36,9 @@ export function useThreadMutations(organizationId: MaybeRefOrGetter<number>) {
     Promise.all([
       refreshLists(parent),
       invalidate(getGetThreadQueryKey(id), true),
-      ...(assignees ? [invalidate(getGetThreadAssigneesQueryKey(id, { page: 0 }).slice(0, -1))] : []),
+      ...(assignees
+        ? [invalidate(getGetThreadAssigneesQueryKey(id, { page: 0 }).slice(0, -1)), refreshDeadlineAccess(cache)]
+        : []),
     ]);
 
   const create = useCreateThread({
@@ -102,7 +105,11 @@ export function useThreadMutations(organizationId: MaybeRefOrGetter<number>) {
           }
         }
         if (scope.threadId === threadId || scope.deadline?.threadId === threadId) scope.exitScope("thread");
-        return Promise.all([refreshLists(parent.organizationId), refreshParent(parent.organizationId)]);
+        return Promise.all([
+          refreshLists(parent.organizationId),
+          refreshParent(parent.organizationId),
+          clearThreadDeadlines(cache, threadId),
+        ]);
       },
     },
   });

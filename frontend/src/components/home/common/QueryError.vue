@@ -11,8 +11,19 @@ const notification = computed(() => props.error ? requestErrorNotification(props
 </script>
 
 <template>
-  <n-alert v-if="notification" type="error" :title="notification.title" class="my-3">
-    {{ notification.content }}
-    <n-button class="ml-3" size="small" :loading="loading" @click="emit('retry')">{{ t('actions.retry') }}</n-button>
+  <n-alert v-if="notification" type="error" :title="notification.title">
+    <section class="space-y-3 flex flex-col justify-center">
+      <div>{{ notification.content }}</div>
+      <n-button
+        class="ml-3"
+        size="small"
+        type="error"
+        :loading="loading"
+        :disabled="loading"
+        @click="emit('retry')"
+      >
+        {{ t('actions.retry') }}
+      </n-button>
+    </section>
   </n-alert>
 </template>

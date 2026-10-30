@@ -2,18 +2,18 @@
 import { type FormInst, type FormRules, NButton, NCard, NDivider, NForm, NFormItem, NInput, NUpload, NUploadDragger, type UploadFileInfo, useMessage } from "naive-ui";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { patchDeadlineAttachmentMetadata, putDeadlineAttachment } from "@/api/deadline-attachments";
-import type { DeadlineAttachment } from "@/api/schemas/deadline-attachment/common/DeadlineAttachment";
+import type { AttachmentModel } from "@/api/adapters/attachment";
+import QueryError from "@/components/home/common/QueryError.vue";
 import UserAvatar from "@/components/home/common/UserAvatar.vue";
 import PropertyValue from "@/components/PropertyValue.vue";
-import { useApi } from "@/composables/useApi";
-import { useLoading } from "@/composables/useLoading";
+import { useAttachment, useAttachmentMutations } from "@/composables/useDeadlineAttachments";
+import { useRequestError } from "@/composables/useRequestError";
 import { tFormError } from "@/locales/utils";
 import { useLocalizationStore } from "@/stores/LocalizationStore";
 import { msToReadable } from "@/utils/date";
 import { formatBytes } from "@/utils/files";
 
-const props = defineProps<{ attachment: DeadlineAttachment }>();
+const props = defineProps<{ attachment: AttachmentModel }>();
 const emit = defineEmits<{
   close: [];
 }>();
@@ -21,8 +21,12 @@ const emit = defineEmits<{
 const { t, locale } = useI18n();
 const message = useMessage();
 const localizationStore = useLocalizationStore();
-const { makeRequest } = useApi();
-const { isLoading: isSubmitting, withLoading } = useLoading();
+const displayError = useRequestError();
+
+const detail = useAttachment(() => props.attachment.id);
+const attachment = computed(() => detail.attachment.value ?? props.attachment);
+const mutations = useAttachmentMutations(() => props.attachment.attachedTo);
+const isSubmitting = computed(() => mutations.patch.isLoading.value || mutations.replace.isLoading.value);
 
 const formRef = ref<FormInst | null>(null);
 const formModel = ref<{ filename: string; file: File | null }>({ filename: props.attachment.filename, file: null });
@@ -39,53 +43,44 @@ const handleFileListUpdate = (files: UploadFileInfo[]) => {
 };
 
 const handleSave = () => {
+  if (isSubmitting.value) return;
+
   formRef.value?.validate(async (errors) => {
     if (errors) return;
 
-    const res = await withLoading(async () => {
-      if (formModel.value.filename !== props.attachment.filename) {
-        const patchRes = await makeRequest(() =>
-          patchDeadlineAttachmentMetadata(props.attachment.id, { filename: formModel.value.filename }),
-        );
-        if (!patchRes.ok) return patchRes;
+    const attachmentId = props.attachment.id;
+    const { filename, file } = formModel.value;
+
+    try {
+      if (filename !== attachment.value.filename) {
+        await mutations.patch.mutateAsync({ attachmentId, patchFileMetadataRequest: { filename } });
       }
 
-      if (formModel.value.file) {
-        const putRes = await makeRequest(() => putDeadlineAttachment(props.attachment.id, formModel.value.file!));
-        if (!putRes.ok) return putRes;
+      if (file) {
+        await mutations.replace.mutateAsync({ attachmentId, replaceAttachmentBody: { file } });
       }
 
-      return { ok: true, data: undefined };
-    });
-    if (!res.ok) return;
-
-    const attachment = props.attachment;
-    attachment.filename = formModel.value.filename;
-
-    const file = formModel.value.file;
-    if (file) {
-      attachment.mimeType = file.type;
-      attachment.sizeBytes = file.size;
-      attachment.uploadedAt = Date.now();
+      message.success(t("scopes.deadline.attachment-updated"));
+      emit("close");
+    } catch (error) {
+      displayError(error);
     }
-    message.success(t("scopes.deadline.attachment-updated"));
-
-    emit("close");
   });
 };
 
 const readOnlyOptions = computed(() => [
-  { selector: "mime-type", data: props.attachment.mimeType },
-  { selector: "file-size", data: formatBytes(props.attachment.sizeBytes) },
+  { selector: "mime-type", data: attachment.value.mimeType },
+  { selector: "file-size", data: formatBytes(attachment.value.sizeBytes) },
   {
     selector: "uploaded-at",
-    data: msToReadable(props.attachment.uploadedAt, locale.value, localizationStore.timeZone).long,
+    data: msToReadable(attachment.value.uploadedAt, locale.value, localizationStore.timeZone).long,
   },
 ]);
 </script>
 
 <template>
   <n-card :title="t('scopes.deadline.edit-attachment')" closable @close="emit('close')">
+    <QueryError :error="detail.error.value" :loading="detail.isLoading.value" @retry="detail.refetch()" />
     <n-form ref="formRef" :model="formModel" :rules="formRules">
       <n-form-item :label="t('scopes.common.form-labels.filename')" path="filename">
         <n-input
@@ -127,7 +122,14 @@ const readOnlyOptions = computed(() => [
       </div>
     </n-form>
     <div v-if="attachment.permissions.update" class="mt-4 flex justify-end">
-      <n-button role="button" type="info" class="rounded-lg!" :loading="isSubmitting" @click="handleSave">
+      <n-button
+        role="button"
+        type="info"
+        class="rounded-lg!"
+        :loading="isSubmitting"
+        :disabled="isSubmitting"
+        @click="handleSave"
+      >
         {{ t("actions.save") }}
       </n-button>
     </div>

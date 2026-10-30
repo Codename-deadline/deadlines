@@ -51,9 +51,9 @@ const itemsPerRow = computed<number>(() => {
 });
 const cardHeight = computed<number>(() => {
   switch (props.scopeType) {
-    case "organization": return 211;
-    case "thread": return 179;
-    case "deadline": return 128;
+    case "organization": return 209;
+    case "thread": return 201;
+    case "deadline": return 151;
   }
 });
 

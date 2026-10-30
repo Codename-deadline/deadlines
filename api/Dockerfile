@@ -1,6 +1,8 @@
 # The prebuilt gRPC code generator requires glibc.
 FROM eclipse-temurin:25-jdk-resolute AS builder
 
+ARG JAVA_TOOL_OPTIONS
+
 WORKDIR /backend
 COPY proto/ proto/
 
@@ -17,6 +19,5 @@ FROM eclipse-temurin:25-jre-alpine-3.24
 
 WORKDIR /app
 COPY --from=builder --chmod=644 /backend/api/build/libs/deadlines_api.jar ./deadlines_api.jar
-USER 10001:10001
 
 CMD ["java", "-jar", "/app/deadlines_api.jar"]

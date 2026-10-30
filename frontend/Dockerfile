@@ -4,7 +4,7 @@ WORKDIR /deadlines
 COPY package.json bun.lock ./
 RUN bun i --frozen-lock
 
-COPY tsconfig.json tsconfig.app.json tsconfig.node.json vite.config.ts index.html ./
+COPY tsconfig.json tsconfig.app.json tsconfig.api.json tsconfig.node.json vite.config.ts index.html ./
 COPY src src
 
 RUN bun run build

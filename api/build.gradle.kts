@@ -11,6 +11,10 @@ plugins {
 group = "xyz.om3lette"
 version = "0.0.1-SNAPSHOT"
 
+tasks.bootJar {
+    archiveFileName = "deadlines_api.jar"
+}
+
 sourceSets {
     main {
         proto {

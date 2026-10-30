@@ -42,12 +42,12 @@
     "@vue/tsconfig": "^0.9.1",
     "autoprefixer": "^10.6.2",
     "naive-ui": "^2.45.3",
-    "orval": "^8.41.0",
+    "orval": "^8.46.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
     "vite-plugin-vue-devtools": "^8.2.1",
     "vitest": "^5.0.5",
-    "vue-tsc": "3.3.11"
+    "vue-tsc": "^3.3.14"
   },
   "overrides": {
     "postcss-selector-parser": "^7.1.6"

@@ -21,6 +21,7 @@ import { tEntityActionConfirmation, tEntityToastAction, tFormError } from "@/loc
 import emitter from "@/plugins/emitter";
 import { useCurrentScopeStore } from "@/stores/CurrentScopeStore";
 import { useLocalizationStore } from "@/stores/LocalizationStore";
+import { parsePositiveRouteId } from "@/utils/route";
 import { normalizeUsername } from "@/utils/validation";
 import DeadlineDatePicker from "./DeadlineDatePicker.vue";
 
@@ -70,8 +71,10 @@ const { patchFormModel, patchFormRules, handlePatch } = useEntityEdit({
 const handleDelete = async () => {
   if (mutations.remove.isLoading.value) return;
 
-  const wasSelected = scope.deadlineId === props.entity.id;
-  const path = router.currentRoute.value.fullPath;
+  const route = router.currentRoute.value;
+  // scope's deadline id cannot be trusted, as it loades asynchronously and might be null (not yet loaded)
+  const wasSelected = route.name === "Deadline" && parsePositiveRouteId(route.query.ddlId) === props.entity.id;
+  const path = route.fullPath;
 
   try {
     await mutations.remove.mutateAsync({ deadlineId: props.entity.id });

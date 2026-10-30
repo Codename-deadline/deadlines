@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useQueryCache } from "@pinia/colada";
-import { ref, watch } from "vue";
+import { watch } from "vue";
 import { type LocationQueryValue, useRoute } from "vue-router";
 import { resolveDeadline as resolveDeadlineQuery } from "@/composables/deadlines/useDeadlines";
 import { resolveOrganization as resolveOrganizationQuery } from "@/composables/organizations/useOrganizations";
@@ -18,7 +18,6 @@ const tokens = useTokenStore();
 const defaultEnabled = useDefaultQueryEnabled();
 const displayError = useRequestError();
 
-const ready = ref<boolean>(false);
 let resolutionGeneration: number = 0;
 
 const resolveOrganization = async (organizationId: number) => {
@@ -82,7 +81,8 @@ watch(
   async () => {
     const generation = ++resolutionGeneration;
     const session = tokens.sessionSignal();
-    ready.value = false;
+    // Render the destination immediately without exposing the previous route's scope.
+    currentScopeStore.$reset();
     let resolved: boolean = false;
 
     switch (route.name) {
@@ -107,12 +107,11 @@ watch(
 
     if (generation !== resolutionGeneration || session.aborted) return;
     if (!resolved) currentScopeStore.$reset();
-    ready.value = true;
   },
   { immediate: true },
 );
 </script>
 
 <template>
-  <RouterView v-if="ready" :key="route.fullPath" />
+  <RouterView :key="route.fullPath" />
 </template>

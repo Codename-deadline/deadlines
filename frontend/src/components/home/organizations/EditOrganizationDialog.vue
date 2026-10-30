@@ -11,10 +11,10 @@ import EntityDialoglayout from "@/components/home/common/dialogs/EntityDialoglay
 import MembersTab from "@/components/home/common/dialogs/members/MembersTab.vue";
 import UserInvitationInput from "@/components/home/common/forms/UserInvitationInput.vue";
 import QueryError from "@/components/home/common/QueryError.vue";
-import { useEntityEdit } from "@/composables/useEntityEdit";
-import { useOrganizationMutations } from "@/composables/useOrganizationMutations";
-import { useOrganization, useOrganizationMembers } from "@/composables/useOrganizations";
-import { useRequestError } from "@/composables/useRequestError";
+import { useOrganizationMutations } from "@/composables/organizations/useOrganizationMutations";
+import { useOrganization, useOrganizationMembers } from "@/composables/organizations/useOrganizations";
+import { useEntityEdit } from "@/composables/shared/useEntityEdit";
+import { useRequestError } from "@/composables/shared/useRequestError";
 import { DEFAULT_MEMBERS_PAGE_SIZE } from "@/constants/defaults";
 import { ORG_OWNER_ROLE } from "@/constants/roles";
 import { tEntityActionConfirmation, tEntityToastAction, tFormError } from "@/locales/utils";

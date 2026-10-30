@@ -9,7 +9,7 @@ import {
   useGetNumberOfPendingInvitation,
 } from "@/api/generated/endpoints/invitations/invitations";
 import type { OrganizationInvitationResponse } from "@/api/generated/models";
-import { usePagedList } from "./usePagedList";
+import { usePagedList } from "@/composables/shared/usePagedList";
 
 export const receivedInvitationsPrefix = getGetPendingInvitationsByUserQueryKey({ page: 0 }).slice(0, -1);
 export const sentInvitationsPrefix = getGetPendingSentInvitationsByUserQueryKey({ page: 0 }).slice(0, -1);

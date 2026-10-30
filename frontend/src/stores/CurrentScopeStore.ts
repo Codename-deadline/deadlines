@@ -7,7 +7,7 @@ import { getGetDeadlineQueryKey } from "@/api/generated/endpoints/deadlines/dead
 import { getGetOrganizationMetadataQueryKey } from "@/api/generated/endpoints/organizations/organizations";
 import { getGetThreadQueryKey } from "@/api/generated/endpoints/threads/threads";
 import type { OrganizationResponse, ThreadResponse } from "@/api/generated/models";
-import { useCachedEntity } from "@/composables/useCachedEntity";
+import { useCachedEntity } from "@/composables/shared/useCachedEntity";
 import type { ScopeType } from "@/types/scope";
 
 type ScopeEntity =

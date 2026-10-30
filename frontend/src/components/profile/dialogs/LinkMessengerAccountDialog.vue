@@ -3,8 +3,8 @@ import { type FormInst, type FormRules, NButton, NCard, NForm, NFormItem, NInput
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { LinkMessengerAccountRequestMessenger } from "@/api/generated/models";
-import { useLinkMessengerAccount } from "@/composables/useLinkedAccounts";
-import { useRequestError } from "@/composables/useRequestError";
+import { useRequestError } from "@/composables/shared/useRequestError";
+import { useLinkMessengerAccount } from "@/composables/users/useLinkedAccounts";
 import { isDigitOnlySequence } from "@/utils/validation";
 
 const emit = defineEmits<{

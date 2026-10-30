@@ -7,7 +7,7 @@ import GlobalHeader from "@/components/home/common/GlobalHeader.vue";
 import QueryError from "@/components/home/common/QueryError.vue";
 import SectionHeader from "@/components/home/common/SectionHeader.vue";
 import InvitationList from "@/components/home/invitations/InvitationList.vue";
-import { usePendingInvitationCount } from "@/composables/useInvitations";
+import { usePendingInvitationCount } from "@/composables/invitations/useInvitations";
 
 const { t } = useI18n();
 const pendingInvitations = usePendingInvitationCount();

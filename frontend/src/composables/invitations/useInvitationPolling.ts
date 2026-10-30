@@ -1,7 +1,7 @@
 import { useQueryCache } from "@pinia/colada";
 import { watch } from "vue";
+import { useDefaultQueryEnabled } from "@/composables/shared/useDefaultQueryEnabled";
 import { refreshInvitations } from "./invitationCache";
-import { useDefaultQueryEnabled } from "./useDefaultQueryEnabled";
 import { usePendingInvitationCount } from "./useInvitations";
 
 export const INVITATION_POLL_INTERVAL_MS = 5 * 60 * 1000;

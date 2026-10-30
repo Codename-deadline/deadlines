@@ -12,8 +12,8 @@ import {
   useGetThreadAssignees,
 } from "@/api/generated/endpoints/threads/threads";
 import type { ThreadResponseWithRole } from "@/api/generated/models";
-import { useDefaultQueryEnabled } from "./useDefaultQueryEnabled";
-import { usePagedList } from "./usePagedList";
+import { useDefaultQueryEnabled } from "@/composables/shared/useDefaultQueryEnabled";
+import { usePagedList } from "@/composables/shared/usePagedList";
 
 export const userAssignedThreadsPrefix = getGetUserThreadsQueryKey({ page: 0 }).slice(0, -1);
 export const organizationThreadsPrefix = (id: number) => getGetThreadsQueryKey(id, { page: 0 }).slice(0, -1);

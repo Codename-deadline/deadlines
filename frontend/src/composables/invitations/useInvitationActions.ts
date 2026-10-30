@@ -5,8 +5,8 @@ import {
   useDeclineInvitation,
   useRevokeInvitation,
 } from "@/api/generated/endpoints/invitations/invitations";
+import { refreshOrganization } from "@/composables/organizations/organizationCache";
 import { refreshInvitations, removeInvitationRows } from "./invitationCache";
-import { refreshOrganization } from "./organizationCache";
 
 type ParentContext = { organizationId: number };
 

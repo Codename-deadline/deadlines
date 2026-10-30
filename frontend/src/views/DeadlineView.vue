@@ -13,10 +13,10 @@ import DeadlineAttachmentsCard from "@/components/scopes/deadline/cards/Deadline
 import DeadlineDescriptionCard from "@/components/scopes/deadline/cards/DeadlineDescriptionCard.vue";
 import DeadlineDetailsCard from "@/components/scopes/deadline/cards/DeadlineDetailsCard.vue";
 import EditDeadlineAttachmentDialog from "@/components/scopes/deadline/EditDeadlineAttachmentDialog.vue";
-import { useAttachmentDownload, useAttachmentMutations, useDeadlineAttachments } from "@/composables/useDeadlineAttachments";
-import { useDeadlineMutations } from "@/composables/useDeadlineMutations";
-import { useDeadline, useDeadlineAssignees } from "@/composables/useDeadlines";
-import { useRequestError } from "@/composables/useRequestError";
+import { useAttachmentDownload, useAttachmentMutations, useDeadlineAttachments } from "@/composables/deadlines/useDeadlineAttachments";
+import { useDeadlineMutations } from "@/composables/deadlines/useDeadlineMutations";
+import { useDeadline, useDeadlineAssignees } from "@/composables/deadlines/useDeadlines";
+import { useRequestError } from "@/composables/shared/useRequestError";
 import { MINUTE_MS } from "@/constants/time";
 import emitter from "@/plugins/emitter";
 import { useTokenStore } from "@/stores/TokenStore";

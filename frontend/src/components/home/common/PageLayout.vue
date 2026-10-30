@@ -3,7 +3,7 @@ import { useWindowSize } from "@vueuse/core";
 import type { Component } from "vue";
 import { computed, onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { useInfiniteVirtualList } from "@/composables/useInfiniteVirtualList";
+import { useInfiniteVirtualList } from "@/composables/shared/useInfiniteVirtualList";
 import { CARD_HEIGHT_PIXELS, PRELOAD_DISTANCE_PIXELS } from "@/constants/virtualList";
 import { tEntitiesNotFound } from "@/locales/utils";
 import emitter from "@/plugins/emitter";

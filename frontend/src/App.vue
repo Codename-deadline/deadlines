@@ -15,9 +15,9 @@ import {
 import { computed, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
+import { useCurrentUser } from "@/composables/users/useCurrentUser";
 import CurrentScopeResolver from "./components/CurrentScopeResolver.vue";
 import ThemeSemanticVars from "./components/ThemeSemanticVars.vue";
-import { useCurrentUser } from "./composables/useCurrentUser";
 import { SEMI_PUBLIC_ROUTES } from "./constants/app";
 import GlobalEventHandler from "./GlobalEventHandler.vue";
 import { useLocalizationStore } from "./stores/LocalizationStore";

@@ -4,7 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 import AuthForm from "@/components/auth/AuthForm.vue";
 import AuthSelection from "@/components/auth/AuthSelection.vue";
 import AuthChannelCard from "@/components/auth/common/AuthChannelCard.vue";
-import { useCurrentUser } from "@/composables/useCurrentUser";
+import { useCurrentUser } from "@/composables/users/useCurrentUser";
 import emitter from "@/plugins/emitter";
 import type { AuthMethod } from "@/types/auth";
 

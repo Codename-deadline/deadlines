@@ -14,10 +14,10 @@ import EditProfileDialog from '@/components/profile/dialogs/EditProfileDialog.vu
 import LinkMessengerAccountDialog from '@/components/profile/dialogs/LinkMessengerAccountDialog.vue';
 import MessengerAccountCard from '@/components/profile/MessengerAccountCard.vue';
 import SubHeader from '@/components/SubHeader.vue';
-import { useCurrentUser } from '@/composables/useCurrentUser';
-import { useEndServerSessions } from '@/composables/useEndServerSessions';
-import { useLinkedAccounts, useUnlinkMessengerAccount } from '@/composables/useLinkedAccounts';
-import { useRequestError } from '@/composables/useRequestError';
+import { useEndServerSessions } from '@/composables/auth/useEndServerSessions';
+import { useRequestError } from '@/composables/shared/useRequestError';
+import { useCurrentUser } from '@/composables/users/useCurrentUser';
+import { useLinkedAccounts, useUnlinkMessengerAccount } from '@/composables/users/useLinkedAccounts';
 import { tActionConfirmation } from '@/locales/utils';
 import emitter from '@/plugins/emitter';
 import { useTokenStore } from '@/stores/TokenStore';

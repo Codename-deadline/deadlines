@@ -10,11 +10,11 @@ import EntityDialoglayout from "@/components/home/common/dialogs/EntityDialoglay
 import MembersTab from "@/components/home/common/dialogs/members/MembersTab.vue";
 import UserInvitationInput from "@/components/home/common/forms/UserInvitationInput.vue";
 import QueryError from "@/components/home/common/QueryError.vue";
-import { useDeadlineMutations } from "@/composables/useDeadlineMutations";
-import { useDeadline, useDeadlineAssignees } from "@/composables/useDeadlines";
-import { useEntityEdit } from "@/composables/useEntityEdit";
-import { useRequestError } from "@/composables/useRequestError";
-import { useThread } from "@/composables/useThreads";
+import { useDeadlineMutations } from "@/composables/deadlines/useDeadlineMutations";
+import { useDeadline, useDeadlineAssignees } from "@/composables/deadlines/useDeadlines";
+import { useEntityEdit } from "@/composables/shared/useEntityEdit";
+import { useRequestError } from "@/composables/shared/useRequestError";
+import { useThread } from "@/composables/threads/useThreads";
 import { MIN_DEADLINE_DURATION_MS } from "@/constants/forms";
 import { MINUTE_MS } from "@/constants/time";
 import { tEntityActionConfirmation, tEntityToastAction, tFormError } from "@/locales/utils";

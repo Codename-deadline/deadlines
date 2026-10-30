@@ -6,7 +6,7 @@ import { useI18n } from 'vue-i18n';
 import type { MemberModel } from '@/api/adapters/user';
 import type { UserScopeResponseRole as AnyRole } from '@/api/generated/models';
 import RoleDropdown from '@/components/home/common/forms/RoleDropdown.vue';
-import { useCurrentUser } from '@/composables/useCurrentUser';
+import { useCurrentUser } from '@/composables/users/useCurrentUser';
 import { PAGE_SIZE_KEY } from '@/constants/providerKeys';
 import { ORG_OWNER_ROLE } from '@/constants/roles';
 import { tActionConfirmation } from '@/locales/utils';

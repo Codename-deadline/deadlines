@@ -6,7 +6,7 @@ import PageLayout from "@/components/home/common/PageLayout.vue";
 import CreateThreadDialog from "@/components/home/threads/CreateThreadDialog.vue";
 import EditThreadDialog from "@/components/home/threads/EditThreadDialog.vue";
 import ThreadCard from "@/components/home/threads/ThreadCard.vue";
-import { useOrganizationThreads, useUserAssignedThreads } from "@/composables/useThreads";
+import { useOrganizationThreads, useUserAssignedThreads } from "@/composables/threads/useThreads";
 import { useCurrentScopeStore } from "@/stores/CurrentScopeStore";
 import { parsePositiveRouteId } from "@/utils/route";
 

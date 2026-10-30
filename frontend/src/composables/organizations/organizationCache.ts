@@ -4,8 +4,8 @@ import {
   getGetMemberUsernamesStartingWithQueryKey,
   getGetOrganizationMetadataQueryKey,
 } from "@/api/generated/endpoints/organizations/organizations";
-import { refreshQueryEntries } from "./queryCache";
-import { refreshOrganizationThreads } from "./threadCache";
+import { refreshQueryEntries } from "@/composables/shared/queryCache";
+import { refreshOrganizationThreads } from "@/composables/threads/threadCache";
 import { organizationsListPrefix } from "./useOrganizations";
 
 export const organizationMembersPrefix = (id: number) => getGetMembersQueryKey(id, { page: 0, size: 5 }).slice(0, -1);

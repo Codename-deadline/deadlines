@@ -6,7 +6,7 @@ import {
   getGetDeadlineQueryKey,
 } from "@/api/generated/endpoints/deadlines/deadlines";
 import type { AttachmentResponse, DeadlineResponseWithRole } from "@/api/generated/models";
-import { clearQueryEntries, refreshQueryEntries, removeInfiniteQueryItems } from "./queryCache";
+import { clearQueryEntries, refreshQueryEntries, removeInfiniteQueryItems } from "@/composables/shared/queryCache";
 import { deadlineListsPrefix, threadDeadlinesPrefix, userAssignedDeadlinesPrefix } from "./useDeadlines";
 
 type QueryCache = ReturnType<typeof useQueryCache>;

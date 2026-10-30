@@ -3,7 +3,7 @@ import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import OtpVerification from "@/components/auth/otp/OtpVerification.vue";
 import PasswordVerification from "@/components/auth/otp/PasswordVerification.vue";
-import { useCurrentUser } from "@/composables/useCurrentUser";
+import { useCurrentUser } from "@/composables/users/useCurrentUser";
 import emitter from "@/plugins/emitter";
 import { AuthMethod } from "@/types/auth";
 

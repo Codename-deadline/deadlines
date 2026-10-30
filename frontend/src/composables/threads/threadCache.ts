@@ -5,8 +5,8 @@ import type {
   ThreadResponse,
   ThreadResponseWithRole,
 } from "@/api/generated/models";
-import { clearThreadDeadlines, refreshDeadlineAccess } from "./deadlineCache";
-import { clearQueryEntries, refreshQueryEntries, removeInfiniteQueryItems } from "./queryCache";
+import { clearThreadDeadlines, refreshDeadlineAccess } from "@/composables/deadlines/deadlineCache";
+import { clearQueryEntries, refreshQueryEntries, removeInfiniteQueryItems } from "@/composables/shared/queryCache";
 import { organizationThreadsPrefix, userAssignedThreadsPrefix } from "./useThreads";
 
 type QueryCache = ReturnType<typeof useQueryCache>;

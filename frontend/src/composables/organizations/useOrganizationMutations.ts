@@ -10,11 +10,11 @@ import {
 } from "@/api/generated/endpoints/organizations/organizations";
 import { useChangeOrganizationOwner, useChangeOrganizationRole } from "@/api/generated/endpoints/roles/roles";
 import type { OrganizationResponseWithRole } from "@/api/generated/models";
+import { clearOrganizationInvitations, refreshInvitations } from "@/composables/invitations/invitationCache";
+import { clearQueryEntries, refreshQueryEntries, removeInfiniteQueryItems } from "@/composables/shared/queryCache";
+import { clearOrganizationThreads } from "@/composables/threads/threadCache";
 import { useCurrentScopeStore } from "@/stores/CurrentScopeStore";
-import { clearOrganizationInvitations, refreshInvitations } from "./invitationCache";
 import { organizationHintsPrefix, organizationMembersPrefix, refreshOrganization } from "./organizationCache";
-import { clearQueryEntries, refreshQueryEntries, removeInfiniteQueryItems } from "./queryCache";
-import { clearOrganizationThreads } from "./threadCache";
 import { organizationsListPrefix } from "./useOrganizations";
 
 export function useOrganizationMutations() {

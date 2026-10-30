@@ -3,7 +3,7 @@ import { useWindowSize } from "@vueuse/core";
 import { NBadge } from "naive-ui";
 import { type Component, computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { usePendingInvitationCount } from "@/composables/useInvitations";
+import { usePendingInvitationCount } from "@/composables/invitations/useInvitations";
 import type { MainSection } from "@/types/navigation";
 
 const props = defineProps<{

@@ -4,7 +4,7 @@ import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { toChangePasswordRequest } from "@/api/adapters/auth";
 import { useChangePassword } from "@/api/generated/endpoints/authentication/authentication";
-import { useRequestError } from "@/composables/useRequestError";
+import { useRequestError } from "@/composables/shared/useRequestError";
 import { tFormError } from "@/locales/utils";
 import emitter from "@/plugins/emitter";
 

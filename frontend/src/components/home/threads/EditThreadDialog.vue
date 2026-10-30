@@ -10,10 +10,10 @@ import EntityDialoglayout from "@/components/home/common/dialogs/EntityDialoglay
 import MembersTab from "@/components/home/common/dialogs/members/MembersTab.vue";
 import UserInvitationInput from "@/components/home/common/forms/UserInvitationInput.vue";
 import QueryError from "@/components/home/common/QueryError.vue";
-import { useEntityEdit } from "@/composables/useEntityEdit";
-import { useRequestError } from "@/composables/useRequestError";
-import { useThreadMutations } from "@/composables/useThreadMutations";
-import { useThread, useThreadAssignees } from "@/composables/useThreads";
+import { useEntityEdit } from "@/composables/shared/useEntityEdit";
+import { useRequestError } from "@/composables/shared/useRequestError";
+import { useThreadMutations } from "@/composables/threads/useThreadMutations";
+import { useThread, useThreadAssignees } from "@/composables/threads/useThreads";
 import { THREAD_ASSIGNEES_PAGE_SIZE } from "@/constants/defaults";
 import { tEntityActionConfirmation, tEntityToastAction, tFormError } from "@/locales/utils";
 import emitter from "@/plugins/emitter";

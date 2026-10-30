@@ -6,7 +6,7 @@ import PageLayout from "@/components/home/common/PageLayout.vue";
 import CreateDeadlineDialog from "@/components/home/deadlines/CreateDeadlineDialog.vue";
 import DeadlineCard from "@/components/home/deadlines/DeadlineCard.vue";
 import EditDeadlineDialog from "@/components/home/deadlines/EditDeadlineDialog.vue";
-import { useThreadDeadlines, useUserAssignedDeadlines } from "@/composables/useDeadlines";
+import { useThreadDeadlines, useUserAssignedDeadlines } from "@/composables/deadlines/useDeadlines";
 import { useCurrentScopeStore } from "@/stores/CurrentScopeStore";
 import { parsePositiveRouteId } from "@/utils/route";
 

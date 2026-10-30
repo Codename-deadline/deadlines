@@ -10,7 +10,7 @@ import type { RegisterOtpRequest } from "@/api/generated/models";
 import BaseAuthForm from "@/components/auth/common/BaseAuthForm.vue";
 import LanguageTooltip from "@/components/common/LanguageTooltip.vue";
 import TimezoneSelect from "@/components/common/TimezoneSelect.vue";
-import { useRequestError } from "@/composables/useRequestError";
+import { useRequestError } from "@/composables/shared/useRequestError";
 import { tFormError, tFormLabel, tLanguageOptions } from "@/locales/utils";
 import { useLocalizationStore } from "@/stores/LocalizationStore";
 import type { AuthMethod } from "@/types/auth";

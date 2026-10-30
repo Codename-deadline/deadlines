@@ -11,11 +11,11 @@ import {
 } from "@/api/generated/endpoints/deadlines/deadlines";
 import { useChangeDeadlineRole } from "@/api/generated/endpoints/roles/roles";
 import { getGetThreadQueryKey } from "@/api/generated/endpoints/threads/threads";
+import { refreshQueryEntries } from "@/composables/shared/queryCache";
+import { threadPrefix, userAssignedThreadsPrefix } from "@/composables/threads/useThreads";
 import { useCurrentScopeStore } from "@/stores/CurrentScopeStore";
 import { clearDeadline, refreshDeadlineAttachmentAccess, removeDeadlineRows } from "./deadlineCache";
-import { refreshQueryEntries } from "./queryCache";
 import { threadDeadlinesPrefix, userAssignedDeadlinesPrefix } from "./useDeadlines";
-import { threadPrefix, userAssignedThreadsPrefix } from "./useThreads";
 
 type ParentContext = { threadId: number };
 

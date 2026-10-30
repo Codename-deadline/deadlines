@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
-import { useCurrentUser } from "@/composables/useCurrentUser";
+import { useCurrentUser } from "@/composables/users/useCurrentUser";
 import { Language } from "@/types/Language";
 import { detectTimeZone } from "@/utils/timeZone";
 

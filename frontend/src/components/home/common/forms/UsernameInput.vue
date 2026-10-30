@@ -3,7 +3,7 @@ import { useDebounceFn } from "@vueuse/core";
 import { NMention } from "naive-ui";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { useUsernameHints } from "@/composables/useUsernameHints";
+import { useUsernameHints } from "@/composables/users/useUsernameHints";
 import { normalizeUsername } from "@/utils/validation";
 import QueryError from "../QueryError.vue";
 

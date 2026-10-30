@@ -12,10 +12,10 @@ import {
   useRemoveThreadAssignee,
 } from "@/api/generated/endpoints/threads/threads";
 import type { ThreadResponseWithRole } from "@/api/generated/models";
+import { clearThreadDeadlines, refreshDeadlineAccess } from "@/composables/deadlines/deadlineCache";
+import { organizationsListPrefix } from "@/composables/organizations/useOrganizations";
+import { clearQueryEntries, refreshQueryEntries, removeInfiniteQueryItems } from "@/composables/shared/queryCache";
 import { useCurrentScopeStore } from "@/stores/CurrentScopeStore";
-import { clearThreadDeadlines, refreshDeadlineAccess } from "./deadlineCache";
-import { clearQueryEntries, refreshQueryEntries, removeInfiniteQueryItems } from "./queryCache";
-import { organizationsListPrefix } from "./useOrganizations";
 import { organizationThreadsPrefix, threadPrefix, userAssignedThreadsPrefix } from "./useThreads";
 
 type ParentContext = { organizationId: number };

@@ -1,7 +1,7 @@
 import { computed, type MaybeRefOrGetter, toValue } from "vue";
 import { useGetMemberUsernamesStartingWith } from "@/api/generated/endpoints/organizations/organizations";
 import { useGetUsernamesStartingWith } from "@/api/generated/endpoints/user/user";
-import { useDefaultQueryEnabled } from "./useDefaultQueryEnabled";
+import { useDefaultQueryEnabled } from "@/composables/shared/useDefaultQueryEnabled";
 
 /**
  * useUsernameHints resolves usernames starting with a substring.

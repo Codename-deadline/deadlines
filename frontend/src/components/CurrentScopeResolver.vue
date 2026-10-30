@@ -2,11 +2,11 @@
 import { useQueryCache } from "@pinia/colada";
 import { ref, watch } from "vue";
 import { type LocationQueryValue, useRoute } from "vue-router";
-import { resolveDeadline as resolveDeadlineQuery } from "@/composables/useDeadlines";
-import { useDefaultQueryEnabled } from "@/composables/useDefaultQueryEnabled";
-import { resolveOrganization as resolveOrganizationQuery } from "@/composables/useOrganizations";
-import { useRequestError } from "@/composables/useRequestError";
-import { resolveThread as resolveThreadQuery } from "@/composables/useThreads";
+import { resolveDeadline as resolveDeadlineQuery } from "@/composables/deadlines/useDeadlines";
+import { resolveOrganization as resolveOrganizationQuery } from "@/composables/organizations/useOrganizations";
+import { useDefaultQueryEnabled } from "@/composables/shared/useDefaultQueryEnabled";
+import { useRequestError } from "@/composables/shared/useRequestError";
+import { resolveThread as resolveThreadQuery } from "@/composables/threads/useThreads";
 import { type ScopeHierarchy, useCurrentScopeStore } from "@/stores/CurrentScopeStore";
 import { useTokenStore } from "@/stores/TokenStore";
 import { parsePositiveRouteId } from "@/utils/route";

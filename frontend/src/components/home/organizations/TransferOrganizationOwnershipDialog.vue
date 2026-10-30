@@ -4,9 +4,9 @@ import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import type { OrganizationListModel } from "@/api/adapters/organization";
 import UsernameInput from "@/components/home/common/forms/UsernameInput.vue";
-import { useCurrentUser } from "@/composables/useCurrentUser";
-import { useOrganizationMutations } from "@/composables/useOrganizationMutations";
-import { useRequestError } from "@/composables/useRequestError";
+import { useOrganizationMutations } from "@/composables/organizations/useOrganizationMutations";
+import { useRequestError } from "@/composables/shared/useRequestError";
+import { useCurrentUser } from "@/composables/users/useCurrentUser";
 import { normalizeUsername } from "@/utils/validation";
 
 const props = defineProps<{

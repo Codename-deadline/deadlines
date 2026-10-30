@@ -10,8 +10,8 @@ import {
   useGetOrganizationMetadata,
 } from "@/api/generated/endpoints/organizations/organizations";
 import type { OrganizationResponseWithRole } from "@/api/generated/models";
-import { useDefaultQueryEnabled } from "./useDefaultQueryEnabled";
-import { usePagedList } from "./usePagedList";
+import { useDefaultQueryEnabled } from "@/composables/shared/useDefaultQueryEnabled";
+import { usePagedList } from "@/composables/shared/usePagedList";
 
 export const organizationsListPrefix = getGetOrganizationsByUserQueryKey({ page: 0 }).slice(0, -1);
 export const organizationsListKey = [...organizationsListPrefix, "infinite"] as const;

@@ -12,8 +12,8 @@ import {
   useGetDeadlineAssignees,
 } from "@/api/generated/endpoints/deadlines/deadlines";
 import type { DeadlineResponseWithRole } from "@/api/generated/models";
-import { useDefaultQueryEnabled } from "./useDefaultQueryEnabled";
-import { usePagedList } from "./usePagedList";
+import { useDefaultQueryEnabled } from "@/composables/shared/useDefaultQueryEnabled";
+import { usePagedList } from "@/composables/shared/usePagedList";
 
 export const userAssignedDeadlinesPrefix = getGetUserDeadlinesQueryKey({ page: 0 }).slice(0, -1);
 export const threadDeadlinesPrefix = (id: number) => getGetDeadlinesQueryKey(id, { page: 0 }).slice(0, -1);

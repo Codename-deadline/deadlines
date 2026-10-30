@@ -4,8 +4,8 @@ import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import QueryError from "@/components/home/common/QueryError.vue";
 import SkeletonGrid from "@/components/home/common/SkeletonGrid.vue";
-import { useInfiniteVirtualList } from "@/composables/useInfiniteVirtualList";
-import { useReceivedInvitations, useSentInvitations } from "@/composables/useInvitations";
+import { useReceivedInvitations, useSentInvitations } from "@/composables/invitations/useInvitations";
+import { useInfiniteVirtualList } from "@/composables/shared/useInfiniteVirtualList";
 import { tEntitiesNotFound } from "@/locales/utils";
 import InvitationCard from "./InvitationCard.vue";
 

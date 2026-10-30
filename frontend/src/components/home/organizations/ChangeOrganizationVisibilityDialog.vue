@@ -4,8 +4,8 @@ import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import type { OrganizationListModel } from "@/api/adapters/organization";
 import { OrganizationResponseType } from "@/api/generated/models";
-import { useOrganizationMutations } from "@/composables/useOrganizationMutations";
-import { useRequestError } from "@/composables/useRequestError";
+import { useOrganizationMutations } from "@/composables/organizations/useOrganizationMutations";
+import { useRequestError } from "@/composables/shared/useRequestError";
 
 const props = defineProps<{
   entity: OrganizationListModel;

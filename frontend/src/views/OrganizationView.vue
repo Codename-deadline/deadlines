@@ -5,7 +5,7 @@ import PageLayout from "@/components/home/common/PageLayout.vue";
 import CreateOrganizationDialog from "@/components/home/organizations/CreateOrganizationDialog.vue";
 import EditOrganizationDialog from "@/components/home/organizations/EditOrganizationDialog.vue";
 import OrganizationCard from "@/components/home/organizations/OrganizationCard.vue";
-import { useOrganizations } from "@/composables/useOrganizations";
+import { useOrganizations } from "@/composables/organizations/useOrganizations";
 
 const router = useRouter();
 const { items, isLoading, error, hasNextPage, loadMore, retry } = useOrganizations();

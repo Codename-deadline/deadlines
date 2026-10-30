@@ -2,8 +2,8 @@
 import { type FormInst, type FormRules, NButton, NCard, NForm, NFormItem, NInput, NUpload, NUploadDragger, type UploadFileInfo, useMessage } from "naive-ui";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { useAttachmentMutations } from "@/composables/useDeadlineAttachments";
-import { useRequestError } from "@/composables/useRequestError";
+import { useAttachmentMutations } from "@/composables/deadlines/useDeadlineAttachments";
+import { useRequestError } from "@/composables/shared/useRequestError";
 import { tFormError } from "@/locales/utils";
 
 const props = defineProps<{

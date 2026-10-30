@@ -16,9 +16,9 @@ import {
   useGetDeadlineAttachmentsMetadata,
 } from "@/api/generated/endpoints/deadlines/deadlines";
 import type { AttachmentResponse } from "@/api/generated/models";
-import { clearQueryEntries, refreshQueryEntries } from "./queryCache";
+import { clearQueryEntries, refreshQueryEntries } from "@/composables/shared/queryCache";
+import { useDefaultQueryEnabled } from "@/composables/shared/useDefaultQueryEnabled";
 import { deadlineListsPrefix, userAssignedDeadlinesPrefix } from "./useDeadlines";
-import { useDefaultQueryEnabled } from "./useDefaultQueryEnabled";
 
 export function useDeadlineAttachments(deadlineId: MaybeRefOrGetter<number>) {
   const enabled = useDefaultQueryEnabled();

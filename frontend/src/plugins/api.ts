@@ -1,7 +1,7 @@
 import { type DataState, PiniaColada, type UseQueryEntry, useMutationCache, useQueryCache } from "@pinia/colada";
 import type { Pinia } from "pinia";
 import { type App, nextTick, toValue, watch } from "vue";
-import { useDefaultQueryEnabled } from "@/composables/useDefaultQueryEnabled";
+import { useDefaultQueryEnabled } from "@/composables/shared/useDefaultQueryEnabled";
 import { useCurrentScopeStore } from "@/stores/CurrentScopeStore";
 import { useTokenStore } from "@/stores/TokenStore";
 import { sessionMutationGuard } from "./pinia/sessionMutations";

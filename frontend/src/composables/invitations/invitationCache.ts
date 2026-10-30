@@ -4,7 +4,7 @@ import {
   getGetNumberOfPendingInvitationQueryKey,
 } from "@/api/generated/endpoints/invitations/invitations";
 import type { OrganizationInvitationResponse } from "@/api/generated/models";
-import { clearQueryEntries, refreshQueryEntries, removeInfiniteQueryItems } from "./queryCache";
+import { clearQueryEntries, refreshQueryEntries, removeInfiniteQueryItems } from "@/composables/shared/queryCache";
 import { receivedInvitationsPrefix, sentInvitationsPrefix } from "./useInvitations";
 
 type QueryCache = ReturnType<typeof useQueryCache>;

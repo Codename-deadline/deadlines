@@ -8,8 +8,8 @@ import { OrganizationResponseType } from "@/api/generated/models";
 import EntityCreationDialogLayout from "@/components/home/common/dialogs/EntityCreationDialogLayout.vue";
 import DynamicUserInvitationInput from "@/components/home/common/forms/DynamicUserInvitationInput.vue";
 import Step from "@/components/home/common/stepper/Step.vue";
-import { useEntityCreate } from "@/composables/useEntityCreate";
-import { useOrganizationMutations } from "@/composables/useOrganizationMutations";
+import { useOrganizationMutations } from "@/composables/organizations/useOrganizationMutations";
+import { useEntityCreate } from "@/composables/shared/useEntityCreate";
 import { tFormError } from "@/locales/utils";
 
 type OrgFormModel = { title: string; description: string; visibility: OrganizationResponseType };

@@ -8,7 +8,7 @@ import { toCreateOtpRequest } from "@/api/adapters/auth";
 import { useSignInOtp } from "@/api/generated/endpoints/authentication/authentication";
 import type { CreateOtpRequest } from "@/api/generated/models";
 import BaseAuthForm from "@/components/auth/common/BaseAuthForm.vue";
-import { useRequestError } from "@/composables/useRequestError";
+import { useRequestError } from "@/composables/shared/useRequestError";
 import { tFormError, tFormLabel } from "@/locales/utils";
 import type { AuthMethod } from "@/types/auth";
 import { redirectToOTP } from "@/utils";

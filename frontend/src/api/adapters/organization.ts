@@ -1,12 +1,10 @@
-import { normalizeUsername } from "@/utils/validation";
 import type {
   CreateOrganizationRequest,
   OrganizationDTO,
   OrganizationResponse,
   OrganizationResponseWithRole,
-  UsernameRolePair,
 } from "../generated/models";
-import { toTimestamp } from "./common";
+import { normalizeInvitations, toTimestamp } from "./common";
 
 export type OrganizationModel<T extends OrganizationDTO = OrganizationResponse> = Omit<
   T,
@@ -34,11 +32,5 @@ export function toCreateOrganizationRequest(
     invitations: { username: string; role: string }[];
   },
 ): CreateOrganizationRequest {
-  const invitations = new Map<string, UsernameRolePair>();
-  for (const invitation of request.invitations) {
-    const username = normalizeUsername(invitation.username.trim());
-    if (username && !invitations.has(username))
-      invitations.set(username, { username, role: toOrganizationRole(invitation.role) });
-  }
-  return { ...request, invitations: [...invitations.values()] };
+  return { ...request, invitations: normalizeInvitations(request.invitations, toOrganizationRole) };
 }

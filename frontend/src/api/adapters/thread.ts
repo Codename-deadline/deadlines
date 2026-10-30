@@ -1,11 +1,5 @@
-import { normalizeUsername } from "@/utils/validation";
-import type {
-  CreateThreadRequest,
-  ThreadResponse,
-  ThreadResponseWithRole,
-  UsernameRolePair,
-} from "../generated/models";
-import { toTimestamp } from "./common";
+import type { CreateThreadRequest, ThreadResponse, ThreadResponseWithRole } from "../generated/models";
+import { normalizeInvitations, toTimestamp } from "./common";
 
 export type ThreadModel<T extends ThreadResponse = ThreadResponse> = Omit<T, "createdAt" | "description"> & {
   createdAt: number;
@@ -34,11 +28,5 @@ export function toCreateThreadRequest(
     invitations: { username: string; role: string }[];
   },
 ): CreateThreadRequest {
-  const invitations = new Map<string, UsernameRolePair>();
-  for (const invitation of request.invitations) {
-    const username = normalizeUsername(invitation.username.trim());
-    if (username && !invitations.has(username))
-      invitations.set(username, { username, role: toThreadRole(invitation.role) });
-  }
-  return { ...request, invitations: [...invitations.values()] };
+  return { ...request, invitations: normalizeInvitations(request.invitations, toThreadRole) };
 }

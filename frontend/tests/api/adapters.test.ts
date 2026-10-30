@@ -4,7 +4,9 @@ import {
   toAttachment,
   toChangeOrganizationOwnerRequest,
   toCreateDeadlineRequest,
+  toCreateOrganizationRequest,
   toCreateOtpRequest,
+  toCreateThreadRequest,
   toDeadline,
   toInvitation,
   toMember,
@@ -276,4 +278,49 @@ describe("toPatchDeadlineRequest", () => {
 
     expect(result).toEqual(input);
   });
+});
+
+type InvitationInput = { username: string; role: string };
+const createRequests = [
+  {
+    name: "organization",
+    role: "ORG_MEMBER",
+    create: (invitations: InvitationInput[]) =>
+      toCreateOrganizationRequest({ title: "Organization", type: "PRIVATE", invitations }),
+  },
+  {
+    name: "thread",
+    role: "THR_ASSIGNEE",
+    create: (invitations: InvitationInput[]) => toCreateThreadRequest({ title: "Thread", invitations }),
+  },
+  {
+    name: "deadline",
+    role: "DDL_ASSIGNEE",
+    create: (invitations: InvitationInput[]) =>
+      toCreateDeadlineRequest({ title: "Deadline", due: timestamp, invitations }),
+  },
+];
+
+test.each(createRequests)("$name creation normalizes invitations without changing their input", ({ create, role }) => {
+  const invitations = [
+    { username: " @@user ", role },
+    { username: "user", role: "INVALID" },
+    { username: "@", role: "INVALID" },
+    { username: "second", role },
+  ];
+  const original = structuredClone(invitations);
+
+  const request = create(invitations);
+
+  expect(request.invitations).toEqual([
+    { username: "user", role },
+    { username: "second", role },
+  ]);
+  expect(invitations).toEqual(original);
+});
+
+test.each(createRequests)("$name creation rejects invalid roles for unique invitees", ({ create }) => {
+  const invitations = [{ username: "user", role: "INVALID" }];
+
+  expect(() => create(invitations)).toThrow(TypeError);
 });

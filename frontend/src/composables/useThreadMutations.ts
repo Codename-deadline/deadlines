@@ -1,4 +1,4 @@
-import { type EntryKey, setInfiniteQueryData, type UseInfiniteQueryData, useQueryCache } from "@pinia/colada";
+import { useQueryCache } from "@pinia/colada";
 import { type MaybeRefOrGetter, toValue } from "vue";
 import { getGetOrganizationMetadataQueryKey } from "@/api/generated/endpoints/organizations/organizations";
 import { useChangeThreadRole } from "@/api/generated/endpoints/roles/roles";
@@ -11,10 +11,10 @@ import {
   usePatchThread,
   useRemoveThreadAssignee,
 } from "@/api/generated/endpoints/threads/threads";
-import type { PaginationResponseThreadResponseWithRole } from "@/api/generated/models";
-import { QUERY_EMPTY_PENDING_STATE } from "@/plugins/api";
+import type { ThreadResponseWithRole } from "@/api/generated/models";
 import { useCurrentScopeStore } from "@/stores/CurrentScopeStore";
 import { clearThreadDeadlines, refreshDeadlineAccess } from "./deadlineCache";
+import { clearQueryEntries, refreshQueryEntries, removeInfiniteQueryItems } from "./queryCache";
 import { organizationsListPrefix } from "./useOrganizations";
 import { organizationThreadsPrefix, threadPrefix, userAssignedThreadsPrefix } from "./useThreads";
 
@@ -26,18 +26,27 @@ export function useThreadMutations(organizationId: MaybeRefOrGetter<number>) {
 
   const captureParent = (): ParentContext => ({ organizationId: toValue(organizationId) });
 
-  const invalidate = (key: EntryKey, all = false) =>
-    cache.invalidateQueries({ key }, all ? "all" : true).catch(() => {});
   const refreshLists = (id: number) =>
-    Promise.all([invalidate(userAssignedThreadsPrefix), invalidate(organizationThreadsPrefix(id))]);
+    Promise.all([
+      refreshQueryEntries(cache, { key: userAssignedThreadsPrefix }),
+      refreshQueryEntries(cache, { key: organizationThreadsPrefix(id) }),
+    ]);
+
   const refreshParent = (id: number) =>
-    Promise.all([invalidate(organizationsListPrefix), invalidate(getGetOrganizationMetadataQueryKey(id), true)]);
+    Promise.all([
+      refreshQueryEntries(cache, { key: organizationsListPrefix }),
+      refreshQueryEntries(cache, { key: getGetOrganizationMetadataQueryKey(id) }, "all"),
+    ]);
+
   const refreshThread = (id: number, parent: number, assignees = false) =>
     Promise.all([
       refreshLists(parent),
-      invalidate(getGetThreadQueryKey(id), true),
+      refreshQueryEntries(cache, { key: getGetThreadQueryKey(id) }, "all"),
       ...(assignees
-        ? [invalidate(getGetThreadAssigneesQueryKey(id, { page: 0 }).slice(0, -1)), refreshDeadlineAccess(cache)]
+        ? [
+            refreshQueryEntries(cache, { key: getGetThreadAssigneesQueryKey(id, { page: 0 }).slice(0, -1) }),
+            refreshDeadlineAccess(cache),
+          ]
         : []),
     ]);
 
@@ -74,36 +83,19 @@ export function useThreadMutations(organizationId: MaybeRefOrGetter<number>) {
     mutation: {
       onMutate: captureParent,
       onSuccess: (_, { threadId }, parent) => {
-        for (const prefix of [userAssignedThreadsPrefix, threadPrefix]) {
-          for (const entry of cache.getEntries({
-            key: prefix,
-            predicate: (entry) => entry.key[entry.key.length - 1] === "infinite",
-          })) {
-            const list = entry.state.value.data as
-              | UseInfiniteQueryData<PaginationResponseThreadResponseWithRole, number>
-              | undefined;
-            if (list)
-              setInfiniteQueryData(cache, entry.key, {
-                ...list,
-                pages: list.pages.map((page) => ({
-                  ...page,
-                  data: page.data.filter((item) => item.id !== threadId),
-                })),
-              });
-          }
-        }
+        removeInfiniteQueryItems(
+          cache,
+          [userAssignedThreadsPrefix, threadPrefix],
+          (item: ThreadResponseWithRole) => item.id === threadId,
+        );
+
         for (const key of [
           getGetThreadQueryKey(threadId),
           getGetThreadAssigneesQueryKey(threadId, { page: 0 }).slice(0, -1),
         ]) {
-          for (const entry of cache.getEntries({ key })) {
-            cache.cancel(entry);
-            entry.placeholderData = null;
-            cache.setEntryState(entry, QUERY_EMPTY_PENDING_STATE);
-            cache.invalidate(entry);
-            if (!entry.active) cache.remove(entry);
-          }
+          clearQueryEntries(cache, key);
         }
+
         if (scope.threadId === threadId || scope.deadline?.threadId === threadId) scope.exitScope("thread");
         return Promise.all([
           refreshLists(parent.organizationId),

@@ -1,8 +1,12 @@
-import { type EntryKey, setInfiniteQueryData, type UseInfiniteQueryData, type useQueryCache } from "@pinia/colada";
+import type { EntryKey, UseInfiniteQueryData, useQueryCache } from "@pinia/colada";
 import { getGetThreadAssigneesQueryKey, getGetThreadQueryKey } from "@/api/generated/endpoints/threads/threads";
-import type { PaginationResponseThreadResponseWithRole, ThreadResponse } from "@/api/generated/models";
-import { QUERY_EMPTY_PENDING_STATE } from "@/plugins/api";
+import type {
+  PaginationResponseThreadResponseWithRole,
+  ThreadResponse,
+  ThreadResponseWithRole,
+} from "@/api/generated/models";
 import { clearThreadDeadlines, refreshDeadlineAccess } from "./deadlineCache";
+import { clearQueryEntries, refreshQueryEntries, removeInfiniteQueryItems } from "./queryCache";
 import { organizationThreadsPrefix, userAssignedThreadsPrefix } from "./useThreads";
 
 type QueryCache = ReturnType<typeof useQueryCache>;
@@ -17,9 +21,9 @@ export function refreshOrganizationThreads(cache: QueryCache, organizationId: nu
 
   return Promise.all([
     refreshDeadlineAccess(cache),
-    cache.invalidateQueries({ key: userAssignedThreadsPrefix }).catch(() => {}),
-    cache.invalidateQueries({ key: organizationThreadsPrefix(organizationId) }).catch(() => {}),
-    ...details.map((entry) => cache.invalidateQueries({ key: entry.key, exact: true }, "all").catch(() => {})),
+    refreshQueryEntries(cache, { key: userAssignedThreadsPrefix }),
+    refreshQueryEntries(cache, { key: organizationThreadsPrefix(organizationId) }),
+    ...details.map((entry) => refreshQueryEntries(cache, { key: entry.key, exact: true }, "all")),
   ]);
 }
 
@@ -51,36 +55,16 @@ export function clearOrganizationThreads(cache: QueryCache, organizationId: numb
   }
 
   for (const key of keys) {
-    for (const entry of cache.getEntries({ key })) {
-      if (!entry.active) {
-        cache.cancel(entry);
-        cache.remove(entry);
-      } else {
-        entry.placeholderData = null;
-        cache.setEntryState(entry, QUERY_EMPTY_PENDING_STATE);
-        cache.invalidate(entry);
-      }
-    }
+    clearQueryEntries(cache, key);
   }
+  removeInfiniteQueryItems(
+    cache,
+    [userAssignedThreadsPrefix],
+    (item: ThreadResponseWithRole) => item.organizationId === organizationId,
+  );
 
-  for (const entry of cache.getEntries({
-    key: userAssignedThreadsPrefix,
-    predicate: (entry) => entry.key[entry.key.length - 1] === "infinite",
-  })) {
-    const list = entry.state.value.data as
-      | UseInfiniteQueryData<PaginationResponseThreadResponseWithRole, number>
-      | undefined;
-    if (list)
-      setInfiniteQueryData(cache, entry.key, {
-        ...list,
-        pages: list.pages.map((page) => ({
-          ...page,
-          data: page.data.filter((item) => item.organizationId !== organizationId),
-        })),
-      });
-  }
   return Promise.all([
-    cache.invalidateQueries({ key: userAssignedThreadsPrefix }).catch(() => {}),
+    refreshQueryEntries(cache, { key: userAssignedThreadsPrefix }),
     ...[...threadIds].map((id) => clearThreadDeadlines(cache, id)),
   ]);
 }

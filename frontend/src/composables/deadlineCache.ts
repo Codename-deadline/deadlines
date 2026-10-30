@@ -1,39 +1,20 @@
-import { type EntryKey, setInfiniteQueryData, type UseInfiniteQueryData, type useQueryCache } from "@pinia/colada";
+import type { EntryKey, useQueryCache } from "@pinia/colada";
 import { getGetAttachmentMetadataQueryKey } from "@/api/generated/endpoints/attachments/attachments";
 import {
   getGetDeadlineAssigneesQueryKey,
   getGetDeadlineAttachmentsMetadataQueryKey,
   getGetDeadlineQueryKey,
 } from "@/api/generated/endpoints/deadlines/deadlines";
-import type {
-  AttachmentResponse,
-  DeadlineResponseWithRole,
-  PaginationResponseDeadlineResponseWithRole,
-} from "@/api/generated/models";
-import { clearQueryEntries } from "./queryCache";
+import type { AttachmentResponse, DeadlineResponseWithRole } from "@/api/generated/models";
+import { clearQueryEntries, refreshQueryEntries, removeInfiniteQueryItems } from "./queryCache";
 import { deadlineListsPrefix, threadDeadlinesPrefix, userAssignedDeadlinesPrefix } from "./useDeadlines";
 
 type QueryCache = ReturnType<typeof useQueryCache>;
 const detailsPrefix = getGetDeadlineQueryKey(0).slice(0, -1);
 const attachmentsPrefix = getGetAttachmentMetadataQueryKey(0).slice(0, -1);
 
-export function removeDeadlineRows(cache: QueryCache, matches: (deadline: DeadlineResponseWithRole) => boolean) {
-  for (const prefix of [userAssignedDeadlinesPrefix, deadlineListsPrefix]) {
-    for (const entry of cache.getEntries({
-      key: prefix,
-      predicate: (entry) => entry.key[entry.key.length - 1] === "infinite",
-    })) {
-      const list = entry.state.value.data as
-        | UseInfiniteQueryData<PaginationResponseDeadlineResponseWithRole, number>
-        | undefined;
-      if (!list) continue;
-
-      setInfiniteQueryData(cache, entry.key, {
-        ...list,
-        pages: list.pages.map((page) => ({ ...page, data: page.data.filter((item) => !matches(item)) })),
-      });
-    }
-  }
+export function removeDeadlineRows(cache: QueryCache, matches: (item: DeadlineResponseWithRole) => boolean) {
+  removeInfiniteQueryItems(cache, [userAssignedDeadlinesPrefix, deadlineListsPrefix], matches);
 }
 
 export function clearDeadline(cache: QueryCache, id: number) {
@@ -74,7 +55,7 @@ export function clearThreadDeadlines(cache: QueryCache, threadId: number) {
   for (const id of ids) clearDeadline(cache, id);
   clearQueryEntries(cache, threadDeadlinesPrefix(threadId));
 
-  return cache.invalidateQueries({ key: userAssignedDeadlinesPrefix }).catch(() => {});
+  return refreshQueryEntries(cache, { key: userAssignedDeadlinesPrefix });
 }
 
 export function refreshDeadlineAttachmentAccess(cache: QueryCache, deadlineId: number) {
@@ -85,7 +66,7 @@ export function refreshDeadlineAttachmentAccess(cache: QueryCache, deadlineId: n
     if (dto?.attachedTo === deadlineId) keys.push(entry.key);
   }
 
-  return Promise.all(keys.map((key) => cache.invalidateQueries({ key }, "all").catch(() => {})));
+  return Promise.all(keys.map((key) => refreshQueryEntries(cache, { key }, "all")));
 }
 
 /** Parent roles can change inherited deadline and attachment permissions. */
@@ -99,5 +80,5 @@ export function refreshDeadlineAccess(cache: QueryCache) {
     attachmentsPrefix,
   ];
 
-  return Promise.all(prefixes.map((key) => cache.invalidateQueries({ key }, "all").catch(() => {})));
+  return Promise.all(prefixes.map((key) => refreshQueryEntries(cache, { key }, "all")));
 }

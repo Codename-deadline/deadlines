@@ -4,6 +4,7 @@ import {
   getGetMemberUsernamesStartingWithQueryKey,
   getGetOrganizationMetadataQueryKey,
 } from "@/api/generated/endpoints/organizations/organizations";
+import { refreshQueryEntries } from "./queryCache";
 import { refreshOrganizationThreads } from "./threadCache";
 import { organizationsListPrefix } from "./useOrganizations";
 
@@ -13,13 +14,13 @@ export const organizationHintsPrefix = (id: number) =>
 
 export function refreshOrganization(cache: ReturnType<typeof useQueryCache>, organizationId: number, members = false) {
   return Promise.all([
-    cache.invalidateQueries({ key: organizationsListPrefix }).catch(() => {}),
+    refreshQueryEntries(cache, { key: organizationsListPrefix }),
     // Scope readers can consume the detail cache without mounting a query observer.
-    cache.invalidateQueries({ key: getGetOrganizationMetadataQueryKey(organizationId) }, "all").catch(() => {}),
+    refreshQueryEntries(cache, { key: getGetOrganizationMetadataQueryKey(organizationId) }, "all"),
     ...(members
       ? [
-          cache.invalidateQueries({ key: organizationMembersPrefix(organizationId) }).catch(() => {}),
-          cache.invalidateQueries({ key: organizationHintsPrefix(organizationId) }).catch(() => {}),
+          refreshQueryEntries(cache, { key: organizationMembersPrefix(organizationId) }),
+          refreshQueryEntries(cache, { key: organizationHintsPrefix(organizationId) }),
           refreshOrganizationThreads(cache, organizationId),
         ]
       : []),

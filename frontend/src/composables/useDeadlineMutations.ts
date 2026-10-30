@@ -1,4 +1,4 @@
-import { type EntryKey, useQueryCache } from "@pinia/colada";
+import { useQueryCache } from "@pinia/colada";
 import { type MaybeRefOrGetter, toValue } from "vue";
 import {
   getGetDeadlineAssigneesQueryKey,
@@ -13,6 +13,7 @@ import { useChangeDeadlineRole } from "@/api/generated/endpoints/roles/roles";
 import { getGetThreadQueryKey } from "@/api/generated/endpoints/threads/threads";
 import { useCurrentScopeStore } from "@/stores/CurrentScopeStore";
 import { clearDeadline, refreshDeadlineAttachmentAccess, removeDeadlineRows } from "./deadlineCache";
+import { refreshQueryEntries } from "./queryCache";
 import { threadDeadlinesPrefix, userAssignedDeadlinesPrefix } from "./useDeadlines";
 import { threadPrefix, userAssignedThreadsPrefix } from "./useThreads";
 
@@ -23,23 +24,28 @@ export function useDeadlineMutations(threadId: MaybeRefOrGetter<number>) {
   const scope = useCurrentScopeStore();
   const captureParent = (): ParentContext => ({ threadId: toValue(threadId) });
 
-  const invalidate = (key: EntryKey, all = false) =>
-    cache.invalidateQueries({ key }, all ? "all" : true).catch(() => {});
-
   const refreshLists = (id: number) =>
-    Promise.all([invalidate(userAssignedDeadlinesPrefix), invalidate(threadDeadlinesPrefix(id))]);
+    Promise.all([
+      refreshQueryEntries(cache, { key: userAssignedDeadlinesPrefix }),
+      refreshQueryEntries(cache, { key: threadDeadlinesPrefix(id) }),
+    ]);
+
   const refreshParent = (id: number) =>
     Promise.all([
-      invalidate(getGetThreadQueryKey(id), true),
-      invalidate(userAssignedThreadsPrefix),
-      invalidate(threadPrefix),
+      refreshQueryEntries(cache, { key: getGetThreadQueryKey(id) }, "all"),
+      refreshQueryEntries(cache, { key: userAssignedThreadsPrefix }),
+      refreshQueryEntries(cache, { key: threadPrefix }),
     ]);
+
   const refreshDeadline = (id: number, parent: number, assignees = false) =>
     Promise.all([
       refreshLists(parent),
-      invalidate(getGetDeadlineQueryKey(id), true),
+      refreshQueryEntries(cache, { key: getGetDeadlineQueryKey(id) }, "all"),
       ...(assignees
-        ? [invalidate(getGetDeadlineAssigneesQueryKey(id)), refreshDeadlineAttachmentAccess(cache, id)]
+        ? [
+            refreshQueryEntries(cache, { key: getGetDeadlineAssigneesQueryKey(id) }),
+            refreshDeadlineAttachmentAccess(cache, id),
+          ]
         : []),
     ]);
 

@@ -1,13 +1,13 @@
-import { useQueryCache } from "@pinia/colada";
 import { defineStore } from "pinia";
-import { computed, ref } from "vue";
+import { ref } from "vue";
 import { type DeadlineModel, toDeadline } from "@/api/adapters/deadline";
 import { type OrganizationModel, toOrganization } from "@/api/adapters/organization";
 import { type ThreadModel, toThread } from "@/api/adapters/thread";
 import { getGetDeadlineQueryKey } from "@/api/generated/endpoints/deadlines/deadlines";
 import { getGetOrganizationMetadataQueryKey } from "@/api/generated/endpoints/organizations/organizations";
 import { getGetThreadQueryKey } from "@/api/generated/endpoints/threads/threads";
-import type { DeadlineResponseWithRole, OrganizationResponse, ThreadResponse } from "@/api/generated/models";
+import type { OrganizationResponse, ThreadResponse } from "@/api/generated/models";
+import { useCachedEntity } from "@/composables/useCachedEntity";
 import type { ScopeType } from "@/types/scope";
 
 type ScopeEntity =
@@ -22,26 +22,18 @@ export type ScopeHierarchy = {
 };
 
 export const useCurrentScopeStore = defineStore("currentScope", () => {
-  const cache = useQueryCache();
   const organizationId = ref<number | null>(null);
-  const organization = computed(() => {
-    if (!organizationId.value) return null;
-    const dto = cache.getQueryData<OrganizationResponse>(getGetOrganizationMetadataQueryKey(organizationId.value));
-    return dto ? toOrganization(dto) : null;
-  });
-  const threadId = ref<number | null>(null);
-  const thread = computed(() => {
-    if (!threadId.value) return null;
-    const dto = cache.getQueryData<ThreadResponse>(getGetThreadQueryKey(threadId.value));
-    return dto ? toThread(dto) : null;
-  });
-  const deadlineId = ref<number | null>(null);
-  const deadline = computed(() => {
-    if (!deadlineId.value) return null;
-    const dto = cache.getQueryData<DeadlineResponseWithRole>(getGetDeadlineQueryKey(deadlineId.value));
+  const organization = useCachedEntity(
+    organizationId,
+    getGetOrganizationMetadataQueryKey,
+    toOrganization<OrganizationResponse>,
+  );
 
-    return dto ? toDeadline(dto) : null;
-  });
+  const threadId = ref<number | null>(null);
+  const thread = useCachedEntity(threadId, getGetThreadQueryKey, toThread<ThreadResponse>);
+
+  const deadlineId = ref<number | null>(null);
+  const deadline = useCachedEntity(deadlineId, getGetDeadlineQueryKey, toDeadline);
 
   function withScope(config: ScopeEntity) {
     switch (config.type) {

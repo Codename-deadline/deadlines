@@ -16,7 +16,7 @@ import {
   useGetDeadlineAttachmentsMetadata,
 } from "@/api/generated/endpoints/deadlines/deadlines";
 import type { AttachmentResponse } from "@/api/generated/models";
-import { clearQueryEntries } from "./queryCache";
+import { clearQueryEntries, refreshQueryEntries } from "./queryCache";
 import { deadlineListsPrefix, userAssignedDeadlinesPrefix } from "./useDeadlines";
 import { useDefaultQueryEnabled } from "./useDefaultQueryEnabled";
 
@@ -46,13 +46,13 @@ export function useAttachmentMutations(deadlineId: MaybeRefOrGetter<number>) {
 
   const refresh = (id: number, attachmentId?: number) =>
     Promise.all([
-      cache.invalidateQueries({ key: getGetDeadlineAttachmentsMetadataQueryKey(id) }).catch(() => {}),
-      cache.invalidateQueries({ key: getGetDeadlineQueryKey(id) }, "all").catch(() => {}),
-      cache.invalidateQueries({ key: userAssignedDeadlinesPrefix }).catch(() => {}),
-      cache.invalidateQueries({ key: deadlineListsPrefix }).catch(() => {}),
+      refreshQueryEntries(cache, { key: getGetDeadlineAttachmentsMetadataQueryKey(id) }),
+      refreshQueryEntries(cache, { key: getGetDeadlineQueryKey(id) }, "all"),
+      refreshQueryEntries(cache, { key: userAssignedDeadlinesPrefix }),
+      refreshQueryEntries(cache, { key: deadlineListsPrefix }),
       ...(attachmentId === undefined
         ? []
-        : [cache.invalidateQueries({ key: getGetAttachmentMetadataQueryKey(attachmentId) }, "all").catch(() => {})]),
+        : [refreshQueryEntries(cache, { key: getGetAttachmentMetadataQueryKey(attachmentId) }, "all")]),
     ]);
 
   const create = useCreateAttachment({

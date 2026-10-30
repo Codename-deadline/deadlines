@@ -1,11 +1,9 @@
 package xyz.om3lette.deadlines_api.util
 
-import com.fasterxml.jackson.annotation.JsonInclude
 import org.springframework.web.ErrorResponse
 import xyz.om3lette.deadlines_api.exceptions.enums.ErrorCode
 import xyz.om3lette.deadlines_api.exceptions.type.StatusCodeException
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
 data class GeneralErrorResponse(
     val code: ErrorCode,
 

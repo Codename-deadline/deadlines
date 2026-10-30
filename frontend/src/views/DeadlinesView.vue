@@ -1,34 +1,32 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { getMyDeadlines, getThreadDeadlines } from '@/api/deadline';
-import type { DeadlineWithRole } from '@/api/schemas/deadline/common/Deadline';
-import PageLayout from '@/components/home/common/PageLayout.vue';
-import CreateDeadlineDialog from '@/components/home/deadlines/CreateDeadlineDialog.vue';
-import DeadlineCard from '@/components/home/deadlines/DeadlineCard.vue';
-import EditDeadlineDialog from '@/components/home/deadlines/EditDeadlineDialog.vue';
-import { useCurrentScopeStore } from '@/stores/CurrentScopeStore';
-import { parsePositiveRouteId } from '@/utils/route';
+import { computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import type { DeadlineModel } from "@/api/adapters/deadline";
+import PageLayout from "@/components/home/common/PageLayout.vue";
+import CreateDeadlineDialog from "@/components/home/deadlines/CreateDeadlineDialog.vue";
+import DeadlineCard from "@/components/home/deadlines/DeadlineCard.vue";
+import EditDeadlineDialog from "@/components/home/deadlines/EditDeadlineDialog.vue";
+import { useThreadDeadlines, useUserAssignedDeadlines } from "@/composables/deadlines/useDeadlines";
+import { useCurrentScopeStore } from "@/stores/CurrentScopeStore";
+import { parsePositiveRouteId } from "@/utils/route";
 
 const route = useRoute();
 const router = useRouter();
-const currentScopeStore = useCurrentScopeStore();
+const scope = useCurrentScopeStore();
 
-const thrId = computed(() => parsePositiveRouteId(route.query.thrId));
-const showCreateDeadlineButton = computed(
-  () => currentScopeStore.thread?.id === thrId.value
-    && currentScopeStore.thread.permissions.createDeadlines
+const threadId = computed(() => parsePositiveRouteId(route.query.thrId) ?? 0);
+const showAssigned = computed(() => route.query.thrId === undefined);
+const assigned = useUserAssignedDeadlines(showAssigned);
+const scopedDeadlines = useThreadDeadlines(threadId);
+const deadlines = computed(() => showAssigned.value ? assigned : scopedDeadlines);
+
+const showCreateDeadlineButton = computed(() =>
+  scope.thread?.id === threadId.value && scope.thread.permissions.createDeadlines,
 );
 
-
-const userDeadlineFetcher = (page: number) => getMyDeadlines(page);
-const threadDeadlinesFetcher = (page: number) => getThreadDeadlines(thrId.value!, page);
-const deadlineFetcher = computed(() => thrId.value ? threadDeadlinesFetcher : userDeadlineFetcher)
-
-const onCardClick = (deadline: DeadlineWithRole) => {
-  router.push({ path: '/deadline', query: { ddlId: deadline.id } });
-  currentScopeStore.withScope({ entity: deadline, type: "deadline" });
-}
+const onCardClick = (deadline: DeadlineModel) => {
+  router.push({ path: "/deadline", query: { ddlId: deadline.id } });
+};
 </script>
 
 <template>
@@ -37,9 +35,9 @@ const onCardClick = (deadline: DeadlineWithRole) => {
     :entity-card-component="DeadlineCard"
     :edit-dialog-component="EditDeadlineDialog"
     :create-dialog-component="CreateDeadlineDialog"
-    :fetcher="deadlineFetcher"
+    :items="deadlines.items.value" :loading="deadlines.isLoading.value" :error="deadlines.error.value"
+    :has-more="deadlines.hasNextPage.value" :load-more="deadlines.loadMore" :retry="deadlines.retry"
     :show-create-button="showCreateDeadlineButton"
-    :reset="true"
     scope-type="deadline"
   />
 </template>

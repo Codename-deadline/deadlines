@@ -60,6 +60,9 @@
             "type" : "integer"
           }
         },
+        "required" : [
+          "attachmentId"
+        ],
         "type" : "object"
       },
       "AttachmentPermissions" : {
@@ -71,6 +74,10 @@
             "type" : "boolean"
           }
         },
+        "required" : [
+          "delete",
+          "update"
+        ],
         "type" : "object"
       },
       "AttachmentResponse" : {
@@ -111,6 +118,16 @@
             ]
           }
         },
+        "required" : [
+          "attachedTo",
+          "filename",
+          "id",
+          "mimeType",
+          "permissions",
+          "sizeBytes",
+          "uploadedAt",
+          "uploadedBy"
+        ],
         "type" : "object"
       },
       "BetweenValidationViolation" : {
@@ -151,6 +168,11 @@
             "type" : "string"
           }
         },
+        "required" : [
+          "botId",
+          "messenger",
+          "username"
+        ],
         "type" : "object"
       },
       "ChangeOrganizationOwnerRequest" : {
@@ -198,6 +220,9 @@
             ]
           }
         },
+        "required" : [
+          "newPassword"
+        ],
         "type" : "object"
       },
       "ChangeRoleRequest" : {
@@ -238,6 +263,10 @@
             "type" : "string"
           }
         },
+        "required" : [
+          "id",
+          "password"
+        ],
         "type" : "object"
       },
       "CreateDeadlineRequest" : {
@@ -269,6 +298,8 @@
           }
         },
         "required" : [
+          "due",
+          "invitations",
           "title"
         ],
         "type" : "object"
@@ -306,6 +337,7 @@
           }
         },
         "required" : [
+          "invitations",
           "title",
           "type"
         ],
@@ -331,6 +363,7 @@
           }
         },
         "required" : [
+          "channel",
           "identifier",
           "username"
         ],
@@ -361,6 +394,7 @@
           }
         },
         "required" : [
+          "invitations",
           "title"
         ],
         "type" : "object"
@@ -388,6 +422,11 @@
             "type" : "string"
           }
         },
+        "required" : [
+          "assignees",
+          "deadlineId",
+          "globalRole"
+        ],
         "type" : "object"
       },
       "DeadlinePermissions" : {
@@ -405,13 +444,16 @@
             "type" : "boolean"
           }
         },
+        "required" : [
+          "delete",
+          "manageAssignees",
+          "manageAttachments",
+          "update"
+        ],
         "type" : "object"
       },
       "DeadlineResponseWithRole" : {
         "properties" : {
-          "completed" : {
-            "type" : "boolean"
-          },
           "createdAt" : {
             "format" : "date-time",
             "type" : "string"
@@ -445,6 +487,9 @@
             "format" : "int64",
             "type" : "integer"
           },
+          "isCompleted" : {
+            "type" : "boolean"
+          },
           "permissions" : {
             "$ref" : "#/components/schemas/DeadlinePermissions"
           },
@@ -474,6 +519,19 @@
             "type" : "string"
           }
         },
+        "required" : [
+          "createdAt",
+          "description",
+          "due",
+          "globalRole",
+          "id",
+          "isCompleted",
+          "permissions",
+          "role",
+          "stats",
+          "threadId",
+          "title"
+        ],
         "type" : "object"
       },
       "DeadlineStatsResponse" : {
@@ -487,6 +545,10 @@
             "type" : "integer"
           }
         },
+        "required" : [
+          "assignees",
+          "attachments"
+        ],
         "type" : "object"
       },
       "ExactValidationViolation" : {
@@ -527,6 +589,9 @@
             "type" : "integer"
           }
         },
+        "required" : [
+          "invitationId"
+        ],
         "type" : "object"
       },
       "LinkMessengerAccountRequest" : {
@@ -544,6 +609,7 @@
           }
         },
         "required" : [
+          "accountId",
           "messenger"
         ],
         "type" : "object"
@@ -606,6 +672,10 @@
             "type" : "string"
           }
         },
+        "required" : [
+          "accountId",
+          "messenger"
+        ],
         "type" : "object"
       },
       "MetadataResponse" : {
@@ -617,6 +687,10 @@
             "type" : "string"
           }
         },
+        "required" : [
+          "botsMetadataVersion",
+          "rolesMetadataVersion"
+        ],
         "type" : "object"
       },
       "MinimalUserResponse" : {
@@ -628,6 +702,10 @@
             "type" : "string"
           }
         },
+        "required" : [
+          "fullName",
+          "username"
+        ],
         "type" : "object"
       },
       "MinimumValidationViolation" : {
@@ -665,6 +743,10 @@
             },
             "type" : "object"
           }
+        ],
+        "required" : [
+          "passwordRequired",
+          "tokenPair"
         ]
       },
       "OneOfValidationViolation" : {
@@ -693,6 +775,9 @@
             "type" : "integer"
           }
         },
+        "required" : [
+          "organizationId"
+        ],
         "type" : "object"
       },
       "OrganizationDTO" : {
@@ -723,6 +808,13 @@
             "type" : "string"
           }
         },
+        "required" : [
+          "createdAt",
+          "description",
+          "id",
+          "title",
+          "type"
+        ],
         "type" : "object"
       },
       "OrganizationInvitationResponse" : {
@@ -758,6 +850,16 @@
             "type" : "string"
           }
         },
+        "required" : [
+          "answeredAt",
+          "createdAt",
+          "id",
+          "invitedBy",
+          "invitedUser",
+          "organization",
+          "role",
+          "status"
+        ],
         "type" : "object"
       },
       "OrganizationInvitationsPendingResponse" : {
@@ -767,6 +869,9 @@
             "type" : "integer"
           }
         },
+        "required" : [
+          "pending"
+        ],
         "type" : "object"
       },
       "OrganizationPermissions" : {
@@ -787,6 +892,13 @@
             "type" : "boolean"
           }
         },
+        "required" : [
+          "createThreads",
+          "delete",
+          "invite",
+          "manageRoles",
+          "update"
+        ],
         "type" : "object"
       },
       "OrganizationResponse" : {
@@ -823,6 +935,15 @@
             "type" : "string"
           }
         },
+        "required" : [
+          "createdAt",
+          "description",
+          "id",
+          "permissions",
+          "stats",
+          "title",
+          "type"
+        ],
         "type" : "object"
       },
       "OrganizationResponseWithRole" : {
@@ -871,6 +992,16 @@
             "type" : "string"
           }
         },
+        "required" : [
+          "createdAt",
+          "description",
+          "id",
+          "permissions",
+          "role",
+          "stats",
+          "title",
+          "type"
+        ],
         "type" : "object"
       },
       "OrganizationStats" : {
@@ -884,6 +1015,10 @@
             "type" : "integer"
           }
         },
+        "required" : [
+          "members",
+          "threads"
+        ],
         "type" : "object"
       },
       "OtpResponse" : {
@@ -893,6 +1028,9 @@
             "type" : "string"
           }
         },
+        "required" : [
+          "otpId"
+        ],
         "type" : "object"
       },
       "OtpSignInResponse" : { },
@@ -909,6 +1047,10 @@
             "type" : "integer"
           }
         },
+        "required" : [
+          "data",
+          "totalPages"
+        ],
         "type" : "object"
       },
       "PaginationResponseOrganizationInvitationResponse" : {
@@ -924,6 +1066,10 @@
             "type" : "integer"
           }
         },
+        "required" : [
+          "data",
+          "totalPages"
+        ],
         "type" : "object"
       },
       "PaginationResponseOrganizationResponseWithRole" : {
@@ -939,6 +1085,10 @@
             "type" : "integer"
           }
         },
+        "required" : [
+          "data",
+          "totalPages"
+        ],
         "type" : "object"
       },
       "PaginationResponseThreadResponseWithRole" : {
@@ -954,6 +1104,10 @@
             "type" : "integer"
           }
         },
+        "required" : [
+          "data",
+          "totalPages"
+        ],
         "type" : "object"
       },
       "PaginationResponseUserScopeResponse" : {
@@ -969,6 +1123,10 @@
             "type" : "integer"
           }
         },
+        "required" : [
+          "data",
+          "totalPages"
+        ],
         "type" : "object"
       },
       "PasswordRequired" : {
@@ -988,13 +1146,14 @@
             },
             "type" : "object"
           }
+        ],
+        "required" : [
+          "passwordRequired",
+          "requestId"
         ]
       },
       "PatchDeadlineRequest" : {
         "properties" : {
-          "completed" : {
-            "type" : "boolean"
-          },
           "description" : {
             "maxLength" : 4096,
             "minLength" : 0,
@@ -1007,6 +1166,12 @@
             "format" : "date-time",
             "type" : [
               "string",
+              "null"
+            ]
+          },
+          "isCompleted" : {
+            "type" : [
+              "boolean",
               "null"
             ]
           },
@@ -1148,8 +1313,11 @@
           }
         },
         "required" : [
+          "channel",
           "fullName",
           "identifier",
+          "language",
+          "timeZone",
           "username"
         ],
         "type" : "object"
@@ -1172,6 +1340,10 @@
             "type" : "array"
           }
         },
+        "required" : [
+          "matrix",
+          "roles"
+        ],
         "type" : "object"
       },
       "SimpleValidationViolation" : {
@@ -1216,6 +1388,11 @@
             "type" : "integer"
           }
         },
+        "required" : [
+          "assignees",
+          "globalRole",
+          "threadId"
+        ],
         "type" : "object"
       },
       "ThreadPermissions" : {
@@ -1233,6 +1410,12 @@
             "type" : "boolean"
           }
         },
+        "required" : [
+          "createDeadlines",
+          "delete",
+          "manageAssignees",
+          "update"
+        ],
         "type" : "object"
       },
       "ThreadResponse" : {
@@ -1265,6 +1448,15 @@
             "type" : "string"
           }
         },
+        "required" : [
+          "createdAt",
+          "description",
+          "id",
+          "organizationId",
+          "permissions",
+          "stats",
+          "title"
+        ],
         "type" : "object"
       },
       "ThreadResponseWithRole" : {
@@ -1327,6 +1519,17 @@
             "type" : "string"
           }
         },
+        "required" : [
+          "createdAt",
+          "description",
+          "globalRole",
+          "id",
+          "organizationId",
+          "permissions",
+          "role",
+          "stats",
+          "title"
+        ],
         "type" : "object"
       },
       "ThreadStats" : {
@@ -1344,6 +1547,11 @@
             "type" : "integer"
           }
         },
+        "required" : [
+          "assignees",
+          "completedDeadlines",
+          "deadlines"
+        ],
         "type" : "object"
       },
       "TokenPair" : {
@@ -1355,6 +1563,10 @@
             "type" : "string"
           }
         },
+        "required" : [
+          "accessToken",
+          "refreshToken"
+        ],
         "type" : "object"
       },
       "TypeValidationViolation" : {
@@ -1395,6 +1607,10 @@
             "type" : "string"
           }
         },
+        "required" : [
+          "accountId",
+          "messenger"
+        ],
         "type" : "object"
       },
       "UserResponse" : {
@@ -1424,6 +1640,14 @@
             "type" : "string"
           }
         },
+        "required" : [
+          "fullName",
+          "id",
+          "joinedAt",
+          "language",
+          "timeZone",
+          "username"
+        ],
         "type" : "object"
       },
       "UserScopeResponse" : {
@@ -1448,6 +1672,11 @@
             "$ref" : "#/components/schemas/UserResponse"
           }
         },
+        "required" : [
+          "assignedAt",
+          "role",
+          "user"
+        ],
         "type" : "object"
       },
       "UsernameRolePair" : {
@@ -1611,14 +1840,16 @@
             "type" : "string"
           }
         },
+        "required" : [
+          "code",
+          "id"
+        ],
         "type" : "object"
       }
     },
     "securitySchemes" : {
       "bearerAuth" : {
         "bearerFormat" : "JWT",
-        "in" : "header",
-        "name" : "Auth",
         "scheme" : "bearer",
         "type" : "http"
       }
@@ -1693,8 +1924,17 @@
           }
         ],
         "responses" : {
-          "200" : {
-            "description" : "OK"
+          "302" : {
+            "description" : "Redirect to a presigned storage URL",
+            "headers" : {
+              "Location" : {
+                "schema" : {
+                  "format" : "uri",
+                  "type" : "string"
+                },
+                "style" : "simple"
+              }
+            }
           },
           "422" : {
             "content" : {
@@ -1747,7 +1987,8 @@
                 "type" : "object"
               }
             }
-          }
+          },
+          "required" : true
         },
         "responses" : {
           "200" : {
@@ -1793,7 +2034,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/AttachmentResponse"
                 }
@@ -1929,7 +2170,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/OtpResponse"
                 }
@@ -1970,7 +2211,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "oneOf" : [
                     {
@@ -2008,7 +2249,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/TokenPair"
                 }
@@ -2050,7 +2291,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/OtpResponse"
                 }
@@ -2116,7 +2357,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/TokenPair"
                 }
@@ -2159,7 +2400,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PaginationResponseDeadlineResponseWithRole"
                 }
@@ -2246,7 +2487,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/DeadlineResponseWithRole"
                 }
@@ -2328,7 +2569,7 @@
     "/api/deadlines/{deadlineId}/assignees" : {
       "get" : {
         "description" : "Returns a list of explicit thread assignees.Higher role users in the organization or thread are not included.",
-        "operationId" : "getAssignees_1",
+        "operationId" : "getDeadlineAssignees",
         "parameters" : [
           {
             "in" : "path",
@@ -2344,7 +2585,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "items" : {
                     "$ref" : "#/components/schemas/UserScopeResponse"
@@ -2377,7 +2618,7 @@
         ]
       },
       "post" : {
-        "operationId" : "addAssignees_1",
+        "operationId" : "addDeadlineAssignee",
         "parameters" : [
           {
             "in" : "path",
@@ -2428,7 +2669,7 @@
     },
     "/api/deadlines/{deadlineId}/assignees/{assigneeUsername}" : {
       "delete" : {
-        "operationId" : "removeAssignee_1",
+        "operationId" : "removeDeadlineAssignee",
         "parameters" : [
           {
             "in" : "path",
@@ -2493,7 +2734,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "items" : {
                     "$ref" : "#/components/schemas/AttachmentResponse"
@@ -2542,6 +2783,11 @@
         "requestBody" : {
           "content" : {
             "multipart/form-data" : {
+              "encoding" : {
+                "meta" : {
+                  "contentType" : "application/json"
+                }
+              },
               "schema" : {
                 "properties" : {
                   "file" : {
@@ -2559,12 +2805,13 @@
                 "type" : "object"
               }
             }
-          }
+          },
+          "required" : true
         },
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/AttachmentCreatedResponse"
                 }
@@ -2610,7 +2857,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "format" : "int64",
                   "type" : "integer"
@@ -2696,7 +2943,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PaginationResponseOrganizationInvitationResponse"
                 }
@@ -2732,7 +2979,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/OrganizationInvitationsPendingResponse"
                 }
@@ -2780,7 +3027,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PaginationResponseOrganizationInvitationResponse"
                 }
@@ -2828,7 +3075,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/OrganizationInvitationResponse"
                 }
@@ -2988,7 +3235,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/MetadataResponse"
                 }
@@ -3019,7 +3266,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "items" : {
                     "$ref" : "#/components/schemas/BotDTO"
@@ -3065,7 +3312,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PaginationResponseOrganizationResponseWithRole"
                 }
@@ -3109,7 +3356,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/OrganizationCreatedResponse"
                 }
@@ -3196,7 +3443,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/OrganizationResponse"
                 }
@@ -3354,7 +3601,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/InvitationCreatedResponse"
                 }
@@ -3424,7 +3671,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PaginationResponseUserScopeResponse"
                 }
@@ -3482,7 +3729,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "items" : {
                     "type" : "string"
@@ -3592,7 +3839,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PaginationResponseThreadResponseWithRole"
                 }
@@ -3648,7 +3895,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ThreadCreatedResponse"
                 }
@@ -3735,7 +3982,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/RolesMetadataResponse"
                 }
@@ -3932,7 +4179,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PaginationResponseThreadResponseWithRole"
                 }
@@ -4019,7 +4266,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ThreadResponse"
                 }
@@ -4101,7 +4348,7 @@
     "/api/threads/{threadId}/assignees" : {
       "get" : {
         "description" : "Returns a list of explicit thread assignees. Higher role organization members are not included.",
-        "operationId" : "getAssignees",
+        "operationId" : "getThreadAssignees",
         "parameters" : [
           {
             "in" : "path",
@@ -4127,7 +4374,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PaginationResponseUserScopeResponse"
                 }
@@ -4157,7 +4404,7 @@
         ]
       },
       "post" : {
-        "operationId" : "addAssignees",
+        "operationId" : "addThreadAssignee",
         "parameters" : [
           {
             "in" : "path",
@@ -4208,7 +4455,7 @@
     },
     "/api/threads/{threadId}/assignees/{assigneeUsername}" : {
       "delete" : {
-        "operationId" : "removeAssignee",
+        "operationId" : "removeThreadAssignee",
         "parameters" : [
           {
             "in" : "path",
@@ -4283,7 +4530,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PaginationResponseDeadlineResponseWithRole"
                 }
@@ -4339,7 +4586,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/DeadlineCreatedResponse"
                 }
@@ -4402,7 +4649,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/UserResponse"
                 }
@@ -4487,7 +4734,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "items" : {
                     "type" : "string"
@@ -4526,7 +4773,7 @@
         "responses" : {
           "200" : {
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "items" : {
                     "$ref" : "#/components/schemas/MessengerAccountDTO"

@@ -15,14 +15,17 @@ import {
 import { computed, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
+import { useCurrentUser } from "@/composables/users/useCurrentUser";
 import CurrentScopeResolver from "./components/CurrentScopeResolver.vue";
 import ThemeSemanticVars from "./components/ThemeSemanticVars.vue";
+import { SEMI_PUBLIC_ROUTES } from "./constants/app";
 import GlobalEventHandler from "./GlobalEventHandler.vue";
 import { useLocalizationStore } from "./stores/LocalizationStore";
-import { useUserStore } from "./stores/UserStore";
+import { useTokenStore } from "./stores/TokenStore";
 import { Language } from "./types/Language";
 
-const userStore = useUserStore();
+const { user } = useCurrentUser();
+const tokenStore = useTokenStore();
 const localizationStore = useLocalizationStore();
 const { locale } = useI18n();
 
@@ -51,7 +54,12 @@ watch(
 
 const route = useRoute();
 const router = useRouter();
-if (route.path.includes("auth") && userStore.isAvailable) {
+const canShowRoute = computed(
+  () => Boolean(tokenStore.accessToken || tokenStore.refreshToken)
+    || route.path.startsWith("/auth")
+    || SEMI_PUBLIC_ROUTES.includes(String(route.name)),
+);
+if (route.path.includes("auth") && user.value) {
   router.push({ path: "/" });
 }
 
@@ -68,7 +76,7 @@ if (route.path.includes("auth") && userStore.isAvailable) {
     <theme-semantic-vars>
       <n-notification-provider :max="3">
         <n-message-provider>
-          <CurrentScopeResolver />
+          <CurrentScopeResolver v-if="canShowRoute" :key="tokenStore.sessionVersion" />
           <GlobalEventHandler />
         </n-message-provider>
       </n-notification-provider>

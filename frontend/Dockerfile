@@ -1,7 +1,6 @@
 FROM oven/bun:1.3-alpine AS builder
 WORKDIR /deadlines
 
-COPY patches patches
 COPY package.json bun.lock ./
 RUN bun i --frozen-lock
 

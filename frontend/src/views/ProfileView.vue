@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { Key, Link as LinkIcon, SignOutAlt, TrashAlt } from '@vicons/fa';
-import { NAvatar, NButton, NCard, NIcon, NPopconfirm, NSpin, useMessage } from 'naive-ui';
-import { onMounted, ref } from 'vue';
+import { NAlert, NAvatar, NButton, NCard, NIcon, NPopconfirm, NSpin, useMessage } from 'naive-ui';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { unlinkMessengerAccount } from '@/api/integration/accounts';
-import type { MessengerAccount } from '@/api/schemas/integration/MessengerAccount';
-import { deleteUser, getLinkedMessengerAccounts, signOut } from '@/api/user';
+import { useDeleteUser } from '@/api/generated/endpoints/user/user';
+import type { MessengerAccountDTO } from '@/api/generated/models';
 import CardWithHeader from '@/components/CardWithHeader.vue';
 import GlobalHeader from '@/components/home/common/GlobalHeader.vue';
 import ShortLongTimeDisplay from '@/components/home/common/ShortLongTimeDisplay.vue';
@@ -15,60 +14,88 @@ import EditProfileDialog from '@/components/profile/dialogs/EditProfileDialog.vu
 import LinkMessengerAccountDialog from '@/components/profile/dialogs/LinkMessengerAccountDialog.vue';
 import MessengerAccountCard from '@/components/profile/MessengerAccountCard.vue';
 import SubHeader from '@/components/SubHeader.vue';
-import { useApi } from '@/composables/useApi';
-import { useLoading } from '@/composables/useLoading';
+import { useEndServerSessions } from '@/composables/auth/useEndServerSessions';
+import { useRequestError } from '@/composables/shared/useRequestError';
+import { useCurrentUser } from '@/composables/users/useCurrentUser';
+import { useLinkedAccounts, useUnlinkMessengerAccount } from '@/composables/users/useLinkedAccounts';
 import { tActionConfirmation } from '@/locales/utils';
 import emitter from '@/plugins/emitter';
-import { useUserStore } from '@/stores/UserStore';
+import { useTokenStore } from '@/stores/TokenStore';
+import { requestErrorNotification } from '@/utils/requestError';
 import { getAvatarText } from '@/utils/strings';
 
-const { t } = useI18n();
+const { t, te } = useI18n();
 const message = useMessage();
-const userStore = useUserStore();
-const { makeRequest } = useApi();
-const { isLoading: isLoadingAccounts, withLoading: withAccountsLoading } = useLoading();
+const { user } = useCurrentUser();
 
-const linkedAccounts = ref<MessengerAccount[]>([]);
+const {
+  data: accounts,
+  error: accountsError,
+  isLoading: isLoadingAccounts,
+  refetch: refetchAccounts,
+} = useLinkedAccounts();
+const { mutateAsync: unlinkAccount, isLoading: isUnlinking } = useUnlinkMessengerAccount();
+const { mutateAsync: deleteAccount, isLoading: isDeleting } = useDeleteUser();
+const { mutateAsync: endServerSessions, isLoading: isSigningOutAll } = useEndServerSessions();
+
+const displayRequestError = useRequestError();
+const linkedAccounts = computed(() => accounts.value ?? []);
+const accountsFailure = computed(() =>
+  accountsError.value
+    ? requestErrorNotification(accountsError.value, (key, params) => (te(key) ? t(key, params ?? {}) : undefined))
+    : undefined,
+);
 const unlinkingAccountKey = ref<string | null>(null);
 
 const dialogState = ref<"profile" | "account" | "password" | "closed">("closed");
+const tokens = useTokenStore();
 
-const accountKey = (account: MessengerAccount) => `${account.messenger}:${account.accountId}`;
+// Discard client-owned form drafts too when the account changes on this route.
+watch(
+  () => tokens.sessionVersion,
+  () => {
+    dialogState.value = "closed";
+    unlinkingAccountKey.value = null;
+  },
+  { flush: "sync" },
+);
 
-const fetchLinkedAccounts = async () => {
-  const response = await withAccountsLoading(() => makeRequest(() => getLinkedMessengerAccounts()));
-  if (response.ok) linkedAccounts.value = response.data;
-};
+const accountKey = (account: MessengerAccountDTO) => `${account.messenger}:${account.accountId}`;
 
-const handleUnlinkAccount = async (account: MessengerAccount) => {
+const handleUnlinkAccount = async (account: MessengerAccountDTO) => {
   const key = accountKey(account);
-  if (unlinkingAccountKey.value) return;
+  if (isUnlinking.value) return;
 
   unlinkingAccountKey.value = key;
   try {
-    const response = await makeRequest(() => unlinkMessengerAccount(account));
-    if (!response.ok) return;
-
-    linkedAccounts.value = linkedAccounts.value.filter((linkedAccount) => accountKey(linkedAccount) !== key);
+    await unlinkAccount({ unlinkMessengerAccountRequest: account });
     message.success(t("profile.accounts.unlinked"));
+  } catch (error) {
+    displayRequestError(error);
   } finally {
     unlinkingAccountKey.value = null;
   }
 };
 
 const handleDeleteUser = async () => {
-  const res = await makeRequest(() => deleteUser());
-  if (!res.ok) return;
-  emitter.emit("signOut");
-}
+  if (isDeleting.value || isSigningOutAll.value) return;
+  try {
+    await deleteAccount();
+    emitter.emit("signOut");
+  } catch (error) {
+    displayRequestError(error);
+  }
+};
 
 const handleSignOutAll = async () => {
-  const res = await makeRequest(() => signOut());
-  if (!res.ok) return;
-  emitter.emit("signOut");
-}
-
-onMounted(fetchLinkedAccounts);
+  if (isSigningOutAll.value || isDeleting.value) return;
+  try {
+    await endServerSessions();
+    emitter.emit("signOut");
+  } catch (error) {
+    displayRequestError(error);
+  }
+};
 </script>
 
 <template>
@@ -76,14 +103,14 @@ onMounted(fetchLinkedAccounts);
   <main class="my-8 flex w-full justify-center">
     <div class="w-9/10 sm:w-4/6 md:w-1/2 xl:w-3/8">
       <sub-header/>
-      <section v-if="userStore.user" class="space-y-6 mt-4">
+      <section v-if="user" class="space-y-6 mt-4">
         <n-card class="card">
           <div class="flex justify-center">
             <div class="flex flex-col items-center gap-4">
-              <n-avatar round class="w-24! h-24! text-3xl!">{{ getAvatarText(userStore.user.fullName) }}</n-avatar>
+              <n-avatar round class="w-24! h-24! text-3xl!">{{ getAvatarText(user.fullName) }}</n-avatar>
               <div class="text-center">
-                <h2 class="text-2xl">{{ userStore.user.fullName }}</h2>
-                <p class="w-full font-medium description mb-3">@{{ userStore.user.username }}</p>
+                <h2 class="text-2xl">{{ user.fullName }}</h2>
+                <p class="w-full font-medium description mb-3">@{{ user.username }}</p>
                 <n-button role="button" class="rounded-lg!" @click="dialogState = 'profile'">
                   {{ t('profile.edit') }}
                 </n-button>
@@ -101,6 +128,12 @@ onMounted(fetchLinkedAccounts);
             </n-button>
           </template>
           <n-spin :show="isLoadingAccounts">
+            <n-alert v-if="accountsFailure" type="error" :title="accountsFailure.title" class="mb-3">
+              {{ accountsFailure.content }}
+              <n-button class="mt-2" :loading="isLoadingAccounts" @click="refetchAccounts()">
+                {{ t("actions.retry") }}
+              </n-button>
+            </n-alert>
             <div v-if="linkedAccounts.length" class="space-y-3">
               <messenger-account-card
                 v-for="account in linkedAccounts"
@@ -110,24 +143,24 @@ onMounted(fetchLinkedAccounts);
                 @unlink="handleUnlinkAccount"
               />
             </div>
-            <p v-else-if="!isLoadingAccounts" class="description py-4 text-center">
+            <p v-else-if="!isLoadingAccounts && !accountsFailure" class="description py-4 text-center">
               {{ t("profile.accounts.empty") }}
             </p>
           </n-spin>
         </card-with-header>
         <card-with-header header-selector="profile.account-info">
           <property-value property-selector="profile.properties.language" :add-divider="true">
-            <b>{{ t(`language.${userStore.user.language.toLowerCase()}`) }}</b>
+            <b>{{ t(`language.${user.language.toLowerCase()}`) }}</b>
           </property-value>
           <property-value property-selector="profile.properties.time-zone" :add-divider="true">
-            <b>{{ userStore.user.timeZone }}</b>
+            <b>{{ user.timeZone }}</b>
           </property-value>
           <property-value property-selector="profile.properties.joined">
             <b>
               <short-long-time-display
                 :long-format="true"
-                :time="userStore.user.joinedAt"
-                :time-zone="userStore.user.timeZone"
+                :time="user.joinedAt"
+                :time-zone="user.timeZone"
               />
             </b>
           </property-value>
@@ -158,7 +191,7 @@ onMounted(fetchLinkedAccounts);
             </n-button>
             <n-popconfirm @positive-click="handleSignOutAll">
               <template #trigger>
-              <n-button type="error">
+                <n-button type="error" :loading="isSigningOutAll" :disabled="isDeleting">
                   <template #icon>
                     <n-icon>
                       <sign-out-alt/>
@@ -171,7 +204,7 @@ onMounted(fetchLinkedAccounts);
             </n-popconfirm>
             <n-popconfirm @positive-click="handleDeleteUser">
               <template #trigger>
-              <n-button type="error">
+                <n-button type="error" :loading="isDeleting" :disabled="isSigningOutAll">
                   <template #icon>
                     <n-icon>
                       <trash-alt />

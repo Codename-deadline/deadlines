@@ -2,7 +2,7 @@
 import { NButton } from "naive-ui";
 import type { Component } from "vue";
 import { useI18n } from "vue-i18n";
-import type { AuthMethod } from "@/types/api";
+import type { AuthMethod } from "@/types/auth";
 
 const props = defineProps<{
   method: AuthMethod;

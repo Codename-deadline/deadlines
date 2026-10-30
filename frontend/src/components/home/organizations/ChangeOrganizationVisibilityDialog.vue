@@ -2,47 +2,44 @@
 import { NAlert, NButton, NCard, NSelect, useMessage } from "naive-ui";
 import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { changeOrganizationVisibility } from "@/api/organization";
-import type { OrganizationWithStatsAndRole } from "@/api/schemas/organization/common/Organization";
-import {
-  type OrganizationType,
-  OrganizationTypeSchema,
-} from "@/api/schemas/organization/common/OrganizationType";
-import { useApi } from "@/composables/useApi";
-import { useLoading } from "@/composables/useLoading";
+import type { OrganizationListModel } from "@/api/adapters/organization";
+import { OrganizationResponseType } from "@/api/generated/models";
+import { useOrganizationMutations } from "@/composables/organizations/useOrganizationMutations";
+import { useRequestError } from "@/composables/shared/useRequestError";
 
 const props = defineProps<{
-  entity: OrganizationWithStatsAndRole;
+  entity: OrganizationListModel;
 }>();
 const emit = defineEmits<{
   cancel: [];
-  changed: [type: OrganizationType];
+  changed: [type: OrganizationResponseType];
 }>();
 
 const { t } = useI18n();
 const message = useMessage();
-const { makeRequest } = useApi();
-const { isLoading: isSaving, withLoading } = useLoading();
+const { visibility } = useOrganizationMutations();
+const isSaving = visibility.isLoading;
+const displayError = useRequestError();
 
-const selectedType = ref<OrganizationType>(props.entity.type);
+const selectedType = ref<OrganizationResponseType>(props.entity.type);
 const isUnchanged = computed(() => selectedType.value === props.entity.type);
 const visibilityOptions = computed(() =>
-  OrganizationTypeSchema.options.map((type) => ({
+  Object.values(OrganizationResponseType).map((type) => ({
     value: type,
     label: t(`scopes.organization.type.${type.toLowerCase()}`),
   })),
 );
 
 const handleSave = async () => {
-  if (isUnchanged.value) return;
-
-  const response = await withLoading(() =>
-    makeRequest(() => changeOrganizationVisibility(props.entity.id, { type: selectedType.value })),
-  );
-  if (!response.ok) return;
-
-  message.success(t("scopes.organization.visibility.updated"));
-  emit("changed", selectedType.value);
+  if (isUnchanged.value || isSaving.value) return;
+  const type = selectedType.value;
+  try {
+    await visibility.mutateAsync({ organizationId: props.entity.id, changeOrganizationVisibilityRequest: { type } });
+    message.success(t("scopes.organization.visibility.updated"));
+    emit("changed", type);
+  } catch (error) {
+    displayError(error);
+  }
 };
 </script>
 

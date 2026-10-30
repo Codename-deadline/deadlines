@@ -1,46 +1,66 @@
 <script setup lang="ts">
+import { useQueryCache } from "@pinia/colada";
 import { ref, watch } from "vue";
 import { type LocationQueryValue, useRoute } from "vue-router";
-import { getDeadline } from "@/api/deadline";
-import { getOrganization } from "@/api/organization";
-import { getThread } from "@/api/thread";
-import { useApi } from "@/composables/useApi";
+import { resolveDeadline as resolveDeadlineQuery } from "@/composables/deadlines/useDeadlines";
+import { resolveOrganization as resolveOrganizationQuery } from "@/composables/organizations/useOrganizations";
+import { useDefaultQueryEnabled } from "@/composables/shared/useDefaultQueryEnabled";
+import { useRequestError } from "@/composables/shared/useRequestError";
+import { resolveThread as resolveThreadQuery } from "@/composables/threads/useThreads";
 import { type ScopeHierarchy, useCurrentScopeStore } from "@/stores/CurrentScopeStore";
+import { useTokenStore } from "@/stores/TokenStore";
 import { parsePositiveRouteId } from "@/utils/route";
 
 const route = useRoute();
-const { makeRequest } = useApi();
 const currentScopeStore = useCurrentScopeStore();
-const ready = ref(false);
+const cache = useQueryCache();
+const tokens = useTokenStore();
+const defaultEnabled = useDefaultQueryEnabled();
+const displayError = useRequestError();
+
+const ready = ref<boolean>(false);
 let resolutionGeneration: number = 0;
 
 const resolveOrganization = async (organizationId: number) => {
-  if (currentScopeStore.organization?.id === organizationId) {
-    return currentScopeStore.organization;
-  }
+  if (!defaultEnabled()) return null;
 
-  const response = await makeRequest(() => getOrganization(organizationId));
-  return response.ok ? response.data : null;
+  try {
+    return await resolveOrganizationQuery(organizationId, cache);
+  }
+  catch (error) {
+    displayError(error);
+    return null;
+  }
 };
 
 const resolveThread = async (threadId: number) => {
-  const thread = currentScopeStore.thread?.id === threadId
-    ? currentScopeStore.thread
-    : await makeRequest(() => getThread(threadId)).then((response) => response.ok ? response.data : null);
-  if (!thread) return null;
+  if (!defaultEnabled()) return null;
 
-  const organization = await resolveOrganization(thread.organizationId);
-  return organization ? { organization, thread } : null;
+  try {
+    const thread = await resolveThreadQuery(threadId, cache);
+    if (!thread) return null;
+
+    const organization = await resolveOrganization(thread.organizationId);
+    return organization ? { organization, thread } : null;
+  } catch (error) {
+    displayError(error);
+    return null;
+  }
 };
 
 const resolveDeadline = async (deadlineId: number) => {
-  const deadline = currentScopeStore.deadline?.id === deadlineId
-    ? currentScopeStore.deadline
-    : await makeRequest(() => getDeadline(deadlineId)).then((response) => response.ok ? response.data : null);
-  if (!deadline) return null;
+  if (!defaultEnabled()) return null;
 
-  const parentScope = await resolveThread(deadline.threadId);
-  return parentScope ? { ...parentScope, deadline } : null;
+  try {
+    const deadline = await resolveDeadlineQuery(deadlineId, cache);
+    if (!deadline) return null;
+
+    const parentScope = await resolveThread(deadline.threadId);
+    return parentScope ? { ...parentScope, deadline } : null;
+  } catch (error) {
+    displayError(error);
+    return null;
+  }
 };
 
 const resolveScopeByRoute = async <T>(
@@ -48,9 +68,10 @@ const resolveScopeByRoute = async <T>(
 ): Promise<boolean> => {
   const entityId = parsePositiveRouteId(queryId);
   if (!entityId) return false;
-  
+
+  const session = tokens.sessionSignal();
   const scope = await resolver(entityId);
-  if (scope && generation === resolutionGeneration) {
+  if (scope && generation === resolutionGeneration && !session.aborted) {
     currentScopeStore.replaceScope(scopeMapper(scope));
   }
   return scope !== null;
@@ -60,6 +81,7 @@ watch(
   () => route.fullPath,
   async () => {
     const generation = ++resolutionGeneration;
+    const session = tokens.sessionSignal();
     ready.value = false;
     let resolved: boolean = false;
 
@@ -83,7 +105,7 @@ watch(
       }
     }
 
-    if (generation !== resolutionGeneration) return;
+    if (generation !== resolutionGeneration || session.aborted) return;
     if (!resolved) currentScopeStore.$reset();
     ready.value = true;
   },

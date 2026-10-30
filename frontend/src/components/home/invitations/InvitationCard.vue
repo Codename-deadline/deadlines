@@ -1,36 +1,39 @@
 <script setup lang="ts">
 import { TrashAlt, UserFriends } from "@vicons/fa";
-import { NButton, NIconWrapper, NTooltip } from 'naive-ui';
+import { NButton, NIconWrapper, NTooltip, useMessage } from 'naive-ui';
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
-import type { OrganizationInvitation } from '@/api/schemas/organization/invitation/Invitation';
-import { useInvitationActions } from '@/composables/useInvitationActions';
-import { useGlobalStateStore } from "@/stores/GlobalStateStore";
+import type { InvitationModel } from "@/api/adapters/invitation";
+import { useInvitationActions } from '@/composables/invitations/useInvitationActions';
+import { useRequestError } from "@/composables/shared/useRequestError";
 import { getRelativeTimeString } from '@/utils/date';
 import { getPopoverTrigger } from '@/utils/flags';
 import EntityCard from "../common/EntityCard.vue";
 import RoleTag from '../common/RoleTag.vue';
 
 const props = defineProps<{
-  invitation: OrganizationInvitation;
+  invitation: InvitationModel;
   variant: "received" | "sent";
 }>();
 
 const { t, locale } = useI18n();
-const { accept, decline, revoke } = useInvitationActions(props.variant);
-const globalStateStore = useGlobalStateStore();
+const mutations = useInvitationActions(() => props.invitation.organization.id);
+const isSaving = computed(() => mutations.accept.isLoading.value || mutations.decline.isLoading.value || mutations.revoke.isLoading.value);
+const message = useMessage();
+const displayError = useRequestError();
 
-const handleReceivedInvitationAction = async (action: 'accept' | 'decline', invitationId: number) => {
-  switch (action) {
-    case "accept":
-      await accept(invitationId);
-      break;
-    case "decline":
-      await decline(invitationId);
-      break;
+const handleAction = async (action: "accept" | "decline" | "revoke") => {
+  if (isSaving.value) return;
+
+  try {
+    await mutations[action].mutateAsync({ invitationId: props.invitation.id });
+
+    const toast = { accept: "accepted", decline: "declined", revoke: "revoked" }[action];
+    message.success(t(`scopes.toasts.invitation-${toast}`));
+  } catch (error) {
+    displayError(error);
   }
-  globalStateStore.resolveInvitation();
-}
+};
 
 const createdAtRelative = computed(() => getRelativeTimeString(props.invitation.createdAt, locale.value));
 </script>
@@ -74,7 +77,9 @@ const createdAtRelative = computed(() => getRelativeTimeString(props.invitation.
               class="flex-1 rounded-lg!"
               role="button"
               size="medium"
-              @click.stop="handleReceivedInvitationAction('accept', invitation.id)"
+              :loading="mutations.accept.isLoading.value"
+              :disabled="isSaving"
+              @click.stop="handleAction('accept')"
             >
               {{ t("actions.accept") }}
             </n-button>
@@ -83,7 +88,9 @@ const createdAtRelative = computed(() => getRelativeTimeString(props.invitation.
               class="flex-1 rounded-lg!"
               role="button"
               size="medium"
-              @click.stop="handleReceivedInvitationAction('decline', invitation.id)"
+              :loading="mutations.decline.isLoading.value"
+              :disabled="isSaving"
+              @click.stop="handleAction('decline')"
             >
               {{ t("actions.decline") }}
             </n-button>
@@ -94,7 +101,9 @@ const createdAtRelative = computed(() => getRelativeTimeString(props.invitation.
             class="flex-1 rounded-lg!"
             role="button"
             size="medium"
-            @click.stop="revoke(invitation.id)"
+            :loading="mutations.revoke.isLoading.value"
+            :disabled="isSaving"
+            @click.stop="handleAction('revoke')"
           >
             <template #icon>
               <TrashAlt />

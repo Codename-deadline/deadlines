@@ -1,6 +1,10 @@
 package xyz.om3lette.deadlines_api.controllers.attachments
 
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.headers.Header
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.parameters.RequestBody as OpenApiRequestBody
+import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
@@ -21,7 +25,7 @@ class AttachmentsController(
     private val attachmentsService: AttachmentsService
 ) {
     @PutMapping("/{attachmentId}", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
-    @Operation(summary = "Replace attachment")
+    @Operation(summary = "Replace attachment", requestBody = OpenApiRequestBody(required = true))
     fun replaceAttachment(
         @AuthenticationPrincipal user: User,
         @PathVariable @Positive attachmentId: Long,
@@ -29,7 +33,14 @@ class AttachmentsController(
     ) = attachmentsService.replaceAttachment(user, attachmentId, file)
 
     @GetMapping("/{attachmentId}")
-    @Operation(summary = "Get attachment")
+    @Operation(
+        summary = "Get attachment",
+        responses = [ApiResponse(
+            responseCode = "302",
+            description = "Redirect to a presigned storage URL",
+            headers = [Header(name = "Location", schema = Schema(type = "string", format = "uri"))]
+        )]
+    )
     fun getAttachment(
         @AuthenticationPrincipal user: User?,
         @PathVariable @Positive attachmentId: Long,

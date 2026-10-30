@@ -3,7 +3,7 @@ import { CalendarAlt, Cog, UserFriends } from "@vicons/fa";
 import { NButton } from "naive-ui";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
-import type { DeadlineWithRole } from "@/api/schemas/deadline/common/Deadline";
+import type { DeadlineModel } from "@/api/adapters/deadline";
 import { useLocalizationStore } from "@/stores/LocalizationStore";
 import { hasAnyEditPermission } from "@/utils/permissions";
 import { computeDeadlineState } from "@/utils/state";
@@ -15,7 +15,7 @@ const { t } = useI18n();
 const localizationStore = useLocalizationStore();
 
 const props = defineProps<{
-  entity: DeadlineWithRole;
+  entity: DeadlineModel;
 }>();
 const emit = defineEmits<{
   edit: [id: number];
@@ -30,7 +30,12 @@ const state = computed(() => computeDeadlineState(props.entity));
       <div class="flex min-w-0 w-full justify-between items-center">
         <DeadlineHeader :deadline="entity" header-type="h3"/>
         <div class="flex shrink-0 space-x-3 ml-3">
-          <n-button role="button" v-if="hasAnyEditPermission(entity.permissions)" @click.stop="emit('edit', entity.id)" text>
+          <n-button
+            role="button"
+            v-if="hasAnyEditPermission({ ...entity.permissions })"
+            @click.stop="emit('edit', entity.id)"
+            text
+          >
             <template #icon>
               <icon class="">
                 <Cog/>

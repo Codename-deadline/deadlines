@@ -4,22 +4,24 @@ import { type FormInst, type FormRules, NForm, NFormItem, NInput, NSelect } from
 import { computed, type Ref, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
-import * as apiAuth from "@/api/auth";
-import type { SignUpRequest } from "@/api/schemas/auth/SignUpRequest";
+import { toRegisterOtpRequest } from "@/api/adapters/auth";
+import { useRegisterOtp } from "@/api/generated/endpoints/authentication/authentication";
+import type { RegisterOtpRequest } from "@/api/generated/models";
 import BaseAuthForm from "@/components/auth/common/BaseAuthForm.vue";
 import LanguageTooltip from "@/components/common/LanguageTooltip.vue";
 import TimezoneSelect from "@/components/common/TimezoneSelect.vue";
-import { useApi } from "@/composables/useApi";
+import { useRequestError } from "@/composables/shared/useRequestError";
 import { tFormError, tFormLabel, tLanguageOptions } from "@/locales/utils";
 import { useLocalizationStore } from "@/stores/LocalizationStore";
-import type { AuthMethod } from "@/types/api";
-import { displayApiError, displayFormErrors, redirectToOTP } from "@/utils";
+import type { AuthMethod } from "@/types/auth";
+import { redirectToOTP } from "@/utils";
 import { isDigitOnlySequence } from "@/utils/validation";
 
 const router = useRouter();
 const { t } = useI18n();
 const localizationStore = useLocalizationStore();
-const { makeRequest } = useApi();
+const { mutateAsync: register, isLoading: isSubmitting } = useRegisterOtp();
+const displayRequestError = useRequestError();
 
 const props = defineProps<{
   method: AuthMethod;
@@ -44,9 +46,9 @@ const signUpFormRules: FormRules = {
   language: [{ required: true, renderMessage: () => tFormError(t, "language"), trigger: ["input", "blur"] }],
   timeZone: [{ required: true, renderMessage: () => tFormError(t, "time-zone"), trigger: ["change"] }],
 };
-const signUpFormData = ref<SignUpRequest>({
+const signUpFormData = ref<RegisterOtpRequest>({
   identifier: "",
-  channel: "",
+  channel: props.method,
   username: "",
   fullName: "",
   language: localizationStore.language,
@@ -55,22 +57,27 @@ const signUpFormData = ref<SignUpRequest>({
 
 const languageOptions = computed(() => tLanguageOptions(t));
 
-const submitSignUpForm = async () => {
+const submitSignUpForm = () => {
+  if (isSubmitting.value) return;
   signUpFormRef.value?.validate(async (errors) => {
     if (errors) return;
-    signUpFormData.value.channel = authMethod.value.toUpperCase();
-  
-    const response = await makeRequest(() => apiAuth.signUp(signUpFormData.value), displayFormErrors, displayApiError);
-    if (!response.ok) return;
-  
-    redirectToOTP(router, response.data.otpId, authMethod.value);
-  })
+
+    try {
+      const response = await register({
+        registerOtpRequest: toRegisterOtpRequest({ ...signUpFormData.value, channel: authMethod.value }),
+      });
+      redirectToOTP(router, response.otpId, authMethod.value);
+    } catch (error) {
+      displayRequestError(error);
+    }
+  });
 };
 </script>
 
 <template>
   <BaseAuthForm
     @submit="submitSignUpForm"
+    :is-loading="isSubmitting"
     :is-sign-in="false"
     :auth-method="authMethod"
     button-selector="auth.sign-up.action"

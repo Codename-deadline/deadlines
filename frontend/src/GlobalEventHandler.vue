@@ -1,24 +1,21 @@
 <script setup lang="ts">
 import { useNotification } from "naive-ui";
-import { onMounted } from "vue";
+import { onMounted, onUnmounted, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
-import { getNumberOfPendingInvitations } from "./api/invitation";
-import { getMe } from "./api/user";
-import { useApi } from "./composables/useApi";
-import { useMetadataResolver } from "./composables/useMetadataResolver";
+import { useInvitationPolling } from "@/composables/invitations/useInvitationPolling";
+import { useMetadataResolver } from "@/composables/shared/useMetadataResolver";
+import { useCurrentUser } from "@/composables/users/useCurrentUser";
+import { isCancellation } from "./api/errors";
 import { SEMI_PUBLIC_ROUTES } from "./constants/app";
 import emitter from "./plugins/emitter";
-import { useGlobalStateStore } from "./stores/GlobalStateStore";
 import { useTokenStore } from "./stores/TokenStore";
-import { useUserStore } from "./stores/UserStore";
 
-const userStore = useUserStore();
+const { user, error: userError, refresh: refreshUser } = useCurrentUser();
 const tokenStore = useTokenStore();
-const globalStateStore = useGlobalStateStore();
+useInvitationPolling();
 
 const { t } = useI18n();
-const { makeRequest } = useApi();
 const { resolveOutdatedMetadata } = useMetadataResolver();
 
 const notification = useNotification();
@@ -33,70 +30,55 @@ const displayCriticalError = (errorSelector: string) => {
   });
 };
 
+watch(userError, (error) => {
+  if (error && !isCancellation(error)) displayCriticalError("failed-to-fetch-user");
+}, { immediate: true });
+
 const fetchUser = async () => {
   if (!tokenStore.accessToken && !tokenStore.refreshToken) {
-    userStore.$reset();
     if (isSemiPublicRoute()) return;
     router.push({ path: "/auth" });
     return;
   }
 
-  const res = await makeRequest(() => getMe());
-  if (!res.ok) {
-    displayCriticalError("failed-to-fetch-user");
-    return;
-  }
-
-  userStore.setUser(res.data);
+  await refreshUser();
 };
-emitter.on("signUpCompleted", async () => {
+const handleSignUpCompleted = async () => {
+  const session = tokenStore.sessionSignal();
   await fetchUser();
-  router.push({ path: "/" });
-});
-emitter.on("signOut", async () => {
-  userStore.$reset();
+  if (!session.aborted && user.value) {
+    router.push({ path: "/" });
+  }
+};
+const handleSignOut = () => {
   tokenStore.$reset();
-  globalStateStore.$reset();
   router.push({ path: "/auth" });
-})
+};
+emitter.on("signUpCompleted", handleSignUpCompleted);
+emitter.on("signOut", handleSignOut);
 
-const fetchGlobalState = async () => {
-  if (!userStore.isAvailable) return;
-  
-  const res = await makeRequest(() => getNumberOfPendingInvitations());
-  if (!res.ok) return;
+onUnmounted(() => {
+  emitter.off("signUpCompleted", handleSignUpCompleted);
+  emitter.off("signOut", handleSignOut);
+  emitter.off("failedToRefreshToken", handleRefreshFailure);
+});
 
-  globalStateStore.$patch({
-    pendingReceivedInvitations: res.data.pending
-  });
-}
 onMounted(async () => {
-  setInterval(async () => {
-    // Ideally this is a websocket connection, but the size is negligible ~0.5kb
-    // which is fine to occasionally poll
-    await fetchGlobalState();
-  }, 5 * 60 * 1000);
-
-  // fetchGlobalState depends on user being present
-  // => load the user first
   await fetchUser();
-  await Promise.all([
-    resolveOutdatedMetadata(),
-    fetchGlobalState(),
-  ])
+  await resolveOutdatedMetadata();
 });
 
 const env = import.meta.env;
-emitter.on("failedToRefreshToken", () => {
+const handleRefreshFailure = () => {
   console.log("Failed to refresh token");
   if (env.VITE_NO_AUTH_REDIRECT?.toLowerCase() === "true") {
     console.warn("[DEV]: Auth redirect disabled");
     return;
   }
-  userStore.$reset();
   if (isSemiPublicRoute()) return;
   router.push({ path: "/auth" });
-});
+};
+emitter.on("failedToRefreshToken", handleRefreshFailure);
 </script>
 
 <template>

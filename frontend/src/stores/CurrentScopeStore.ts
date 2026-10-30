@@ -1,46 +1,60 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import type { DeadlineWithRole } from "@/api/schemas/deadline/common/Deadline";
-import type { OrganizationWithStats } from "@/api/schemas/organization/common/Organization";
-import type { Thread } from "@/api/schemas/thread/common/Thread";
+import { type DeadlineModel, toDeadline } from "@/api/adapters/deadline";
+import { type OrganizationModel, toOrganization } from "@/api/adapters/organization";
+import { type ThreadModel, toThread } from "@/api/adapters/thread";
+import { getGetDeadlineQueryKey } from "@/api/generated/endpoints/deadlines/deadlines";
+import { getGetOrganizationMetadataQueryKey } from "@/api/generated/endpoints/organizations/organizations";
+import { getGetThreadQueryKey } from "@/api/generated/endpoints/threads/threads";
+import type { OrganizationResponse, ThreadResponse } from "@/api/generated/models";
+import { useCachedEntity } from "@/composables/shared/useCachedEntity";
 import type { ScopeType } from "@/types/scope";
 
 type ScopeEntity =
-  | { entity: OrganizationWithStats; type: "organization" }
-  | { entity: Thread; type: "thread" }
-  | { entity: DeadlineWithRole; type: "deadline" };
+  | { entity: OrganizationModel; type: "organization" }
+  | { entity: ThreadModel; type: "thread" }
+  | { entity: DeadlineModel; type: "deadline" };
 
 export type ScopeHierarchy = {
-  organization: OrganizationWithStats | null;
-  thread: Thread | null;
-  deadline: DeadlineWithRole | null;
+  organization: OrganizationModel | null;
+  thread: ThreadModel | null;
+  deadline: DeadlineModel | null;
 };
 
 export const useCurrentScopeStore = defineStore("currentScope", () => {
-  const organization = ref<OrganizationWithStats | null>(null);
-  const thread = ref<Thread | null>(null);
-  const deadline = ref<DeadlineWithRole | null>(null);
+  const organizationId = ref<number | null>(null);
+  const organization = useCachedEntity(
+    organizationId,
+    getGetOrganizationMetadataQueryKey,
+    toOrganization<OrganizationResponse>,
+  );
+
+  const threadId = ref<number | null>(null);
+  const thread = useCachedEntity(threadId, getGetThreadQueryKey, toThread<ThreadResponse>);
+
+  const deadlineId = ref<number | null>(null);
+  const deadline = useCachedEntity(deadlineId, getGetDeadlineQueryKey, toDeadline);
 
   function withScope(config: ScopeEntity) {
     switch (config.type) {
       case "organization":
-        organization.value = config.entity;
-        thread.value = null;
-        deadline.value = null;
+        organizationId.value = config.entity.id;
+        threadId.value = null;
+        deadlineId.value = null;
         break;
       case "thread":
-        if (organization.value?.id !== config.entity.organizationId) {
-          organization.value = null;
+        if (organizationId.value !== config.entity.organizationId) {
+          organizationId.value = null;
         }
-        thread.value = config.entity;
-        deadline.value = null;
+        threadId.value = config.entity.id;
+        deadlineId.value = null;
         break;
       case "deadline":
-        if (thread.value?.id !== config.entity.threadId) {
-          organization.value = null;
-          thread.value = null;
+        if (threadId.value !== config.entity.threadId) {
+          organizationId.value = null;
+          threadId.value = null;
         }
-        deadline.value = config.entity;
+        deadlineId.value = config.entity.id;
         break;
     }
   }
@@ -48,16 +62,16 @@ export const useCurrentScopeStore = defineStore("currentScope", () => {
   function exitScope(scopeType: ScopeType) {
     switch (scopeType) {
       case "organization":
-        organization.value = null;
-        thread.value = null;
-        deadline.value = null;
+        organizationId.value = null;
+        threadId.value = null;
+        deadlineId.value = null;
         break;
       case "thread":
-        thread.value = null;
-        deadline.value = null;
+        threadId.value = null;
+        deadlineId.value = null;
         break;
       case "deadline":
-        deadline.value = null;
+        deadlineId.value = null;
         break;
     }
   }
@@ -75,9 +89,9 @@ export const useCurrentScopeStore = defineStore("currentScope", () => {
       throw new Error("Deadline does not belong to the current thread");
     }
 
-    organization.value = scope.organization;
-    thread.value = scope.thread;
-    deadline.value = scope.deadline;
+    organizationId.value = scope.organization?.id ?? null;
+    threadId.value = scope.thread?.id ?? null;
+    deadlineId.value = scope.deadline?.id ?? null;
   }
 
   function $reset() {
@@ -86,8 +100,11 @@ export const useCurrentScopeStore = defineStore("currentScope", () => {
 
   return {
     organization,
+    organizationId,
     thread,
+    threadId,
     deadline,
+    deadlineId,
     withScope,
     exitScope,
     exitAndSet,

@@ -3,10 +3,10 @@ import { NButton, NQrCode, useMessage } from 'naive-ui';
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type { Messenger } from '@/api/schemas/integration/MessengerAccount';
+import type { BotDTOMessenger } from '@/api/generated/models';
 import emitter from '@/plugins/emitter';
 import { useMetadataStore } from '@/stores/MetadataStore';
-import { AuthMethod } from '@/types/api';
+import { AuthMethod } from '@/types/auth';
 import AuthCard from './AuthCard.vue';
 
 const props = defineProps<{
@@ -22,7 +22,7 @@ const { metadata } = storeToRefs(metadataStore);
 
 const { t } = useI18n();
 
-const getMesssengerBot = (messenger: Messenger) => {
+const getMesssengerBot = (messenger: BotDTOMessenger) => {
   const filteredBots = metadata.value.bots?.value.filter((bot) => bot.messenger === messenger);
   if (!filteredBots || filteredBots.length < 0) {
     message.error(t("errors.failed-to-resolve-bot"));

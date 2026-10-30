@@ -2,17 +2,15 @@
 import { type FormInst, type FormRules, NAlert, NButton, NCard, NForm, NFormItem, useMessage } from "naive-ui";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { getOrganizationMembersWithUsernameStartingWith } from "@/api/organization";
-import { changeOrganizationOwner } from "@/api/roles";
-import type { OrganizationWithStatsAndRole } from "@/api/schemas/organization/common/Organization";
+import type { OrganizationListModel } from "@/api/adapters/organization";
 import UsernameInput from "@/components/home/common/forms/UsernameInput.vue";
-import { useApi } from "@/composables/useApi";
-import { useLoading } from "@/composables/useLoading";
-import { useUserStore } from "@/stores/UserStore";
+import { useOrganizationMutations } from "@/composables/organizations/useOrganizationMutations";
+import { useRequestError } from "@/composables/shared/useRequestError";
+import { useCurrentUser } from "@/composables/users/useCurrentUser";
 import { normalizeUsername } from "@/utils/validation";
 
 const props = defineProps<{
-  entity: OrganizationWithStatsAndRole;
+  entity: OrganizationListModel;
 }>();
 const emit = defineEmits<{
   cancel: [];
@@ -21,45 +19,40 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const message = useMessage();
-const { makeRequest } = useApi();
-const { isLoading: isTransferring, withLoading } = useLoading();
-const userStore = useUserStore();
+const { ownership } = useOrganizationMutations();
+const isTransferring = ownership.isLoading;
+const displayError = useRequestError();
+const { user } = useCurrentUser();
 
 const formRef = ref<FormInst | null>(null);
 const formModel = ref({ newOwnerUsername: "@" });
 const formRules: FormRules = {
   newOwnerUsername: [
     {
+      validator: (_, value: string) => Boolean(normalizeUsername(value)),
       renderMessage: () => t("scopes.organization.ownership.validation.username"),
       trigger: ["input", "blur"],
     },
     {
       validator: (_, value: string) =>
-        normalizeUsername(value).toLowerCase() !== userStore.user?.username.toLowerCase(),
+        normalizeUsername(value).toLowerCase() !== user.value?.username.toLowerCase(),
       renderMessage: () => t("scopes.organization.ownership.validation.self"),
       trigger: ["input", "blur"],
     },
   ],
 };
 
-const fetchOrganizationMembers = (startsWith: string) =>
-  getOrganizationMembersWithUsernameStartingWith(props.entity.id, startsWith);
-
 const handleTransfer = () => {
+  if (isTransferring.value) return;
   formRef.value?.validate(async (errors) => {
     if (errors) return;
-
-    const response = await withLoading(() =>
-      makeRequest(() =>
-        changeOrganizationOwner(props.entity.id, {
-          newOwnerUsername: normalizeUsername(formModel.value.newOwnerUsername),
-        }),
-      ),
-    );
-    if (!response.ok) return;
-
-    message.success(t("scopes.organization.ownership.transferred"));
-    emit("transferred");
+    try {
+      await ownership.mutateAsync({ organizationId: props.entity.id, changeOrganizationOwnerRequest: {
+        newOwnerUsername: normalizeUsername(formModel.value.newOwnerUsername),
+      } });
+      message.success(t("scopes.organization.ownership.transferred"));
+      emit("transferred");
+    } catch (error) { displayError(error); }
   });
 };
 </script>
@@ -73,7 +66,7 @@ const handleTransfer = () => {
       <n-form-item :label="t('scopes.organization.ownership.new-owner')" path="newOwnerUsername">
         <username-input
           v-model="formModel.newOwnerUsername"
-          :usernames-fetcher="fetchOrganizationMembers"
+          :organization-id="entity.id"
         />
       </n-form-item>
     </n-form>

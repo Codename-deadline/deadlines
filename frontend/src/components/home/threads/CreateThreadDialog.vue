@@ -4,75 +4,36 @@ import { type FormInst, NButton, NForm, NFormItem, NIcon, NInput } from "naive-u
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
-import { getOrganizationMembersWithUsernameStartingWith } from "@/api/organization";
-import type { ThreadWithRole } from "@/api/schemas/thread/common/Thread";
-import type { ThreadRole } from "@/api/schemas/thread/common/ThreadRole";
-import type { CreateThreadResponse } from "@/api/schemas/thread/create/CreateThreadResponse";
-import { createThread } from "@/api/thread";
+import { toCreateThreadRequest } from "@/api/adapters/thread";
 import EntityCreationDialogLayout from "@/components/home/common/dialogs/EntityCreationDialogLayout.vue";
 import DynamicUserInvitationInput from "@/components/home/common/forms/DynamicUserInvitationInput.vue";
 import Step from "@/components/home/common/stepper/Step.vue";
-import { useEntityCreate } from "@/composables/useEntityCreate";
+import { useEntityCreate } from "@/composables/shared/useEntityCreate";
+import { useThreadMutations } from "@/composables/threads/useThreadMutations";
 import emitter from "@/plugins/emitter";
 import { useCurrentScopeStore } from "@/stores/CurrentScopeStore";
 import { parsePositiveRouteId } from "@/utils/route";
 
 const route = useRoute();
-
 const currentScopeStore = useCurrentScopeStore();
-const organizationId = currentScopeStore.organization?.id ?? parsePositiveRouteId(route.query.orgId) ?? 0;
+const { t } = useI18n();
+
+const organizationId = parsePositiveRouteId(route.query.orgId) ?? currentScopeStore.organizationId ?? 0;
 if (!organizationId) {
   emitter.emit("closeCreateEntityDialog");
 }
 
-const { t } = useI18n();
-
-type ThreadFormModel = {
-  title: string;
-  description: string;
-}
-
 const formRef = ref<FormInst | null>(null);
-const invitationFormRef = ref<FormInst | null>(null);
-
-const defaultInvitationRole: ThreadRole = "THR_ASSIGNEE"
-const { formModel, formRules, invitationFormModel, validateFormData, handleCreation } = useEntityCreate<
-  ThreadFormModel,
-  ThreadWithRole,
-  CreateThreadResponse
->({
+const defaultInvitationRole = "THR_ASSIGNEE";
+const { create } = useThreadMutations(organizationId);
+const { formModel, formRules, invitationFormModel, validateFormData, handleCreation } = useEntityCreate({
   scopeType: "thread",
-  listType: "threads",
-  defaultInvitationRole,
-  invitationPlaceholder: t("scopes.thread.no-assignees"),
   formRef,
-  invitationFormRef,
   initialFormModel: { title: "", description: "" },
-  createApiCall: async (formData, invitations) =>
-    createThread(organizationId, {
-      title: formData.title,
-      description: formData.description,
-      invitations: invitations,
-    }),
-  buildEntity: (response, formData) => ({
-    id: response.threadId,
-    title: formData.title,
-    description: formData.description,
-    organizationId: organizationId,
-    createdAt: Date.now(),
-    stats: {
-      assignees: response.assignees,
-      deadlines: 0,
-      completedDeadlines: 0,
-    },
-    permissions: {
-      createDeadlines: true,
-      delete: true,
-      manageAssignees: true,
-      update: true,
-    },
-    role: "THR_OWNER",
-    globalRole: response.globalRole
+  isLoading: create.isLoading,
+  create: (model, invitations) => create.mutateAsync({
+    organizationId,
+    createThreadRequest: toCreateThreadRequest({ ...model, invitations })
   }),
 });
 </script>
@@ -105,7 +66,7 @@ const { formModel, formRules, invitationFormModel, validateFormData, handleCreat
             v-model="invitationFormModel"
             :default-role="defaultInvitationRole"
             :placeholder="t('scopes.thread.no-assignees')"
-            :usernames-fetcher="(usernamePrefix) => getOrganizationMembersWithUsernameStartingWith(organizationId, usernamePrefix)"
+            :organization-id="organizationId"
           />
         </n-form-item>
       </n-form>
@@ -115,7 +76,13 @@ const { formModel, formRules, invitationFormModel, validateFormData, handleCreat
             <ArrowLeft />
           </n-icon>
         </n-button>
-        <n-button role="button" @click="handleCreation" type="info">
+        <n-button
+          role="button"
+          @click="handleCreation"
+          type="info"
+          :loading="create.isLoading.value"
+          :disabled="create.isLoading.value"
+        >
           {{ t("actions.create") }}
         </n-button>
       </div>

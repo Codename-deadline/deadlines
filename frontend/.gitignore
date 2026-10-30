@@ -26,3 +26,8 @@ dist-ssr
 
 .env
 .VSCodeCounter
+.orval-check-*/
+
+# Work in progress
+README.md
+notes

@@ -3,8 +3,8 @@ import { Calendar } from "@vicons/fa";
 import { NCard, NCollapse, NCollapseItem, NDivider, NIcon } from 'naive-ui';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type { MemberWithRole } from "@/api/schemas/common/Member";
-import type { DeadlineWithRole } from '@/api/schemas/deadline/common/Deadline';
+import type { DeadlineModel } from '@/api/adapters/deadline';
+import type { MemberModel } from "@/api/adapters/user";
 import ShortLongTimeDisplay from "@/components/home/common/ShortLongTimeDisplay.vue";
 import SkeletonGrid from '@/components/home/common/SkeletonGrid.vue';
 import UserAvatar from "@/components/home/common/UserAvatar.vue";
@@ -15,8 +15,8 @@ import { computeDeadlineState } from "@/utils/state";
 import DeadlineStatusButton from "../DeadlineStatusButton.vue";
 
 const props = defineProps<{
-  deadline: DeadlineWithRole,
-  assignees: MemberWithRole[],
+  deadline: DeadlineModel,
+  assignees: MemberModel[],
   isLoadingAssignees?: boolean,
   isLoadingStatusChange?: boolean
 }>();

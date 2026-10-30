@@ -2,18 +2,14 @@
 import { NForm, NFormItem, NInputOtp } from "naive-ui";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
-import * as apiAuth from "@/api/auth";
-import { useApi } from "@/composables/useApi";
-import emitter from "@/plugins/emitter";
-import { useTokenStore } from "@/stores/TokenStore";
-import type { AuthMethod } from "@/types/api";
-import { displayApiError, displayFormErrors } from "@/utils";
+import { useOtpVerification } from "@/composables/auth/useAuthentication";
+import { useRequestError } from "@/composables/shared/useRequestError";
+import type { AuthMethod } from "@/types/auth";
 import { isDigitOnlySequence } from "@/utils/validation";
 import BaseAuthForm from "../common/BaseAuthForm.vue";
 
 const { t } = useI18n();
-const { makeRequest } = useApi();
-const tokenStore = useTokenStore();
+const displayRequestError = useRequestError();
 
 const props = defineProps<{
   otpId: string;
@@ -21,36 +17,18 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<(e: "password-required", requestId: string) => void>();
 
+const { mutateAsync: verifyOtp, isLoading: isSubmitting } = useOtpVerification((requestId) => {
+  emit("password-required", requestId);
+});
 const otp = ref<string[]>([]);
 
 const submitAuthForm = async () => {
-  const otpCode: string = otp.value.join("");
+  if (isSubmitting.value || otp.value.join("").length !== 6) return;
 
-  const response = await makeRequest(
-    () => apiAuth.verifyOtp({ id: props.otpId, code: otpCode }),
-    displayFormErrors,
-    displayApiError,
-  );
-  if (!response.ok) return;
-
-  if (response.data.passwordRequired) {
-    // TODO: Show an error message
-    if (!response.data.requestId) {
-      // This will only happen if the server returns an invalid response
-      console.error("Request id is missing");
-      return;
-    }
-    emit("password-required", response.data.requestId);
-  } else {
-    const tokenPair = response.data.tokenPair;
-    // TODO: Show an error message
-    if (!tokenPair) {
-      // This will only happen if the server returns an invalid response
-      console.error("Token pair is missing");
-      return;
-    }
-    tokenStore.updateTokens(tokenPair);
-    emitter.emit("signUpCompleted");
+  try {
+    await verifyOtp({ verifyOtpRequest: { id: props.otpId, code: otp.value.join("") } });
+  } catch (error) {
+    displayRequestError(error);
   }
 };
 </script>
@@ -58,6 +36,8 @@ const submitAuthForm = async () => {
 <template>
   <BaseAuthForm
     @submit="submitAuthForm"
+    :is-loading="isSubmitting"
+    :is-disabled="otp.join('').length !== 6"
     :is-sign-in="true"
     :auth-method="authMethod"
     button-selector="auth.otp.action"

@@ -1,30 +1,23 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router";
-import type { OrganizationWithStatsAndRole } from "@/api/schemas/organization/common/Organization";
-import { getOrganizations } from "@/api/user";
+import type { OrganizationListModel } from "@/api/adapters/organization";
 import PageLayout from "@/components/home/common/PageLayout.vue";
 import CreateOrganizationDialog from "@/components/home/organizations/CreateOrganizationDialog.vue";
 import EditOrganizationDialog from "@/components/home/organizations/EditOrganizationDialog.vue";
 import OrganizationCard from "@/components/home/organizations/OrganizationCard.vue";
-import { useCurrentScopeStore } from "@/stores/CurrentScopeStore";
+import { useOrganizations } from "@/composables/organizations/useOrganizations";
 
 const router = useRouter();
-const currentScopeStore = useCurrentScopeStore();
-
-const onCardClick = (org: OrganizationWithStatsAndRole) => {
-  router.push({ path: '/threads', query: { orgId: org.id } });
-  currentScopeStore.withScope({ entity: org, type: "organization" });
-}
+const { items, isLoading, error, hasNextPage, loadMore, retry } = useOrganizations();
+const onCardClick = (organization: OrganizationListModel) => {
+  router.push({ path: "/threads", query: { orgId: organization.id } });
+};
 </script>
 
 <template>
-  <page-layout
-    @card-clicked="onCardClick"
-    :entity-card-component="OrganizationCard"
-    :edit-dialog-component="EditOrganizationDialog"
-    :create-dialog-component="CreateOrganizationDialog"
-    :fetcher="getOrganizations"
-    :reset="true"
-    scope-type="organization"
+  <PageLayout
+    :items="items" :loading="isLoading" :error="error" :has-more="hasNextPage" :load-more="loadMore" :retry="retry"
+    :entity-card-component="OrganizationCard" :edit-dialog-component="EditOrganizationDialog"
+    :create-dialog-component="CreateOrganizationDialog" scope-type="organization" @card-clicked="onCardClick"
   />
 </template>

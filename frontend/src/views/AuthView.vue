@@ -4,9 +4,9 @@ import { useRoute, useRouter } from "vue-router";
 import AuthForm from "@/components/auth/AuthForm.vue";
 import AuthSelection from "@/components/auth/AuthSelection.vue";
 import AuthChannelCard from "@/components/auth/common/AuthChannelCard.vue";
+import { useCurrentUser } from "@/composables/users/useCurrentUser";
 import emitter from "@/plugins/emitter";
-import { useUserStore } from "@/stores/UserStore";
-import type { AuthMethod } from "@/types/api";
+import type { AuthMethod } from "@/types/auth";
 
 const selectedAuthChannel = ref<AuthMethod | null>(null);
 const isSignUpSelected = ref<boolean>(false);
@@ -31,8 +31,8 @@ emitter.on("resetAuthProgress", () => {
 
 const route = useRoute();
 const router = useRouter();
-const userStore = useUserStore();
-if (route.path.includes("auth") && userStore.isAvailable) {
+const { user } = useCurrentUser();
+if (route.path.includes("auth") && user.value) {
   router.push({ path: "/" });
 }
 </script>
@@ -51,7 +51,7 @@ if (route.path.includes("auth") && userStore.isAvailable) {
     />
     <AuthForm
       v-else-if="authState === 'form' && selectedAuthChannel"
-      :method="selectedAuthChannel" 
+      :method="selectedAuthChannel"
       :is-sign-up="isSignUpSelected"
     />
   </div>

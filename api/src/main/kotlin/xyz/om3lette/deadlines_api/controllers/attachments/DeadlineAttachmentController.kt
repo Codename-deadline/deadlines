@@ -1,6 +1,9 @@
 package xyz.om3lette.deadlines_api.controllers.attachments
 
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Encoding
+import io.swagger.v3.oas.annotations.parameters.RequestBody as OpenApiRequestBody
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
@@ -26,7 +29,16 @@ class DeadlineAttachmentController(
     private val attachmentsService: AttachmentsService
 ) {
     @PostMapping(consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
-    @Operation(summary = "Create a deadline attachment")
+    @Operation(
+        summary = "Create a deadline attachment",
+        requestBody = OpenApiRequestBody(
+            required = true,
+            content = [Content(
+                mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                encoding = [Encoding(name = "meta", contentType = MediaType.APPLICATION_JSON_VALUE)]
+            )]
+        )
+    )
     fun createAttachment(
         @AuthenticationPrincipal user: User,
         @PathVariable @Positive deadlineId: Long,

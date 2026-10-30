@@ -57,7 +57,7 @@ class DeadlineController(
     )
 
     @PostMapping("/assignees")
-    @Operation(summary = "Add deadline assignees")
+    @Operation(operationId = "addDeadlineAssignee", summary = "Add deadline assignees")
     fun addAssignees(
         @AuthenticationPrincipal user: User,
         @PathVariable @Positive deadlineId: Long,
@@ -66,6 +66,7 @@ class DeadlineController(
 
     @GetMapping("/assignees")
     @Operation(
+        operationId = "getDeadlineAssignees",
         summary = "Get deadline assignees",
         description = "Returns a list of explicit thread assignees." +
                       "Higher role users in the organization or thread are not included."
@@ -76,7 +77,7 @@ class DeadlineController(
     ) = deadlineService.getDeadlineAssignees(user, deadlineId)
 
     @DeleteMapping("/assignees/{assigneeUsername}")
-    @Operation(summary = "Remove an assignee")
+    @Operation(operationId = "removeDeadlineAssignee", summary = "Remove an assignee")
     fun removeAssignee(
         @AuthenticationPrincipal user: User,
         @PathVariable @Positive deadlineId: Long,

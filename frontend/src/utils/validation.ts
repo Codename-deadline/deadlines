@@ -1,6 +1,16 @@
-import type { ExpectedType, ValidationIssue } from "@/api/common/ValidationError";
+export type ValidationMessage = {
+  field?: string;
+  reason?: string;
+  min?: number;
+  max?: number;
+  exact?: number;
+  allowed?: string[];
+  expected?: string;
+};
 
-const localizeValidationField = (tSafe: any, field: string): string => {
+export type ValidationTranslator = (key: string, params?: Record<string, unknown>) => string | undefined;
+
+const localizeValidationField = (tSafe: ValidationTranslator, field: string): string => {
   const path = field
     .replace(/\[(\d+)\]/g, ".$1")
     .split(".")
@@ -29,7 +39,7 @@ const localizeValidationField = (tSafe: any, field: string): string => {
   );
 };
 
-const expectedTypeAliases: Record<ExpectedType, string> = {
+const expectedTypeAliases: Record<string, string> = {
   string: "string",
   integer: "integer",
   number: "number",
@@ -38,9 +48,9 @@ const expectedTypeAliases: Record<ExpectedType, string> = {
   object: "object",
 };
 
-export const formatValidationIssue = (tSafe: any, issue: ValidationIssue): string => {
+export const formatValidationIssue = (tSafe: ValidationTranslator, issue: ValidationMessage): string => {
   const params: Record<string, unknown> = {
-    field: localizeValidationField(tSafe, issue.field),
+    field: localizeValidationField(tSafe, issue.field ?? "_form"),
   };
 
   switch (issue.reason) {
@@ -64,16 +74,20 @@ export const formatValidationIssue = (tSafe: any, issue: ValidationIssue): strin
       params.exact = issue.exact;
       break;
     case "value.one-of":
-      params.allowed = issue.allowed.join(", ");
+      params.allowed = Array.isArray(issue.allowed) ? issue.allowed.join(", ") : undefined;
       break;
     case "type.invalid": {
-      const key: string = expectedTypeAliases[issue.expected];
+      const key = expectedTypeAliases[issue.expected ?? ""] ?? "unknown";
       params.expected = tSafe(`errors.validation.types.${key}`) ?? issue.expected;
       break;
     }
   }
 
-  return tSafe(`errors.validation.reasons.${issue.reason}`, params) ?? tSafe("errors.validation.invalid", params);
+  return (
+    tSafe(`errors.validation.reasons.${issue.reason}`, params) ??
+    tSafe("errors.validation.invalid", params) ??
+    "Invalid value"
+  );
 };
 
 export const normalizeUsername = (username: string) => username.replace(/^@+/, "").trim();

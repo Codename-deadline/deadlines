@@ -1,44 +1,52 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import type { ThreadWithRole } from '@/api/schemas/thread/common/Thread';
-import { getMyThreads, getOrganizationThreads } from '@/api/thread';
-import PageLayout from '@/components/home/common/PageLayout.vue';
-import CreateThreadDialog from '@/components/home/threads/CreateThreadDialog.vue';
-import EditThreadDialog from '@/components/home/threads/EditThreadDialog.vue';
-import ThreadCard from '@/components/home/threads/ThreadCard.vue';
-import { useCurrentScopeStore } from '@/stores/CurrentScopeStore';
-import { parsePositiveRouteId } from '@/utils/route';
+import { computed, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import type { ThreadWithRoleModel } from "@/api/adapters/thread";
+import PageLayout from "@/components/home/common/PageLayout.vue";
+import CreateThreadDialog from "@/components/home/threads/CreateThreadDialog.vue";
+import EditThreadDialog from "@/components/home/threads/EditThreadDialog.vue";
+import ThreadCard from "@/components/home/threads/ThreadCard.vue";
+import { useOrganizationThreads, useUserAssignedThreads } from "@/composables/threads/useThreads";
+import { useCurrentScopeStore } from "@/stores/CurrentScopeStore";
+import { parsePositiveRouteId } from "@/utils/route";
 
 const router = useRouter();
 const route = useRoute();
-const currentScopeStore = useCurrentScopeStore();
+const scope = useCurrentScopeStore();
 
-const orgId = computed(() => parsePositiveRouteId(route.query.orgId));
-const showCreateThreadButton = computed(
-  () => currentScopeStore.organization?.id === orgId.value
-    && currentScopeStore.organization.permissions.createThreads
-);
+const orgId = computed(() => parsePositiveRouteId(route.query.orgId) ?? -1);
+const showAssignedThreads = computed(() => route.query.orgId === undefined);
+const assignedThreads = useUserAssignedThreads(showAssignedThreads);
+const organizationThreads = useOrganizationThreads(orgId);
+const threads = computed(() => showAssignedThreads.value ? assignedThreads : organizationThreads);
 
-const userThreadsFetcher = (page: number) => getMyThreads(page);
-const organizationThreadFetcher = (page: number) => getOrganizationThreads(orgId.value!, page);
-const threadFetcher = computed(() => orgId.value ? organizationThreadFetcher : userThreadsFetcher)
+watch([orgId, showAssignedThreads], ([id, assigned]) => {
+  if (route.name === "Threads" && !assigned && id <= 0) {
+    void router.replace("/organizations");
+  }
+}, { immediate: true });
 
-const onCardClick = (thread: ThreadWithRole) => {
-  router.push({ path: '/deadlines', query: { thrId: thread.id } });
-  currentScopeStore.withScope({ entity: thread, type: "thread" });
-}
+const showCreateThreadButton = computed(() => Boolean(
+  orgId.value > 0
+  && scope.organization?.id === orgId.value
+  && scope.organization.permissions.createThreads
+));
+
+const onCardClick = (thread: ThreadWithRoleModel) => {
+  router.push({ path: "/deadlines", query: { thrId: thread.id } });
+};
 </script>
 
 <template>
-  <page-layout
+  <PageLayout
+    v-if="showAssignedThreads || orgId > 0"
     @card-clicked="onCardClick"
+    :items="threads.items.value" :loading="threads.isLoading.value" :error="threads.error.value"
+    :has-more="threads.hasNextPage.value" :load-more="threads.loadMore" :retry="threads.retry"
     :entity-card-component="ThreadCard"
     :edit-dialog-component="EditThreadDialog"
     :create-dialog-component="CreateThreadDialog"
-    :fetcher="threadFetcher"
     :show-create-button="showCreateThreadButton"
-    :reset="true"
     scope-type="thread"
   />
 </template>

@@ -4,37 +4,35 @@ import { NButton, NDropdown } from "naive-ui";
 import type { DropdownMixedOption } from "naive-ui/es/dropdown/src/interface";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { LanguageSchema } from "@/api/schemas/common/LanguageSchema";
-import { patchUser } from "@/api/user";
-import { useApi } from "@/composables/useApi";
-import { useLoading } from "@/composables/useLoading";
+import { useRequestError } from "@/composables/shared/useRequestError";
+import { useCurrentUser, useUpdateCurrentUser } from "@/composables/users/useCurrentUser";
 import { tLanguageOptions } from "@/locales/utils";
 import { useLocalizationStore } from "@/stores/LocalizationStore";
-import { useUserStore } from "@/stores/UserStore";
+import { Language } from "@/types/Language";
 
 defineProps<{
   enableLabel?: boolean
 }>()
 
 const { t } = useI18n();
-const userStore = useUserStore();
-const { makeRequest } = useApi();
-const { isLoading: isSaving, withLoading } = useLoading();
+const { user } = useCurrentUser();
+const { mutateAsync: updateUser, isLoading: isSaving } = useUpdateCurrentUser();
+const displayRequestError = useRequestError();
 const localizationStore = useLocalizationStore();
 
 
 const languageOptions = computed<DropdownMixedOption[]>(() => tLanguageOptions(t));
 
 const handleLanguageChange = async (key: string | number) => {
-  const parsedLanguage = LanguageSchema.safeParse(key);
-  if (!parsedLanguage.success || parsedLanguage.data === localizationStore.language || isSaving.value) return;
+  if (key !== Language.ENGLISH && key !== Language.RUSSIAN) return;
+  if (key === localizationStore.language || isSaving.value) return;
 
-  const previousLanguage = localizationStore.language;
-  localizationStore.setLanguage(parsedLanguage.data);
-
-  if (!userStore.isAvailable) return;
-  const response = await withLoading(() => makeRequest(() => patchUser({ language: parsedLanguage.data })));
-  if (!response.ok) localizationStore.setLanguage(previousLanguage);
+  try {
+    if (user.value) await updateUser({ language: key });
+    localizationStore.setLanguage(key);
+  } catch (error) {
+    displayRequestError(error);
+  }
 };
 </script>
 
@@ -48,8 +46,8 @@ const handleLanguageChange = async (key: string | number) => {
     <n-button
       text
       :loading="isSaving"
-      :aria-label="t('actions.change-language')" 
-      :title="t('actions.change-language')" 
+      :aria-label="t('actions.change-language')"
+      :title="t('actions.change-language')"
     >
       <Icon size="32">
         <LanguageIcon />

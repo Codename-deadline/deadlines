@@ -2,7 +2,7 @@
 import { Cog, Globe, Lock, UserFriends, UserLock } from "@vicons/fa";
 import { NButton, NIconWrapper } from "naive-ui";
 import { useI18n } from "vue-i18n";
-import type { OrganizationWithStatsAndRole } from "@/api/schemas/organization/common/Organization";
+import type { OrganizationListModel } from "@/api/adapters/organization";
 import { hasAnyEditPermission } from "@/utils/permissions";
 import EntityCard from "../common/EntityCard.vue";
 import RoleTag from "../common/RoleTag.vue";
@@ -11,7 +11,7 @@ import ScopeHierarchy from "../common/ScopeHierarchy.vue";
 const { t } = useI18n();
 
 const props = defineProps<{
-  entity: OrganizationWithStatsAndRole;
+  entity: OrganizationListModel;
 }>();
 const emit = defineEmits<{
   edit: [id: number];
@@ -29,7 +29,7 @@ const emit = defineEmits<{
         </n-icon-wrapper>
         <div>
           <div class="flex space-x-3!">
-            <n-button role="button" v-if="hasAnyEditPermission(entity.permissions)" @click.stop="emit('edit', entity.id)" text>
+            <n-button role="button" v-if="hasAnyEditPermission({ ...entity.permissions })" @click.stop="emit('edit', entity.id)" text>
               <template #icon>
                 <icon>
                   <Cog/>

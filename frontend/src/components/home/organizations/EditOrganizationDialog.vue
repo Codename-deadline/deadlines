@@ -6,7 +6,7 @@ import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { type OrganizationListModel, toOrganizationRole } from "@/api/adapters/organization";
 import type { MemberModel } from "@/api/adapters/user";
-import type { AnyRole } from "@/api/common/AnyRole";
+import type { UserScopeResponseRole as AnyRole } from "@/api/generated/models";
 import EntityDialoglayout from "@/components/home/common/dialogs/EntityDialoglayout.vue";
 import MembersTab from "@/components/home/common/dialogs/members/MembersTab.vue";
 import UserInvitationInput from "@/components/home/common/forms/UserInvitationInput.vue";
@@ -67,7 +67,7 @@ const { patchFormModel, patchFormRules, handlePatch } = useEntityEdit({
   patch: (model) => mutations.patch.mutateAsync({ organizationId: props.entity.id, patchOrganizationRequest: model }),
 });
 
-const invitationFormModel = ref({ username: "", role: "ORG_MEMBER" });
+const invitationFormModel = ref<{ username: string; role: AnyRole }>({ username: "", role: "ORG_MEMBER" });
 const invitationFormRules: FormRules = {
   username: [{ validator: (_, value: string) => Boolean(normalizeUsername(value)), renderMessage: () => tFormError(t, "username"), trigger: ["input", "blur"] }],
 };

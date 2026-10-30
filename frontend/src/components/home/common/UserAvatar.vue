@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { NAvatar } from 'naive-ui';
-import type { MinimalUser } from '@/api/schemas/user/common/User';
+import type { MinimalUserResponse } from '@/api/generated/models';
 import { getAvatarText } from '@/utils/strings';
 
 withDefaults(
   defineProps<{
-    user: MinimalUser,
+    user: MinimalUserResponse,
     showUsername?: boolean
   }>(),
   {

@@ -6,7 +6,7 @@ import { useI18n } from 'vue-i18n';
 import type { BotDTOMessenger } from '@/api/generated/models';
 import emitter from '@/plugins/emitter';
 import { useMetadataStore } from '@/stores/MetadataStore';
-import { AuthMethod } from '@/types/api';
+import { AuthMethod } from '@/types/auth';
 import AuthCard from './AuthCard.vue';
 
 const props = defineProps<{

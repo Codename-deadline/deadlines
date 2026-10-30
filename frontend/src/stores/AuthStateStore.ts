@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
-import type { AuthMethod } from "@/types/api";
+import type { AuthMethod } from "@/types/auth";
 
 export const useAuthStateStore = defineStore("auth-state", () => {
   const selectedAuthChannel = ref<AuthMethod | null>(null);

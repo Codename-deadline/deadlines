@@ -1,9 +1,8 @@
 import { capitalize } from "vue";
-import type { OrganizationRole } from "@/api/schemas/organization/common/OrganizationRole";
 import { Language } from "@/types/Language";
 import type { ScopeType } from "@/types/scope";
 
-export const extractRoleFromString = (scope: ScopeType, roleString: OrganizationRole) => {
+export const extractRoleFromString = (scope: ScopeType, roleString: string) => {
   const roleSplit: string[] = roleString.toLowerCase().split("_");
   if (roleSplit.length !== 2) return "scopes.common.unknown";
   return `scopes.${scope}.role.${roleSplit[1]}`;

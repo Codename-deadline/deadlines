@@ -5,7 +5,7 @@ import { useI18n } from "vue-i18n";
 import { usePasswordVerification } from "@/composables/useAuthentication";
 import { useRequestError } from "@/composables/useRequestError";
 import { tFormError } from "@/locales/utils";
-import type { AuthMethod } from "@/types/api";
+import type { AuthMethod } from "@/types/auth";
 import BaseAuthForm from "../common/BaseAuthForm.vue";
 
 const { t } = useI18n();

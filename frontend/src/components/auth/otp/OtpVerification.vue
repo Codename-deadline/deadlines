@@ -4,7 +4,7 @@ import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useOtpVerification } from "@/composables/useAuthentication";
 import { useRequestError } from "@/composables/useRequestError";
-import type { AuthMethod } from "@/types/api";
+import type { AuthMethod } from "@/types/auth";
 import { isDigitOnlySequence } from "@/utils/validation";
 import BaseAuthForm from "../common/BaseAuthForm.vue";
 

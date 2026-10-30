@@ -13,7 +13,7 @@ import TimezoneSelect from "@/components/common/TimezoneSelect.vue";
 import { useRequestError } from "@/composables/useRequestError";
 import { tFormError, tFormLabel, tLanguageOptions } from "@/locales/utils";
 import { useLocalizationStore } from "@/stores/LocalizationStore";
-import type { AuthMethod } from "@/types/api";
+import type { AuthMethod } from "@/types/auth";
 import { redirectToOTP } from "@/utils";
 import { isDigitOnlySequence } from "@/utils/validation";
 

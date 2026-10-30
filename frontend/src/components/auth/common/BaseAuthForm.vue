@@ -2,7 +2,7 @@
 import { NButton } from "naive-ui";
 import { useI18n } from "vue-i18n";
 import emitter from "@/plugins/emitter";
-import type { AuthMethod } from "@/types/api";
+import type { AuthMethod } from "@/types/auth";
 import AuthCard from "./AuthCard.vue";
 
 const { t } = useI18n();

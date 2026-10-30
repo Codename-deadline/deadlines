@@ -4,7 +4,7 @@ import { NButton, NPagination, NPopconfirm, NSkeleton } from 'naive-ui';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { MemberModel } from '@/api/adapters/user';
-import type { AnyRole } from '@/api/common/AnyRole';
+import type { UserScopeResponseRole as AnyRole } from '@/api/generated/models';
 import RoleDropdown from '@/components/home/common/forms/RoleDropdown.vue';
 import { useCurrentUser } from '@/composables/useCurrentUser';
 import { PAGE_SIZE_KEY } from '@/constants/providerKeys';

@@ -2,7 +2,7 @@
 import { NButton, NDropdown } from 'naive-ui';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type { AnyRole } from '@/api/common/AnyRole';
+import type { UserScopeResponseRole as AnyRole } from '@/api/generated/models';
 import { SCOPE_TYPE_KEY } from '@/constants/providerKeys';
 import { extractRoleFromString } from '@/locales/utils';
 import { useMetadataStore } from '@/stores/MetadataStore';
@@ -50,7 +50,7 @@ const filteredRoles = computed(() => {
     trigger="click"
   >
     <n-button :disabled="disabled" class="rounded-lg! capitalize" :size="size">
-      {{ t(extractRoleFromString(scopeType, buttonRole ?? filteredRoles[0].key ?? "")) }}
+      {{ t(extractRoleFromString(scopeType, buttonRole ?? filteredRoles[0]?.key ?? "")) }}
     </n-button>
   </n-dropdown>
 </template>

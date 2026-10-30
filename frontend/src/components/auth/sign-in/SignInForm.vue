@@ -10,7 +10,7 @@ import type { CreateOtpRequest } from "@/api/generated/models";
 import BaseAuthForm from "@/components/auth/common/BaseAuthForm.vue";
 import { useRequestError } from "@/composables/useRequestError";
 import { tFormError, tFormLabel } from "@/locales/utils";
-import type { AuthMethod } from "@/types/api";
+import type { AuthMethod } from "@/types/auth";
 import { redirectToOTP } from "@/utils";
 import { isDigitOnlySequence } from "@/utils/validation";
 

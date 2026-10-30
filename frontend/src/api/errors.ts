@@ -1,4 +1,3 @@
-import type { ApiError } from "@/types/api";
 import { HTTP_STATUS } from "./http-status";
 
 export type ApiRequestErrorOptions = {
@@ -62,12 +61,4 @@ export class ApiRequestError extends Error {
 
 export function isCancellation(error: unknown): boolean {
   return error instanceof Error && (error.name === "AbortError" || ("cause" in error && isCancellation(error.cause)));
-}
-
-/** Temporary bridge for the existing notification helpers and SafeApiCall. */
-export function toLegacyApiError(error: unknown): ApiError {
-  if (error instanceof ApiRequestError) {
-    return { ok: false, error: error as ApiError["error"], response: error.response };
-  }
-  return { ok: false, error: { name: "NetworkError", message: "Network request failed", cause: error } };
 }

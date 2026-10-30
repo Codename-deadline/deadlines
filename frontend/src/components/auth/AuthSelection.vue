@@ -5,7 +5,7 @@ import { type Component, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import AuthCard from "@/components/auth/common/AuthCard.vue";
 import AuthMethodButton from "@/components/auth/common/AuthMethodButton.vue";
-import { AuthMethod } from "@/types/api";
+import { AuthMethod } from "@/types/auth";
 
 const emit = defineEmits<{
   channelSelected: [ method: AuthMethod]

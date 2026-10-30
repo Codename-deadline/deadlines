@@ -147,7 +147,7 @@ export function refreshSession(): Promise<RequestResult<TokenPair>> {
   return promise;
 }
 
-/** Both clients use this path; only safe reads retry, and a 401 is replayed at most once. */
+/** Shared request path: only safe reads retry, and a 401 is replayed at most once. */
 export async function request<T>(
   path: string,
   options: RequestInit = {},

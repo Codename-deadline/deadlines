@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NDynamicInput } from 'naive-ui';
-import type { AnyRole } from '@/api/common/AnyRole';
+import type { UserScopeResponseRole as AnyRole } from '@/api/generated/models';
 import { MAX_ORGANIZATION_CREATION_INVITATIONS } from '@/constants/forms';
 import UserInvitationInput from './UserInvitationInput.vue';
 

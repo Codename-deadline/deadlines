@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
 import type { MemberModel } from "@/api/adapters/user";
-import type { AnyRole } from "@/api/common/AnyRole";
+import type { UserScopeResponseRole as AnyRole } from "@/api/generated/models";
 import QueryError from "../../QueryError.vue";
 import MemberManager from "./MemberManager.vue";
 

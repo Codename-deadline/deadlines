@@ -5,7 +5,7 @@ import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { type DeadlineModel, toDeadlineRole, toPatchDeadlineRequest } from "@/api/adapters/deadline";
 import type { MemberModel } from "@/api/adapters/user";
-import type { AnyRole } from "@/api/common/AnyRole";
+import type { UserScopeResponseRole as AnyRole } from "@/api/generated/models";
 import EntityDialoglayout from "@/components/home/common/dialogs/EntityDialoglayout.vue";
 import MembersTab from "@/components/home/common/dialogs/members/MembersTab.vue";
 import UserInvitationInput from "@/components/home/common/forms/UserInvitationInput.vue";
@@ -120,7 +120,7 @@ const organizationId = computed(() => parentThread.thread.value?.organizationId 
 ));
 
 const invitationFormRef = ref<FormInst | null>(null);
-const invitationFormModel = ref({ username: "", role: "DDL_ASSIGNEE" });
+const invitationFormModel = ref<{ username: string; role: AnyRole }>({ username: "", role: "DDL_ASSIGNEE" });
 const invitationFormRules: FormRules = {
   username: [{
     validator: (_, value: string) => Boolean(normalizeUsername(value.trim())),

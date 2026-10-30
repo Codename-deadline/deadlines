@@ -6,7 +6,7 @@ import AuthSelection from "@/components/auth/AuthSelection.vue";
 import AuthChannelCard from "@/components/auth/common/AuthChannelCard.vue";
 import { useCurrentUser } from "@/composables/useCurrentUser";
 import emitter from "@/plugins/emitter";
-import type { AuthMethod } from "@/types/api";
+import type { AuthMethod } from "@/types/auth";
 
 const selectedAuthChannel = ref<AuthMethod | null>(null);
 const isSignUpSelected = ref<boolean>(false);

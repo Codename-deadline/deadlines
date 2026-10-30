@@ -5,7 +5,7 @@ import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { type ThreadWithRoleModel, toThreadRole } from "@/api/adapters/thread";
 import type { MemberModel } from "@/api/adapters/user";
-import type { AnyRole } from "@/api/common/AnyRole";
+import type { UserScopeResponseRole as AnyRole } from "@/api/generated/models";
 import EntityDialoglayout from "@/components/home/common/dialogs/EntityDialoglayout.vue";
 import MembersTab from "@/components/home/common/dialogs/members/MembersTab.vue";
 import UserInvitationInput from "@/components/home/common/forms/UserInvitationInput.vue";
@@ -34,7 +34,7 @@ const thread = computed(() => ({ ...props.entity, ...detail.thread.value }));
 
 const patchFormRef = ref<FormInst | null>(null);
 const invitationFormRef = ref<FormInst | null>(null);
-const invitationFormModel = ref({ username: "", role: "THR_ASSIGNEE" });
+const invitationFormModel = ref<{ username: string; role: AnyRole }>({ username: "", role: "THR_ASSIGNEE" });
 const invitationFormRules: FormRules = {
   username: [{
     validator: (_, value: string) => Boolean(normalizeUsername(value.trim())),

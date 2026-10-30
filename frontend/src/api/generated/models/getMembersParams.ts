@@ -6,9 +6,7 @@
  */
 
 export type GetMembersParams = {
-  /**
-   * @minimum 0
-   */
+  /** @minimum 0 */
   page: number;
   /**
    * @minimum 1

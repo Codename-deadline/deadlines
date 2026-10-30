@@ -6,8 +6,6 @@
  */
 
 export type GetPendingSentInvitationsByUserParams = {
-  /**
-   * @minimum 0
-   */
+  /** @minimum 0 */
   page: number;
 };

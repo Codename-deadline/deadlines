@@ -6,8 +6,6 @@
  */
 
 export type GetThreadsParams = {
-  /**
-   * @minimum 0
-   */
+  /** @minimum 0 */
   page: number;
 };

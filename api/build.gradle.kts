@@ -2,10 +2,10 @@ plugins {
 	kotlin("jvm") version "2.4.21"
 	kotlin("plugin.spring") version "2.4.21"
     kotlin("plugin.jpa") version "2.4.21"
-	id("org.springframework.boot") version "4.1.1"
+	id("org.springframework.boot") version "4.1.2"
 	id("io.spring.dependency-management") version "1.1.7"
     id("com.google.protobuf") version "0.10.0"
-	id("io.github.ben-manes.versions") version "0.65.0"
+	id("io.github.ben-manes.versions") version "0.66.0"
 }
 
 group = "xyz.om3lette"
@@ -36,11 +36,14 @@ repositories {
 	mavenCentral()
 }
 
-// GHSA-9xv2-5v5q-p794, GHSA-h3x4-894j-xpx5, GHSA-gcx9-497g-6cp6
-extra["tomcat.version"] = "11.0.26"
-
-extra["jackson-2-bom.version"] = "2.21.7"
-extra["jackson-bom.version"] = "3.1.7"
+dependencyManagement {
+    dependencies {
+        // GHSA-xxph-c9ww-hj94
+        dependency("com.google.guava:guava:33.7.2-jre")
+        // GHSA-gwq9-9ffj-mvrv, GHSA-q233-g92q-qxp6, GHSA-xqrx-qh46-34m7
+        dependency("org.xerial.snappy:snappy-java:1.1.10.9")
+    }
+}
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
@@ -51,7 +54,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.springframework.boot:spring-boot-starter-grpc-server")
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.0")
     // Swagger's model resolver uses Jackson 2, independently of Spring MVC's Jackson 3 mapper.
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
@@ -64,17 +67,17 @@ dependencies {
         exclude(module = "lz4-java")
     }
     // Original package is archived. Community maintained fork.
-    implementation("at.yawk.lz4:lz4-java:1.12.0")
+    implementation("at.yawk.lz4:lz4-java:1.12.1")
 
     implementation("io.hypersistence:hypersistence-utils-hibernate-73:3.16.0")
-    implementation("tools.jackson.module:jackson-module-kotlin:3.2.3")
+    implementation("tools.jackson.module:jackson-module-kotlin:3.2.4")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("redis.clients:jedis")
-	implementation(platform("software.amazon.awssdk:bom:2.55.13"))
+	implementation(platform("software.amazon.awssdk:bom:2.57.7"))
 	implementation("software.amazon.awssdk:s3")
 	implementation("software.amazon.awssdk:apache5-client")
-	implementation("org.apache.tika:tika-core:4.1.0")
-    implementation("org.apache.tika:tika-parsers-standard-package:4.1.0")
+	implementation("org.apache.tika:tika-core:4.2.0")
+    implementation("org.apache.tika:tika-parsers-standard-package:4.2.0")
 
     implementation("io.jsonwebtoken:jjwt-api:0.13.0")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.13.0")

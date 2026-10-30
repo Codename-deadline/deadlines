@@ -10,25 +10,12 @@ import type {
   DeadlineResponseWithRole,
   PaginationResponseDeadlineResponseWithRole,
 } from "@/api/generated/models";
-import { QUERY_EMPTY_PENDING_STATE } from "@/plugins/api";
+import { clearQueryEntries } from "./queryCache";
 import { deadlineListsPrefix, threadDeadlinesPrefix, userAssignedDeadlinesPrefix } from "./useDeadlines";
 
 type QueryCache = ReturnType<typeof useQueryCache>;
 const detailsPrefix = getGetDeadlineQueryKey(0).slice(0, -1);
 const attachmentsPrefix = getGetAttachmentMetadataQueryKey(0).slice(0, -1);
-
-export function clearQueryEntries(cache: QueryCache, key: EntryKey) {
-  for (const entry of cache.getEntries({ key })) {
-    if (!entry.active) {
-      cache.cancel(entry);
-      cache.remove(entry);
-    } else {
-      entry.placeholderData = null;
-      cache.setEntryState(entry, QUERY_EMPTY_PENDING_STATE);
-      cache.invalidate(entry);
-    }
-  }
-}
 
 export function removeDeadlineRows(cache: QueryCache, matches: (deadline: DeadlineResponseWithRole) => boolean) {
   for (const prefix of [userAssignedDeadlinesPrefix, deadlineListsPrefix]) {

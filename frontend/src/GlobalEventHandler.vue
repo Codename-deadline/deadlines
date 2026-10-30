@@ -4,21 +4,18 @@ import { onMounted, onUnmounted, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { isCancellation } from "./api/errors";
-import { getNumberOfPendingInvitation } from "./api/generated/endpoints/invitations/invitations";
 import { useCurrentUser } from "./composables/useCurrentUser";
+import { useInvitationPolling } from "./composables/useInvitationPolling";
 import { useMetadataResolver } from "./composables/useMetadataResolver";
-import { useRequestError } from "./composables/useRequestError";
 import { SEMI_PUBLIC_ROUTES } from "./constants/app";
 import emitter from "./plugins/emitter";
-import { useGlobalStateStore } from "./stores/GlobalStateStore";
 import { useTokenStore } from "./stores/TokenStore";
 
 const { user, error: userError, refresh: refreshUser } = useCurrentUser();
 const tokenStore = useTokenStore();
-const globalStateStore = useGlobalStateStore();
+useInvitationPolling();
 
 const { t } = useI18n();
-const displayRequestError = useRequestError();
 const { resolveOutdatedMetadata } = useMetadataResolver();
 
 const notification = useNotification();
@@ -51,7 +48,6 @@ const handleSignUpCompleted = async () => {
   await fetchUser();
   if (!session.aborted && user.value) {
     router.push({ path: "/" });
-    await fetchGlobalState();
   }
 };
 const handleSignOut = () => {
@@ -61,41 +57,15 @@ const handleSignOut = () => {
 emitter.on("signUpCompleted", handleSignUpCompleted);
 emitter.on("signOut", handleSignOut);
 
-const fetchGlobalState = async () => {
-  if (!user.value) return;
-
-  const session = tokenStore.sessionSignal();
-  try {
-    const result = await getNumberOfPendingInvitation();
-    session.throwIfAborted();
-    globalStateStore.$patch({ pendingReceivedInvitations: result.pending });
-  } catch (error) {
-    displayRequestError(error);
-  }
-}
-
-let pollTimer: ReturnType<typeof setInterval>;
 onUnmounted(() => {
-  clearInterval(pollTimer);
   emitter.off("signUpCompleted", handleSignUpCompleted);
   emitter.off("signOut", handleSignOut);
   emitter.off("failedToRefreshToken", handleRefreshFailure);
 });
 
 onMounted(async () => {
-  pollTimer = setInterval(async () => {
-    // Ideally this is a websocket connection, but the size is negligible ~0.5kb
-    // which is fine to occasionally poll
-    await fetchGlobalState();
-  }, 5 * 60 * 1000);
-
-  // fetchGlobalState depends on user being present
-  // => load the user first
   await fetchUser();
-  await Promise.all([
-    resolveOutdatedMetadata(),
-    fetchGlobalState(),
-  ])
+  await resolveOutdatedMetadata();
 });
 
 const env = import.meta.env;

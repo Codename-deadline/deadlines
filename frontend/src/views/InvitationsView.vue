@@ -2,13 +2,16 @@
 import { NTabPane, NTabs } from "naive-ui";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { getPendingInvitations, getSentInvitations } from "@/api/invitation";
 import GlobalFooter from "@/components/home/common/GlobalFooter.vue";
 import GlobalHeader from "@/components/home/common/GlobalHeader.vue";
+import QueryError from "@/components/home/common/QueryError.vue";
 import SectionHeader from "@/components/home/common/SectionHeader.vue";
 import InvitationList from "@/components/home/invitations/InvitationList.vue";
+import { usePendingInvitationCount } from "@/composables/useInvitations";
 
 const { t } = useI18n();
+const pendingInvitations = usePendingInvitationCount();
+
 const activeTab = ref<"received" | "sent">("received");
 </script>
 
@@ -25,22 +28,17 @@ const activeTab = ref<"received" | "sent">("received");
         button-action="create"
       />
       <n-tabs v-model:value="activeTab" class="mt-3">
-        <n-tab-pane name="received" :tab="t('scopes.invitation.received')" />
-        <n-tab-pane name="sent" :tab="t('scopes.invitation.sent')" />
+        <!-- https://github.com/tusen-ai/naive-ui/issues/8197 -->
+        <n-tab-pane name="received">
+          <template #tab>{{ t('scopes.invitation.received') }}</template>
+        </n-tab-pane>
+        <n-tab-pane name="sent">
+          <template #tab>{{ t('scopes.invitation.sent') }}</template>
+        </n-tab-pane>
       </n-tabs>
       <div class="mt-3 mb-4">
-        <InvitationList
-          v-show="activeTab === 'received'"
-          :fetcher="getPendingInvitations"
-          :reset="true"
-          variant="received"
-        />
-        <InvitationList
-          v-show="activeTab === 'sent'"
-          :fetcher="getSentInvitations"
-          :reset="true"
-          variant="sent"
-        />
+        <QueryError :error="pendingInvitations.error.value" :loading="pendingInvitations.isLoading.value" @retry="pendingInvitations.refetch()" />
+        <InvitationList :key="activeTab" :variant="activeTab" />
       </div>
     </div>
     <global-footer />

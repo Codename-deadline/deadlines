@@ -16,7 +16,7 @@ import {
   useGetDeadlineAttachmentsMetadata,
 } from "@/api/generated/endpoints/deadlines/deadlines";
 import type { AttachmentResponse } from "@/api/generated/models";
-import { clearQueryEntries } from "./deadlineCache";
+import { clearQueryEntries } from "./queryCache";
 import { deadlineListsPrefix, userAssignedDeadlinesPrefix } from "./useDeadlines";
 import { useDefaultQueryEnabled } from "./useDefaultQueryEnabled";
 

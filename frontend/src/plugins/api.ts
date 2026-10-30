@@ -3,8 +3,6 @@ import type { Pinia } from "pinia";
 import { type App, nextTick, toValue, watch } from "vue";
 import { useDefaultQueryEnabled } from "@/composables/useDefaultQueryEnabled";
 import { useCurrentScopeStore } from "@/stores/CurrentScopeStore";
-import { useGlobalStateStore } from "@/stores/GlobalStateStore";
-import { type ListType, useInfiniteListStore } from "@/stores/InfiniteListStore";
 import { useTokenStore } from "@/stores/TokenStore";
 import { sessionMutationGuard } from "./pinia/sessionMutations";
 
@@ -39,7 +37,6 @@ export function installApi(app: App, pinia: Pinia) {
 
   const queries = useQueryCache(pinia);
   const mutations = useMutationCache(pinia);
-  const lists = useInfiniteListStore(pinia);
   const interruptedPublic = new Set<UseQueryEntry>();
   let stopped = false;
 
@@ -69,11 +66,6 @@ export function installApi(app: App, pinia: Pinia) {
       }
 
       useCurrentScopeStore(pinia).$reset();
-      useGlobalStateStore(pinia).$reset();
-
-      for (const type of Object.keys(lists.stateMap) as ListType[]) {
-        lists.$reset(type);
-      }
 
       // updateTokens() installs credentials after incrementing sessionVersion. Let it and
       // enabled/key watchers finish first; refresh() reuses fetches already started by them.

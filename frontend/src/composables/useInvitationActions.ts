@@ -1,41 +1,39 @@
-import { useMessage } from "naive-ui";
-import { useI18n } from "vue-i18n";
-import { acceptInvitation, declineInvitation, revokeInvitation } from "@/api/invitation";
-import { useApi } from "@/composables/useApi";
-import { useInfiniteListStore } from "@/stores/InfiniteListStore";
+import { useQueryCache } from "@pinia/colada";
+import { type MaybeRefOrGetter, toValue } from "vue";
+import {
+  useAcceptInvitation,
+  useDeclineInvitation,
+  useRevokeInvitation,
+} from "@/api/generated/endpoints/invitations/invitations";
+import { refreshInvitations, removeInvitationRows } from "./invitationCache";
+import { refreshOrganization } from "./organizationCache";
 
-export function useInvitationActions(variant: "received" | "sent") {
-  const { t } = useI18n();
-  const { makeRequest } = useApi();
-  const message = useMessage();
-  const store = useInfiniteListStore();
+type ParentContext = { organizationId: number };
 
-  const listType = variant === "received" ? "invitations_received" : "invitations_sent";
+export function useInvitationActions(organizationId: MaybeRefOrGetter<number>) {
+  const cache = useQueryCache();
 
-  const removeFromStore = (invitationId: number) => {
-    store.removeItem(listType, invitationId);
+  const finishInvitation = (id: number) => {
+    removeInvitationRows(cache, (item) => item.id === id);
+
+    return refreshInvitations(cache);
   };
 
-  const accept = async (invitationId: number) => {
-    const res = await makeRequest(() => acceptInvitation(invitationId));
-    if (!res.ok) return;
-    removeFromStore(invitationId);
-    message.success(t("scopes.toasts.invitation-accepted"));
-  };
+  const accept = useAcceptInvitation<Error, ParentContext>({
+    mutation: {
+      onMutate: () => ({ organizationId: toValue(organizationId) }),
+      onSuccess: (_, { invitationId }, parent) =>
+        Promise.all([finishInvitation(invitationId), refreshOrganization(cache, parent.organizationId, true)]),
+    },
+  });
 
-  const decline = async (invitationId: number) => {
-    const res = await makeRequest(() => declineInvitation(invitationId));
-    if (!res.ok) return;
-    removeFromStore(invitationId);
-    message.success(t("scopes.toasts.invitation-declined"));
-  };
+  const decline = useDeclineInvitation({
+    mutation: { onSuccess: (_, { invitationId }) => finishInvitation(invitationId) },
+  });
 
-  const revoke = async (invitationId: number) => {
-    const res = await makeRequest(() => revokeInvitation(invitationId));
-    if (!res.ok) return;
-    removeFromStore(invitationId);
-    message.success(t("scopes.toasts.invitation-revoked"));
-  };
+  const revoke = useRevokeInvitation({
+    mutation: { onSuccess: (_, { invitationId }) => finishInvitation(invitationId) },
+  });
 
   return { accept, decline, revoke };
 }

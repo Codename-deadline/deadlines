@@ -1,13 +1,6 @@
 import { type EntryKey, setInfiniteQueryData, type UseInfiniteQueryData, useQueryCache } from "@pinia/colada";
+import { useSendInvitation } from "@/api/generated/endpoints/invitations/invitations";
 import {
-  getGetNumberOfPendingInvitationQueryKey,
-  getGetPendingInvitationsByUserQueryKey,
-  getGetPendingSentInvitationsByUserQueryKey,
-  useSendInvitation,
-} from "@/api/generated/endpoints/invitations/invitations";
-import {
-  getGetMembersQueryKey,
-  getGetMemberUsernamesStartingWithQueryKey,
   getGetOrganizationMetadataQueryKey,
   useChangeOrganizationVisibility,
   useCreateOrganization,
@@ -19,7 +12,9 @@ import { useChangeOrganizationOwner, useChangeOrganizationRole } from "@/api/gen
 import type { PaginationResponseOrganizationResponseWithRole } from "@/api/generated/models";
 import { QUERY_EMPTY_PENDING_STATE } from "@/plugins/api";
 import { useCurrentScopeStore } from "@/stores/CurrentScopeStore";
-import { clearOrganizationThreads, refreshOrganizationThreads } from "./threadCache";
+import { clearOrganizationInvitations, refreshInvitations } from "./invitationCache";
+import { organizationHintsPrefix, organizationMembersPrefix, refreshOrganization } from "./organizationCache";
+import { clearOrganizationThreads } from "./threadCache";
 import { organizationsListKey, organizationsListPrefix } from "./useOrganizations";
 
 export function useOrganizationMutations() {
@@ -30,46 +25,30 @@ export function useOrganizationMutations() {
   const invalidate = (key: EntryKey, all = false) =>
     cache.invalidateQueries({ key }, all ? "all" : true).catch(() => {});
 
-  const refreshInvitations = () =>
-    Promise.all([
-      invalidate(getGetPendingSentInvitationsByUserQueryKey({ page: 0 }).slice(0, -1)),
-      invalidate(getGetPendingInvitationsByUserQueryKey({ page: 0 }).slice(0, -1)),
-      invalidate(getGetNumberOfPendingInvitationQueryKey()),
-    ]);
-
-  const memberPrefix = (id: number) => getGetMembersQueryKey(id, { page: 0, size: 5 }).slice(0, -1);
-  const hintPrefix = (id: number) => getGetMemberUsernamesStartingWithQueryKey(id, { startsWith: "" }).slice(0, -1);
-  const refreshOrganization = async (id: number, members = false) =>
-    Promise.all([
-      invalidate(organizationsListPrefix),
-      // Scope readers consume cached DTOs without mounting another query observer.
-      invalidate(getGetOrganizationMetadataQueryKey(id), true),
-      ...(members
-        ? [invalidate(memberPrefix(id)), invalidate(hintPrefix(id)), refreshOrganizationThreads(cache, id)]
-        : []),
-    ]);
+  const refreshAffectedOrganization = (id: number, members = false) =>
+    Promise.all([refreshOrganization(cache, id, members), refreshInvitations(cache)]);
 
   const create = useCreateOrganization({
     mutation: {
-      onSuccess: () => Promise.all([invalidate(organizationsListPrefix), refreshInvitations()]),
+      onSuccess: () => Promise.all([invalidate(organizationsListPrefix), refreshInvitations(cache)]),
     },
   });
   const patch = usePatchOrganization({
-    mutation: { onSuccess: (_data, { organizationId }) => refreshOrganization(organizationId) },
+    mutation: { onSuccess: (_data, { organizationId }) => refreshAffectedOrganization(organizationId) },
   });
   const visibility = useChangeOrganizationVisibility({
-    mutation: { onSuccess: (_data, { organizationId }) => refreshOrganization(organizationId, true) },
+    mutation: { onSuccess: (_data, { organizationId }) => refreshAffectedOrganization(organizationId, true) },
   });
   const ownership = useChangeOrganizationOwner({
-    mutation: { onSuccess: (_data, { organizationId }) => refreshOrganization(organizationId, true) },
+    mutation: { onSuccess: (_data, { organizationId }) => refreshAffectedOrganization(organizationId, true) },
   });
   const role = useChangeOrganizationRole({
-    mutation: { onSuccess: (_data, { organizationId }) => refreshOrganization(organizationId, true) },
+    mutation: { onSuccess: (_data, { organizationId }) => refreshAffectedOrganization(organizationId, true) },
   });
   const removeMember = useRemoveMember({
-    mutation: { onSuccess: (_data, { organizationId }) => refreshOrganization(organizationId, true) },
+    mutation: { onSuccess: (_data, { organizationId }) => refreshAffectedOrganization(organizationId, true) },
   });
-  const invite = useSendInvitation({ mutation: { onSuccess: () => refreshInvitations() } });
+  const invite = useSendInvitation({ mutation: { onSuccess: () => refreshInvitations(cache) } });
   const remove = useDeleteOrganization({
     mutation: {
       onSuccess: (_data, { organizationId }) => {
@@ -89,8 +68,8 @@ export function useOrganizationMutations() {
 
         for (const key of [
           getGetOrganizationMetadataQueryKey(organizationId),
-          memberPrefix(organizationId),
-          hintPrefix(organizationId),
+          organizationMembersPrefix(organizationId),
+          organizationHintsPrefix(organizationId),
         ]) {
           for (const entry of cache.getEntries({ key })) {
             cache.cancel(entry);
@@ -100,10 +79,12 @@ export function useOrganizationMutations() {
             if (!entry.active) cache.remove(entry);
           }
         }
+        clearOrganizationInvitations(cache, organizationId);
+
         if (scope.organizationId === organizationId) scope.$reset();
         return Promise.all([
           invalidate(organizationsListPrefix),
-          refreshInvitations(),
+          refreshInvitations(cache),
           clearOrganizationThreads(cache, organizationId),
         ]);
       },

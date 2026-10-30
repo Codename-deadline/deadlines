@@ -3,7 +3,7 @@ import { useWindowSize } from "@vueuse/core";
 import { NBadge } from "naive-ui";
 import { type Component, computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { useGlobalStateStore } from "@/stores/GlobalStateStore";
+import { usePendingInvitationCount } from "@/composables/useInvitations";
 import type { MainSection } from "@/types/navigation";
 
 const props = defineProps<{
@@ -14,7 +14,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<(e: "click", id: MainSection) => void>();
-const globalStateStore = useGlobalStateStore();
+const { pendingCount } = usePendingInvitationCount();
 
 const { t } = useI18n();
 const { width, height } = useWindowSize();
@@ -34,7 +34,7 @@ const iconSize = computed(() => {
   >
     <div class="flex flex-col items-center space-y-0.5">
       <n-badge
-        :value="section === 'invitations' ? globalStateStore.pendingReceivedInvitations : 0"
+        :value="section === 'invitations' ? pendingCount : 0"
       >
         <Icon :size="iconSize">
           <component :is="icon"/>

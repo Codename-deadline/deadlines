@@ -2,20 +2,21 @@ import { useQueryCache } from "@pinia/colada";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 import { type OrganizationModel, toOrganization } from "@/api/adapters/organization";
+import { type ThreadModel, toThread } from "@/api/adapters/thread";
 import { getGetOrganizationMetadataQueryKey } from "@/api/generated/endpoints/organizations/organizations";
-import type { OrganizationResponse } from "@/api/generated/models";
+import { getGetThreadQueryKey } from "@/api/generated/endpoints/threads/threads";
+import type { OrganizationResponse, ThreadResponse } from "@/api/generated/models";
 import type { DeadlineWithRole } from "@/api/schemas/deadline/common/Deadline";
-import type { Thread } from "@/api/schemas/thread/common/Thread";
 import type { ScopeType } from "@/types/scope";
 
 type ScopeEntity =
   | { entity: OrganizationModel; type: "organization" }
-  | { entity: Thread; type: "thread" }
+  | { entity: ThreadModel; type: "thread" }
   | { entity: DeadlineWithRole; type: "deadline" };
 
 export type ScopeHierarchy = {
   organization: OrganizationModel | null;
-  thread: Thread | null;
+  thread: ThreadModel | null;
   deadline: DeadlineWithRole | null;
 };
 
@@ -27,27 +28,32 @@ export const useCurrentScopeStore = defineStore("currentScope", () => {
     const dto = cache.getQueryData<OrganizationResponse>(getGetOrganizationMetadataQueryKey(organizationId.value));
     return dto ? toOrganization(dto) : null;
   });
-  const thread = ref<Thread | null>(null);
+  const threadId = ref<number | null>(null);
+  const thread = computed(() => {
+    if (!threadId.value) return null;
+    const dto = cache.getQueryData<ThreadResponse>(getGetThreadQueryKey(threadId.value));
+    return dto ? toThread(dto) : null;
+  });
   const deadline = ref<DeadlineWithRole | null>(null);
 
   function withScope(config: ScopeEntity) {
     switch (config.type) {
       case "organization":
         organizationId.value = config.entity.id;
-        thread.value = null;
+        threadId.value = null;
         deadline.value = null;
         break;
       case "thread":
         if (organizationId.value !== config.entity.organizationId) {
           organizationId.value = null;
         }
-        thread.value = config.entity;
+        threadId.value = config.entity.id;
         deadline.value = null;
         break;
       case "deadline":
-        if (thread.value?.id !== config.entity.threadId) {
+        if (threadId.value !== config.entity.threadId) {
           organizationId.value = null;
-          thread.value = null;
+          threadId.value = null;
         }
         deadline.value = config.entity;
         break;
@@ -58,11 +64,11 @@ export const useCurrentScopeStore = defineStore("currentScope", () => {
     switch (scopeType) {
       case "organization":
         organizationId.value = null;
-        thread.value = null;
+        threadId.value = null;
         deadline.value = null;
         break;
       case "thread":
-        thread.value = null;
+        threadId.value = null;
         deadline.value = null;
         break;
       case "deadline":
@@ -85,7 +91,7 @@ export const useCurrentScopeStore = defineStore("currentScope", () => {
     }
 
     organizationId.value = scope.organization?.id ?? null;
-    thread.value = scope.thread;
+    threadId.value = scope.thread?.id ?? null;
     deadline.value = scope.deadline;
   }
 
@@ -97,6 +103,7 @@ export const useCurrentScopeStore = defineStore("currentScope", () => {
     organization,
     organizationId,
     thread,
+    threadId,
     deadline,
     withScope,
     exitScope,

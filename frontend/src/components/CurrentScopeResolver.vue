@@ -3,10 +3,11 @@ import { useQueryCache } from "@pinia/colada";
 import { ref, watch } from "vue";
 import { type LocationQueryValue, useRoute } from "vue-router";
 import { getDeadline } from "@/api/deadline";
-import { getThread } from "@/api/thread";
 import { useApi } from "@/composables/useApi";
+import { useDefaultQueryEnabled } from "@/composables/useDefaultQueryEnabled";
 import { resolveOrganization as resolveOrganizationQuery } from "@/composables/useOrganizations";
 import { useRequestError } from "@/composables/useRequestError";
+import { resolveThread as resolveThreadQuery } from "@/composables/useThreads";
 import { type ScopeHierarchy, useCurrentScopeStore } from "@/stores/CurrentScopeStore";
 import { useTokenStore } from "@/stores/TokenStore";
 import { parsePositiveRouteId } from "@/utils/route";
@@ -16,24 +17,35 @@ const { makeRequest } = useApi();
 const currentScopeStore = useCurrentScopeStore();
 const cache = useQueryCache();
 const tokens = useTokenStore();
+const defaultEnabled = useDefaultQueryEnabled();
 const displayError = useRequestError();
-const ready = ref(false);
+
+const ready = ref<boolean>(false);
 let resolutionGeneration: number = 0;
 
 const resolveOrganization = async (organizationId: number) => {
-  if (!tokens.accessToken && !tokens.refreshToken) return null;
-  try { return await resolveOrganizationQuery(organizationId, cache); }
-  catch (error) { displayError(error); return null; }
+  if (!defaultEnabled()) return null;
+  try {
+    return await resolveOrganizationQuery(organizationId, cache);
+  }
+  catch (error) {
+    displayError(error);
+    return null;
+  }
 };
 
 const resolveThread = async (threadId: number) => {
-  const thread = currentScopeStore.thread?.id === threadId
-    ? currentScopeStore.thread
-    : await makeRequest(() => getThread(threadId)).then((response) => response.ok ? response.data : null);
-  if (!thread) return null;
+  if (!defaultEnabled()) return null;
+  try {
+    const thread = await resolveThreadQuery(threadId, cache);
+    if (!thread) return null;
 
-  const organization = await resolveOrganization(thread.organizationId);
-  return organization ? { organization, thread } : null;
+    const organization = await resolveOrganization(thread.organizationId);
+    return organization ? { organization, thread } : null;
+  } catch (error) {
+    displayError(error);
+    return null;
+  }
 };
 
 const resolveDeadline = async (deadlineId: number) => {

@@ -1,43 +1,5 @@
 const endpointPrefix: string = "/api";
 const endpoints = {
-  ORGANIZATION_THREADS: {
-    path: "/organizations/{orgId}/threads",
-    pathParams: {} as { orgId: number },
-    queryParams: {} as { page: number },
-  },
-  THREAD_CREATE: {
-    path: "/organizations/{orgId}/threads",
-    pathParams: {} as { orgId: number },
-  },
-  THREAD_GET_MY: {
-    path: "/threads/me",
-    queryParams: {} as { page: number },
-  },
-  THREAD_GET: {
-    path: "/threads/{thrId}",
-    pathParams: {} as { thrId: number },
-  },
-  THREAD_DELETE: {
-    path: "/threads/{thrId}",
-    pathParams: {} as { thrId: number },
-  },
-  THREAD_PATCH: {
-    path: "/threads/{thrId}",
-    pathParams: {} as { thrId: number },
-  },
-  THREAD_ASSIGNEES: {
-    path: "/threads/{thrId}/assignees",
-    pathParams: {} as { thrId: number },
-    queryParams: {} as { page: number; size: number },
-  },
-  THREAD_ADD_ASSIGNEE: {
-    path: "/threads/{thrId}/assignees",
-    pathParams: {} as { thrId: number },
-  },
-  THREAD_REMOVE_ASSIGNEE: {
-    path: "/threads/{thrId}/assignees/{username}",
-    pathParams: {} as { thrId: number; username: string },
-  },
   THREAD_DEADLINES: {
     path: "/threads/{thrId}/deadlines",
     pathParams: {} as { thrId: number },
@@ -74,10 +36,6 @@ const endpoints = {
   DEADLINE_REMOVE_ASSIGNEE: {
     path: "/deadlines/{ddlId}/assignees/{username}",
     pathParams: {} as { ddlId: number; username: string },
-  },
-  ROLES_CHANGE_THREAD: {
-    path: "/roles/thread/{threadId}",
-    pathParams: {} as { threadId: number },
   },
   ROLES_CHANGE_DEADLINE: {
     path: "/roles/deadline/{deadlineId}",

@@ -35,7 +35,7 @@ const { user } = useCurrentUser();
 const pageSize = injectOrThrow<number>(PAGE_SIZE_KEY);
 
 const membersToRender = computed(() => props.members);
-const placeholdersToRender = computed<number>(() => pageSize - membersToRender.value.length);
+const placeholdersToRender = computed<number>(() => Math.max(0, pageSize - membersToRender.value.length));
 
 const metadataStore = useMetadataStore();
 const rolesMetadata = computed(() => metadataStore.metadata.roles?.value);
@@ -111,7 +111,7 @@ const isOrganizationOwner = (member: MemberModel) => member.role === ORG_OWNER_R
           </div>
         </div>
         <!-- Keep the element height constant regardless of the number of members rendered -->
-        <div v-for="i in (pageSize - membersToRender.length)" :key="i + pageSize" class="h-[60.4px]!"></div>
+        <div v-for="i in placeholdersToRender" :key="i + pageSize" class="h-[60.4px]!"></div>
       </div>
       <div v-else key="empty" class="flex justify-center items-center p-5">
         {{ t("scopes.common.nothing-here") }}

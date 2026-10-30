@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { type FormInst, type FormRules, NButton, NForm, NFormItem, NInput, NPopconfirm, NSwitch, NTabPane } from "naive-ui";
-import { onMounted, ref } from "vue";
+import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { addDeadlineAssignee, deleteDeadline, getAllDeadlineAssignees, patchDeadline, removeDeadlineAssignee } from "@/api/deadline";
 import { changeDeadlineAssigneeRole } from "@/api/roles";
 import type { DeadlineWithRole } from "@/api/schemas/deadline/common/Deadline";
-import { getThread } from "@/api/thread";
 import EntityDialoglayout from "@/components/home/common/dialogs/EntityDialoglayout.vue";
 import MembersTab from "@/components/home/common/dialogs/members/LegacyMembersTab.vue";
 import UserInvitationInput from "@/components/home/common/forms/UserInvitationInput.vue";
-import { useApi } from "@/composables/useApi";
+import QueryError from "@/components/home/common/QueryError.vue";
 import { useLegacyEntityEdit } from "@/composables/useLegacyEntityEdit";
+import { useThread } from "@/composables/useThreads";
 import { MIN_DEADLINE_DURATION_MS } from "@/constants/forms";
 import { tEntityActionConfirmation, tFormError } from "@/locales/utils";
 import emitter from "@/plugins/emitter";
@@ -28,22 +28,13 @@ if (!props.entity.globalRole) {
 }
 
 const { t } = useI18n();
-const { makeRequest } = useApi();
 const currentScopeStore = useCurrentScopeStore();
 const localizationStore = useLocalizationStore();
-const organizationId = ref<number | null>(
-  currentScopeStore.thread?.id === props.entity.threadId
-    ? currentScopeStore.thread.organizationId
-    : null,
-);
+const parentThread = useThread(() => props.entity.threadId);
 
-onMounted(async () => {
-  if (organizationId.value) return;
-
-  const response = await makeRequest(() => getThread(props.entity.threadId));
-  if (!response.ok) return;
-  organizationId.value = response.data.organizationId;
-});
+const organizationId = computed(() => parentThread.thread.value?.organizationId ?? (
+  currentScopeStore.threadId === props.entity.threadId ? currentScopeStore.organizationId : null
+));
 
 const extraFormRules: FormRules = {
   due: [
@@ -211,6 +202,11 @@ const {
     >
       <n-form ref="invitationFormRef" :model="invitationFormModel" :rules="invitationFormRules">
         <n-form-item :label="t('scopes.common.form-labels.username')" path="username">
+          <QueryError
+            :error="parentThread.error.value"
+            :loading="parentThread.isLoading.value"
+            @retry="parentThread.refetch()"
+          />
           <UserInvitationInput
             :show-invitation-button="true"
             :organization-id="organizationId ?? 0"

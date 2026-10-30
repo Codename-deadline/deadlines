@@ -2,8 +2,8 @@
 import { Cog, UserFriends } from "@vicons/fa";
 import { NButton } from "naive-ui";
 import { useI18n } from "vue-i18n";
-import type { ThreadWithRole } from "@/api/schemas/thread/common/Thread";
-import type { ThreadStats } from "@/api/schemas/thread/common/ThreadStats";
+import type { ThreadWithRoleModel } from "@/api/adapters/thread";
+import type { ThreadStats } from "@/api/generated/models";
 import { hasAnyEditPermission } from "@/utils/permissions";
 import EntityCard from "../common/EntityCard.vue";
 import RoleTag from "../common/RoleTag.vue";
@@ -12,7 +12,7 @@ import ScopeHierarchy from "../common/ScopeHierarchy.vue";
 const { t } = useI18n();
 
 const props = defineProps<{
-  entity: ThreadWithRole;
+  entity: ThreadWithRoleModel;
 }>();
 const emit = defineEmits<{
   edit: [id: number];
@@ -33,7 +33,12 @@ const calculateCompletionPercentage = (stats: ThreadStats): number => {
           <role-tag class="shrink-0" scope-type="thread" :scope-role="entity.role" />
         </div>
         <div class="flex shrink-0 space-x-3 ml-4">
-          <n-button role="button" v-if="hasAnyEditPermission(entity.permissions)" @click.stop="emit('edit', entity.id)" text>
+          <n-button
+            role="button"
+            v-if="hasAnyEditPermission({ ...entity.permissions })"
+            @click.stop="emit('edit', entity.id)"
+            text
+          >
             <template #icon>
               <icon class="">
                 <Cog/>

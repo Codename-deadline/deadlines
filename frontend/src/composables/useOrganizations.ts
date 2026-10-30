@@ -1,5 +1,5 @@
-import { useInfiniteQuery, type useQueryCache } from "@pinia/colada";
-import { computed, type MaybeRefOrGetter, shallowRef, toValue } from "vue";
+import type { useQueryCache } from "@pinia/colada";
+import { computed, type MaybeRefOrGetter, toValue } from "vue";
 import { type OrganizationListModel, toOrganization } from "@/api/adapters/organization";
 import { toMember } from "@/api/adapters/user";
 import {
@@ -9,7 +9,9 @@ import {
   useGetMembers,
   useGetOrganizationMetadata,
 } from "@/api/generated/endpoints/organizations/organizations";
+import type { OrganizationResponseWithRole } from "@/api/generated/models";
 import { useDefaultQueryEnabled } from "./useDefaultQueryEnabled";
+import { usePagedList } from "./usePagedList";
 
 export const organizationsListPrefix = getGetOrganizationsByUserQueryKey({ page: 0 }).slice(0, -1);
 export const organizationsListKey = [...organizationsListPrefix, "infinite"] as const;
@@ -19,44 +21,11 @@ function isOrgIdValid(organizationId: MaybeRefOrGetter<number>): boolean {
 }
 
 export function useOrganizations() {
-  const defaultEnabled = useDefaultQueryEnabled();
-  const query = useInfiniteQuery({
+  return usePagedList<OrganizationResponseWithRole, OrganizationListModel>(() => ({
     key: organizationsListKey,
-    initialPageParam: 0,
-    query: ({ pageParam, signal }) => getOrganizationsByUser({ page: pageParam }, { signal }),
-    getNextPageParam: (page, _pages, pageParam) => (pageParam + 1 < page.totalPages ? pageParam + 1 : null),
-  });
-
-  const nextPageError = shallowRef<unknown>(null);
-  const uniqueItems = computed(() => {
-    const unique = new Map<number, OrganizationListModel>();
-    for (const page of query.data.value?.pages ?? []) {
-      for (const dto of page.data) {
-        unique.set(dto.id, toOrganization(dto));
-      }
-    }
-    return [...unique.values()];
-  });
-
-  const loadMore = async () => {
-    if (!defaultEnabled() || query.isLoading.value || query.error.value || !query.hasNextPage.value) return;
-
-    await query.loadNextPage({ cancelRefetch: false });
-    nextPageError.value = query.error.value;
-  };
-
-  const retry = async () => {
-    if (!defaultEnabled() || query.isLoading.value) return;
-
-    if (nextPageError.value && nextPageError.value === query.error.value && query.data.value) {
-      await query.loadNextPage({ cancelRefetch: false });
-      nextPageError.value = query.error.value;
-    } else {
-      await query.refetch();
-    }
-  };
-
-  return { ...query, items: uniqueItems, loadMore, retry };
+    fetchPage: (page, signal) => getOrganizationsByUser({ page }, { signal }),
+    map: toOrganization,
+  }));
 }
 
 export function useOrganization(organizationId: MaybeRefOrGetter<number>) {

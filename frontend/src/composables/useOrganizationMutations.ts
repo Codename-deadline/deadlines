@@ -19,6 +19,7 @@ import { useChangeOrganizationOwner, useChangeOrganizationRole } from "@/api/gen
 import type { PaginationResponseOrganizationResponseWithRole } from "@/api/generated/models";
 import { QUERY_EMPTY_PENDING_STATE } from "@/plugins/api";
 import { useCurrentScopeStore } from "@/stores/CurrentScopeStore";
+import { clearOrganizationThreads, refreshOrganizationThreads } from "./threadCache";
 import { organizationsListKey, organizationsListPrefix } from "./useOrganizations";
 
 export function useOrganizationMutations() {
@@ -43,7 +44,9 @@ export function useOrganizationMutations() {
       invalidate(organizationsListPrefix),
       // Scope readers consume cached DTOs without mounting another query observer.
       invalidate(getGetOrganizationMetadataQueryKey(id), true),
-      ...(members ? [invalidate(memberPrefix(id)), invalidate(hintPrefix(id))] : []),
+      ...(members
+        ? [invalidate(memberPrefix(id)), invalidate(hintPrefix(id)), refreshOrganizationThreads(cache, id)]
+        : []),
     ]);
 
   const create = useCreateOrganization({
@@ -98,7 +101,11 @@ export function useOrganizationMutations() {
           }
         }
         if (scope.organizationId === organizationId) scope.$reset();
-        return Promise.all([invalidate(organizationsListPrefix), refreshInvitations()]);
+        return Promise.all([
+          invalidate(organizationsListPrefix),
+          refreshInvitations(),
+          clearOrganizationThreads(cache, organizationId),
+        ]);
       },
     },
   });

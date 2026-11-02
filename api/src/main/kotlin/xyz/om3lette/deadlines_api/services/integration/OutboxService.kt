@@ -58,20 +58,20 @@ class OutboxService(
             when (result) {
                 ProcessResult.SUCCESS -> {
                     successIds.add(outbox.id)
-                    finalNotificationIds.add(outbox.notificationId)
+                    outbox.notificationId?.let(finalNotificationIds::add)
                 }
                 ProcessResult.RETRY -> {
                     outbox.status =
                         if (outbox.retries < maxRetries) NotificationStatus.PENDING
                         else NotificationStatus.FAILED
                     if (outbox.status == NotificationStatus.FAILED) {
-                        finalNotificationIds.add(outbox.notificationId)
+                        outbox.notificationId?.let(finalNotificationIds::add)
                     }
                     toSave += outbox
                 }
                 ProcessResult.PERMANENT_FAILURE -> {
                     outbox.status = NotificationStatus.FAILED
-                    finalNotificationIds.add(outbox.notificationId)
+                    outbox.notificationId?.let(finalNotificationIds::add)
                     toSave += outbox
                 }
             }

@@ -12,7 +12,7 @@ import org.springframework.kafka.core.ProducerFactory
 import org.springframework.kafka.support.serializer.JacksonJsonSerializer
 import xyz.om3lette.deadlines_api.configs.properties.KafkaProperties
 import xyz.om3lette.deadlines_api.data.integration.messengerAccount.event.UserMessengerAccountLinkageEvent
-import xyz.om3lette.deadlines_api.data.notifications.event.DeadlineNotificationEvent
+import xyz.om3lette.deadlines_api.data.notifications.event.NotificationEvent
 import xyz.om3lette.deadlines_api.data.otp.event.OtpEvent
 
 
@@ -63,7 +63,7 @@ class KafkaProducerConfig(
         KafkaTemplate(factory as ProducerFactory<String, T>)
 
     @Bean
-    fun notificationKafkaTemplate(eventProducerFactory: ProducerFactory<String, Any>): KafkaTemplate<String, DeadlineNotificationEvent> =
+    fun notificationKafkaTemplate(eventProducerFactory: ProducerFactory<String, Any>): KafkaTemplate<String, NotificationEvent> =
         eventTemplate(eventProducerFactory)
 
     @Bean

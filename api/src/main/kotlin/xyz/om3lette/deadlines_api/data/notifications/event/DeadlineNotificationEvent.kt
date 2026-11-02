@@ -28,4 +28,4 @@ data class DeadlineNotificationEvent(
     val timeRemaining: TimeRemaining,
     val organization: RawOrganization,
     val thread: RawThread
-)
+) : NotificationEvent

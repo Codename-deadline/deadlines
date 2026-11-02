@@ -41,6 +41,7 @@ export * from "./exactValidationViolation.ts";
 export * from "./exactValidationViolationReason.ts";
 export * from "./fileMetadata.ts";
 export * from "./getAttachmentParams.ts";
+export * from "./getDeadlineAssigneesParams.ts";
 export * from "./getDeadlinesParams.ts";
 export * from "./getMembersParams.ts";
 export * from "./getMemberUsernamesStartingWithParams.ts";

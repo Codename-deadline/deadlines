@@ -218,7 +218,8 @@ class OrganizationService(
             ))
         )
 
-        val pageRequest = PageRequest.of(pageNumber, pageSize, Sort.by("role").descending())
+        val pageRequest = PageRequest.of(pageNumber, pageSize, Sort.by("role")
+            .descending().and(Sort.by("assignedAt", "user.id")))
         return userScopeRepository.findAllByScopeIdAndScopeType(
             organizationId, ScopeType.ORGANIZATION, pageRequest
         ).toPaginationResponse { it.toResponse() }

@@ -2568,7 +2568,7 @@
     },
     "/api/deadlines/{deadlineId}/assignees" : {
       "get" : {
-        "description" : "Returns a list of explicit thread assignees.Higher role users in the organization or thread are not included.",
+        "description" : "Returns a page of explicit deadline assignees. Higher role users in the organization or thread are not included.",
         "operationId" : "getDeadlineAssignees",
         "parameters" : [
           {
@@ -2580,6 +2580,27 @@
               "format" : "int64",
               "type" : "integer"
             }
+          },
+          {
+            "in" : "query",
+            "name" : "page",
+            "required" : true,
+            "schema" : {
+              "format" : "int32",
+              "minimum" : 0,
+              "type" : "integer"
+            }
+          },
+          {
+            "in" : "query",
+            "name" : "size",
+            "required" : true,
+            "schema" : {
+              "format" : "int32",
+              "maximum" : 10,
+              "minimum" : 2,
+              "type" : "integer"
+            }
           }
         ],
         "responses" : {
@@ -2587,10 +2608,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "items" : {
-                    "$ref" : "#/components/schemas/UserScopeResponse"
-                  },
-                  "type" : "array"
+                  "$ref" : "#/components/schemas/PaginationResponseUserScopeResponse"
                 }
               }
             },
@@ -3663,7 +3681,7 @@
             "schema" : {
               "format" : "int32",
               "maximum" : 10,
-              "minimum" : 1,
+              "minimum" : 2,
               "type" : "integer"
             }
           }
@@ -4367,6 +4385,17 @@
             "schema" : {
               "format" : "int32",
               "minimum" : 0,
+              "type" : "integer"
+            }
+          },
+          {
+            "in" : "query",
+            "name" : "size",
+            "required" : true,
+            "schema" : {
+              "format" : "int32",
+              "maximum" : 10,
+              "minimum" : 2,
               "type" : "integer"
             }
           }

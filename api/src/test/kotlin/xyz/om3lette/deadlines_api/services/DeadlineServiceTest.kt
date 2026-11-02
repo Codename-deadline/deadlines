@@ -13,6 +13,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.api.assertThrows
 import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import xyz.om3lette.deadlines_api.DomainObjectBuilder
 import xyz.om3lette.deadlines_api.db.constraintViolation
 import xyz.om3lette.deadlines_api.data.common.constraints.DatabaseConstraint
@@ -255,12 +258,12 @@ class DeadlineServiceTest {
         @Test
         fun `anonymous deadline assignees use scope access check`() {
             every { permissionService.hasAccess(null, deadlineScope()) } returns true
-            every { userScopeRepository.findAllDeadlineAssignees(deadline.id) } returns emptyList()
+            every { userScopeRepository.findAllByScopeIdAndScopeType(deadline.id, ScopeType.DEADLINE, any()) } returns PageImpl(emptyList())
 
-            deadlineService.getDeadlineAssignees(null, deadline.id)
+            deadlineService.getDeadlineAssignees(null, deadline.id, 0, 2)
 
             verify(exactly = 1) { permissionService.hasAccess(null, deadlineScope()) }
-            verify(exactly = 1) { userScopeRepository.findAllDeadlineAssignees(deadline.id) }
+            verify(exactly = 1) { userScopeRepository.findAllByScopeIdAndScopeType(deadline.id, ScopeType.DEADLINE, any()) }
         }
     }
 

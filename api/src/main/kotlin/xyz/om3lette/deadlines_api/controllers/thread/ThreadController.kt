@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Positive
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -65,8 +66,12 @@ class ThreadController(
     fun getAssignees(
         @AuthenticationPrincipal user: User?,
         @PathVariable @Positive threadId: Long,
-        @RequestParam("page") @Min(PaginationConstraints.PAGE_MIN) pageNumber: Int
-    ) = threadService.getThreadAssignees(user, threadId, pageNumber, 10)
+        @RequestParam("page") @Min(PaginationConstraints.PAGE_MIN) pageNumber: Int,
+        @RequestParam("size")
+        @Min(PaginationConstraints.PAGE_SIZE_MIN)
+        @Max(PaginationConstraints.PAGE_SIZE_MAX)
+        pageSize: Int
+    ) = threadService.getThreadAssignees(user, threadId, pageNumber, pageSize)
 
     @PostMapping("/assignees")
     @Operation(operationId = "addThreadAssignee", summary = "Add thread assignee")

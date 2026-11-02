@@ -11,10 +11,10 @@ import MembersTab from "@/components/home/common/dialogs/members/MembersTab.vue"
 import UserInvitationInput from "@/components/home/common/forms/UserInvitationInput.vue";
 import QueryError from "@/components/home/common/QueryError.vue";
 import { useEntityEdit } from "@/composables/shared/useEntityEdit";
+import { useMemberPagination } from "@/composables/shared/useMemberPagination";
 import { useRequestError } from "@/composables/shared/useRequestError";
 import { useThreadMutations } from "@/composables/threads/useThreadMutations";
 import { useThread, useThreadAssignees } from "@/composables/threads/useThreads";
-import { THREAD_ASSIGNEES_PAGE_SIZE } from "@/constants/defaults";
 import { tEntityActionConfirmation, tEntityToastAction, tFormError } from "@/locales/utils";
 import emitter from "@/plugins/emitter";
 import { useCurrentScopeStore } from "@/stores/CurrentScopeStore";
@@ -43,13 +43,11 @@ const invitationFormRules: FormRules = {
   }],
 };
 
-const membersToLoad = THREAD_ASSIGNEES_PAGE_SIZE;
-const memberPage = ref<number>(0);
-const assignees = useThreadAssignees(() => props.entity.id, memberPage);
-watch(() => props.entity.id, () => { memberPage.value = 0; });
-watch(assignees.totalPages, (pages) => {
-  if (pages > 0 && memberPage.value >= pages) memberPage.value = pages - 1;
-});
+const { pagination, page: memberPage, pageSize: membersToLoad, clampPage } = useMemberPagination(() => props.entity.id);
+const assignees = useThreadAssignees(() => props.entity.id, pagination);
+watch(assignees.data, (data) => {
+  if (data) clampPage(data.totalPages);
+}, { immediate: true });
 
 const { patchFormModel, patchFormRules, handlePatch } = useEntityEdit({
   scopeType: "thread",

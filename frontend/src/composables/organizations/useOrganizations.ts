@@ -10,6 +10,7 @@ import {
   useGetOrganizationMetadata,
 } from "@/api/generated/endpoints/organizations/organizations";
 import type { OrganizationResponseWithRole } from "@/api/generated/models";
+import type { MemberPagination } from "@/composables/shared/useMemberPagination";
 import { usePagedList } from "@/composables/shared/usePagedList";
 
 export const organizationsListPrefix = getGetOrganizationsByUserQueryKey({ page: 0 }).slice(0, -1);
@@ -47,16 +48,11 @@ export async function resolveOrganization(organizationId: number, cache: ReturnT
 
 export function useOrganizationMembers(
   organizationId: MaybeRefOrGetter<number>,
-  page: MaybeRefOrGetter<number>,
-  size: MaybeRefOrGetter<number>,
+  pagination: MaybeRefOrGetter<MemberPagination>,
 ) {
-  const query = useGetMembers(
-    organizationId,
-    () => ({ page: toValue(page), size: toValue(size) }),
-    () => ({
-      query: { enabled: isOrgIdValid(organizationId) },
-    }),
-  );
+  const query = useGetMembers(organizationId, pagination, () => ({
+    query: { enabled: isOrgIdValid(organizationId) },
+  }));
 
   return {
     ...query,

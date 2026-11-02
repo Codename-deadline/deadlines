@@ -50,7 +50,10 @@ export function clearOrganizationThreads(cache: QueryCache, organizationId: numb
     const dto = entry.state.value.data as ThreadResponse | undefined;
     if (dto?.organizationId === organizationId) {
       threadIds.add(dto.id);
-      keys.push([...getGetThreadQueryKey(dto.id)], getGetThreadAssigneesQueryKey(dto.id, { page: 0 }).slice(0, -1));
+      keys.push(
+        [...getGetThreadQueryKey(dto.id)],
+        getGetThreadAssigneesQueryKey(dto.id, { page: 0, size: 10 }).slice(0, -1),
+      );
     }
   }
 

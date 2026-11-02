@@ -2,6 +2,7 @@ package xyz.om3lette.deadlines_api.services
 
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import xyz.om3lette.deadlines_api.data.common.constraints.DatabaseConstraint
@@ -31,6 +32,7 @@ import xyz.om3lette.deadlines_api.services.permission.PermissionContext
 import xyz.om3lette.deadlines_api.services.permission.PermissionService
 import xyz.om3lette.deadlines_api.util.jpaRepository.findByIdOr404
 import xyz.om3lette.deadlines_api.util.jpaRepository.violatesConstraint
+import xyz.om3lette.deadlines_api.util.page.toPaginationResponse
 import xyz.om3lette.deadlines_api.util.requirePermission
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -338,14 +340,22 @@ class DeadlineService(
 
     fun getDeadlineAssignees(
         issuer: User?,
-        deadlineId: Long
-    ): List<UserScopeResponse> {
+        deadlineId: Long,
+        pageNumber: Int,
+        pageSize: Int
+    ): PaginationResponse<UserScopeResponse> {
         val deadline = deadlineRepository.findByIdOr404(deadlineId, ErrorCode.DDL_NOT_FOUND)
 
         requirePermission(
             permissionService.hasAccess(issuer, DeadlineScope(deadline))
         )
 
-        return userScopeRepository.findAllDeadlineAssignees(deadlineId).map { it.toResponse() }
+        val pageRequest = PageRequest.of(
+            pageNumber, pageSize,
+            Sort.by("role").descending().and(Sort.by("assignedAt", "user.id"))
+        )
+        return userScopeRepository.findAllByScopeIdAndScopeType(
+            deadlineId, ScopeType.DEADLINE, pageRequest
+        ).toPaginationResponse { it.toResponse() }
     }
 }

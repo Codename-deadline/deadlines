@@ -12,6 +12,7 @@ import {
   useGetDeadlineAssignees,
 } from "@/api/generated/endpoints/deadlines/deadlines";
 import type { DeadlineResponseWithRole } from "@/api/generated/models";
+import type { MemberPagination } from "@/composables/shared/useMemberPagination";
 import { usePagedList } from "@/composables/shared/usePagedList";
 
 export const userAssignedDeadlinesPrefix = getGetUserDeadlinesQueryKey({ page: 0 }).slice(0, -1);
@@ -58,10 +59,17 @@ export async function resolveDeadline(deadlineId: number, cache: ReturnType<type
   return state.data ? toDeadline(state.data) : null;
 }
 
-export function useDeadlineAssignees(deadlineId: MaybeRefOrGetter<number>) {
-  const query = useGetDeadlineAssignees(deadlineId, () => ({
+export function useDeadlineAssignees(
+  deadlineId: MaybeRefOrGetter<number>,
+  pagination: MaybeRefOrGetter<MemberPagination>,
+) {
+  const query = useGetDeadlineAssignees(deadlineId, pagination, () => ({
     query: { enabled: toValue(deadlineId) > 0 },
   }));
 
-  return { ...query, members: computed(() => query.data.value?.map(toMember) ?? []) };
+  return {
+    ...query,
+    members: computed(() => query.data.value?.data.map(toMember) ?? []),
+    totalPages: computed(() => query.data.value?.totalPages ?? 0),
+  };
 }

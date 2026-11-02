@@ -18,11 +18,12 @@ import type {
   CreateDeadlineRequest,
   DeadlineCreatedResponse,
   DeadlineResponseWithRole,
+  GetDeadlineAssigneesParams,
   GetDeadlinesParams,
   GetUserDeadlinesParams,
   PaginationResponseDeadlineResponseWithRole,
+  PaginationResponseUserScopeResponse,
   PatchDeadlineRequest,
-  UserScopeResponse,
 } from "../../models";
 
 import { apiRequest } from "../../../transport.ts";
@@ -263,29 +264,46 @@ export function usePatchDeadline<
 }) {
   return useColadaMutation(getPatchDeadlineMutationOptions(coladaOptions));
 }
-export const getGetDeadlineAssigneesUrl = (deadlineId: number) => {
-  return `${(import.meta.env?.VITE_API_BASE_URL ?? "").replace(/\/$/, "")}/api/deadlines/${deadlineId}/assignees`;
+export const getGetDeadlineAssigneesUrl = (deadlineId: number, params: GetDeadlineAssigneesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `${(import.meta.env?.VITE_API_BASE_URL ?? "").replace(/\/$/, "")}/api/deadlines/${deadlineId}/assignees?${stringifiedParams}`
+    : `${(import.meta.env?.VITE_API_BASE_URL ?? "").replace(/\/$/, "")}/api/deadlines/${deadlineId}/assignees`;
 };
 
 /**
- * Returns a list of explicit thread assignees.Higher role users in the organization or thread are not included.
+ * Returns a page of explicit deadline assignees. Higher role users in the organization or thread are not included.
  * @summary Get deadline assignees
  */
 export const getDeadlineAssignees = async (
   deadlineId: number,
+  params: GetDeadlineAssigneesParams,
   options?: Parameters<typeof apiRequest>[1],
-): Promise<UserScopeResponse[]> => {
-  return apiRequest<UserScopeResponse[]>(getGetDeadlineAssigneesUrl(deadlineId), {
+): Promise<PaginationResponseUserScopeResponse> => {
+  return apiRequest<PaginationResponseUserScopeResponse>(getGetDeadlineAssigneesUrl(deadlineId, params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetDeadlineAssigneesQueryKey = (deadlineId: Parameters<typeof getDeadlineAssignees>[0]) =>
+export const getGetDeadlineAssigneesQueryKey = (
+  deadlineId: Parameters<typeof getDeadlineAssignees>[0],
+  params: Parameters<typeof getDeadlineAssignees>[1],
+) =>
   [
     "get",
     '${(import.meta.env?.VITE_API_BASE_URL ?? "").replace(/\\/$/, "")}/api/deadlines/${deadlineId}/assignees',
     deadlineId ?? null,
+    params ?? null,
   ] as const;
 
 export function getGetDeadlineAssigneesQueryOptions<
@@ -293,18 +311,20 @@ export function getGetDeadlineAssigneesQueryOptions<
   TInitial extends Awaited<ReturnType<typeof getDeadlineAssignees>> | undefined = undefined,
 >(
   deadlineId: Parameters<typeof getDeadlineAssignees>[0],
+  params: Parameters<typeof getDeadlineAssignees>[1],
   coladaOptions?: {
     query?: Partial<
       Omit<DefineQueryOptions<Awaited<ReturnType<typeof getDeadlineAssignees>>, TError, TInitial>, "query">
     >;
-    request?: Parameters<typeof getDeadlineAssignees>[1];
+    request?: Parameters<typeof getDeadlineAssignees>[2];
   },
 ): DefineQueryOptions<Awaited<ReturnType<typeof getDeadlineAssignees>>, TError, TInitial> {
   const coladaRequest = getDeadlineAssignees;
   return {
-    key: getGetDeadlineAssigneesQueryKey(deadlineId),
+    key: getGetDeadlineAssigneesQueryKey(deadlineId, params),
     ...coladaOptions?.query,
-    query: ({ signal: coladaSignal }) => coladaRequest(deadlineId, { ...coladaOptions?.request, signal: coladaSignal }),
+    query: ({ signal: coladaSignal }) =>
+      coladaRequest(deadlineId, params, { ...coladaOptions?.request, signal: coladaSignal }),
   };
 }
 
@@ -313,15 +333,16 @@ export function useGetDeadlineAssignees<
   TInitial extends Awaited<ReturnType<typeof getDeadlineAssignees>> | undefined = undefined,
 >(
   deadlineId: MaybeRefOrGetter<Parameters<typeof getDeadlineAssignees>[0]>,
+  params: MaybeRefOrGetter<Parameters<typeof getDeadlineAssignees>[1]>,
   coladaOptions?: MaybeRefOrGetter<{
     query?: Partial<
       Omit<DefineQueryOptions<Awaited<ReturnType<typeof getDeadlineAssignees>>, TError, TInitial>, "query">
     >;
-    request?: Parameters<typeof getDeadlineAssignees>[1];
+    request?: Parameters<typeof getDeadlineAssignees>[2];
   }>,
 ) {
   return useColadaQuery(() =>
-    getGetDeadlineAssigneesQueryOptions(toColadaValue(deadlineId), toColadaValue(coladaOptions)),
+    getGetDeadlineAssigneesQueryOptions(toColadaValue(deadlineId), toColadaValue(params), toColadaValue(coladaOptions)),
   );
 }
 export const getAddDeadlineAssigneeUrl = (deadlineId: number) => {

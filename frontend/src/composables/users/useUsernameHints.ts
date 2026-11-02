@@ -20,8 +20,9 @@ export function useUsernameHints(
     return toValue(search).length > 2;
   });
 
-  const globalEnabled = () => defaultEnabled() && isSearchLongEnough && toValue(organizationId) === undefined;
-  const membersEnabled = () => defaultEnabled() && isSearchLongEnough && isOrgIdValid(toValue(organizationId) ?? 0);
+  const globalEnabled = () => defaultEnabled() && isSearchLongEnough.value && toValue(organizationId) === undefined;
+  const membersEnabled = () =>
+    defaultEnabled() && isSearchLongEnough.value && isOrgIdValid(toValue(organizationId) ?? 0);
   const enabled = () => globalEnabled() || membersEnabled();
 
   const params = () => ({ startsWith: toValue(search) });

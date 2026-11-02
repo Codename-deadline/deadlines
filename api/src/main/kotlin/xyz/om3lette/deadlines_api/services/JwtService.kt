@@ -20,6 +20,7 @@ class JwtService(
     private val secretKey: SecretKey = Keys.hmacShaKeyFor(
         Base64.getDecoder().decode(jwtProperties.secret)
     )
+    private val parser = Jwts.parser().verifyWith(secretKey).build()
 
     private fun generateToken(
         userDetails: UserDetails,
@@ -57,12 +58,7 @@ class JwtService(
     }
 
     fun extractAllClaims(token: String): Claims {
-        return Jwts
-            .parser()
-            .verifyWith(secretKey)
-            .build()
-            .parseSignedClaims(token)
-            .payload
+        return parser.parseSignedClaims(token).payload
     }
 
     fun <T> extractClaim(token: String, claimRetriever: (Claims) -> T): T? {
@@ -70,16 +66,8 @@ class JwtService(
         return claimRetriever(claims)
     }
 
-    fun extractUsername(token: String): String? {
-        return extractClaim<String>(token, Claims::getSubject)
-    }
-
     fun extractExpiration(token: String): Date? {
         return extractClaim<Date>(token, Claims::getExpiration)
     }
 
-    fun isTokenValid(token: String, userId: String): Boolean {
-//        extractAllClaims will validate the expiry by default
-        return extractUsername(token) == userId
-    }
 }

@@ -1,9 +1,10 @@
 package xyz.om3lette.deadlines_api.services.storage
 
-import org.apache.tika.Tika
+import org.apache.tika.detect.Detector
 import org.apache.tika.io.TikaInputStream
 import org.apache.tika.metadata.Metadata
 import org.apache.tika.metadata.TikaCoreProperties
+import org.apache.tika.parser.ParseContext
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import xyz.om3lette.deadlines_api.exceptions.enums.ErrorCode
@@ -11,7 +12,7 @@ import xyz.om3lette.deadlines_api.util.requirePermission
 
 @Service
 class FileCheckerService(
-    private val tika: Tika
+    private val attachmentDetector: Detector
 ) {
     private val forbiddenSubtypes: List<String> = listOf(
         "octet-stream", "x-csh", "java-archive", "vnd.apple.installer+xml", "x-sh"
@@ -24,9 +25,9 @@ class FileCheckerService(
 
     fun getAttachmentMimeTypeOrError(fileStream: MultipartFile): String {
         val mimeType = TikaInputStream.get(fileStream.inputStream).use { inputStream ->
-            tika.detect(inputStream, Metadata().apply {
+            attachmentDetector.detect(inputStream, Metadata().apply {
                 set(TikaCoreProperties.RESOURCE_NAME_KEY, fileStream.originalFilename)
-            })
+            }, ParseContext()).toString()
         }
 
         requirePermission(

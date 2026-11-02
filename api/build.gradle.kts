@@ -49,6 +49,22 @@ dependencyManagement {
     }
 }
 
+// Keep documentation generation available without shipping its runtime in the API.
+val apiDocumentation = configurations.create("apiDocumentation")
+configurations.compileOnly { extendsFrom(apiDocumentation) }
+configurations.testImplementation { extendsFrom(apiDocumentation) }
+
+val includeApiDocs = providers
+    .gradleProperty("apiDocs")
+    .map(String::toBoolean)
+    .getOrElse(false)
+tasks.bootJar {
+    if (includeApiDocs) classpath(apiDocumentation)
+}
+tasks.bootRun {
+    if (includeApiDocs) classpath(apiDocumentation)
+}
+
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
@@ -56,11 +72,16 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.security:spring-security-crypto")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
-    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("org.springframework.boot:spring-boot-starter-data-redis") {
+        // RedisConfig uses Jedis; do not initialize a second client's resources.
+        exclude(group = "io.lettuce", module = "lettuce-core")
+    }
     implementation("org.springframework.boot:spring-boot-starter-grpc-server")
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.0")
+    // Makes annotations always available given that the springdoc-openapi-starter is optional
+    implementation("io.swagger.core.v3:swagger-annotations-jakarta:2.2.55")
+    apiDocumentation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.0")
     // Swagger's model resolver uses Jackson 2, independently of Spring MVC's Jackson 3 mapper.
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    apiDocumentation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
 	implementation("org.springframework.boot:spring-boot-flyway")
 	implementation("org.flywaydb:flyway-core")
@@ -81,7 +102,14 @@ dependencies {
 	implementation("software.amazon.awssdk:s3")
 	implementation("software.amazon.awssdk:apache5-client")
 	implementation("org.apache.tika:tika-core:4.2.0")
-    implementation("org.apache.tika:tika-parsers-standard-package:4.2.0")
+    // Retain container detectors, without initializing all parsers.
+    implementation("org.apache.tika:tika-parser-apple-module:4.2.0")
+    implementation("org.apache.tika:tika-parser-audiovideo-module:4.2.0")
+    implementation("org.apache.tika:tika-parser-image-module:4.2.0")
+    implementation("org.apache.tika:tika-parser-microsoft-module:4.2.0")
+    implementation("org.apache.tika:tika-parser-miscoffice-module:4.2.0")
+    implementation("org.apache.tika:tika-parser-pkg-module:4.2.0")
+    implementation("org.apache.tika:tika-parser-zip-commons:4.2.0")
 
     implementation("io.jsonwebtoken:jjwt-api:0.13.0")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.13.0")

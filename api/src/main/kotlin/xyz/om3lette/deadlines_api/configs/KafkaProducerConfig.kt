@@ -25,6 +25,7 @@ class KafkaProducerConfig(
         put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.bootstrapServers)
         put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true)
         put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "gzip")
+        put(ProducerConfig.BUFFER_MEMORY_CONFIG, kafkaProperties.producer.bufferMemory)
         put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, kafkaProperties.securityProtocol)
 
         kafkaProperties.ssl.truststoreLocation?.takeIf(String::isNotBlank)?.let {
@@ -47,44 +48,29 @@ class KafkaProducerConfig(
     }
 
     @Bean
-    fun notificationProducerFactory(): ProducerFactory<String, DeadlineNotificationEvent> =
+    fun eventProducerFactory(): ProducerFactory<String, Any> =
         DefaultKafkaProducerFactory(
             configProps,
             StringSerializer(),
-            JacksonJsonSerializer<DeadlineNotificationEvent>().apply {
+            JacksonJsonSerializer<Any>().apply {
                 isAddTypeInfo = false
             }
         )
 
-    @Bean
-    fun accountLinkageProducerFactory(): ProducerFactory<String, UserMessengerAccountLinkageEvent> =
-        DefaultKafkaProducerFactory(
-            configProps,
-            StringSerializer(),
-            JacksonJsonSerializer<UserMessengerAccountLinkageEvent>().apply {
-                isAddTypeInfo = false
-            }
-        )
+    // The shared serializer accepts every event type.
+    @Suppress("UNCHECKED_CAST")
+    private fun <T : Any> eventTemplate(factory: ProducerFactory<String, Any>): KafkaTemplate<String, T> =
+        KafkaTemplate(factory as ProducerFactory<String, T>)
 
     @Bean
-    fun otpProducerFactory(): ProducerFactory<String, OtpEvent> =
-        DefaultKafkaProducerFactory(
-            configProps,
-            StringSerializer(),
-            JacksonJsonSerializer<OtpEvent>().apply {
-                isAddTypeInfo = false
-            }
-        )
+    fun notificationKafkaTemplate(eventProducerFactory: ProducerFactory<String, Any>): KafkaTemplate<String, DeadlineNotificationEvent> =
+        eventTemplate(eventProducerFactory)
 
     @Bean
-    fun notificationKafkaTemplate(): KafkaTemplate<String, DeadlineNotificationEvent> =
-        KafkaTemplate(notificationProducerFactory())
+    fun accountLinkageKafkaTemplate(eventProducerFactory: ProducerFactory<String, Any>): KafkaTemplate<String, UserMessengerAccountLinkageEvent> =
+        eventTemplate(eventProducerFactory)
 
     @Bean
-    fun accountLinkageKafkaTemplate(): KafkaTemplate<String, UserMessengerAccountLinkageEvent> =
-        KafkaTemplate(accountLinkageProducerFactory())
-
-    @Bean
-    fun otpKafkaTemplate(): KafkaTemplate<String, OtpEvent> =
-        KafkaTemplate(otpProducerFactory())
+    fun otpKafkaTemplate(eventProducerFactory: ProducerFactory<String, Any>): KafkaTemplate<String, OtpEvent> =
+        eventTemplate(eventProducerFactory)
 }

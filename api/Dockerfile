@@ -20,4 +20,4 @@ FROM eclipse-temurin:25-jre-alpine-3.24
 WORKDIR /app
 COPY --from=builder --chmod=644 /backend/api/build/libs/deadlines_api.jar ./deadlines_api.jar
 
-CMD ["java", "-jar", "/app/deadlines_api.jar"]
+CMD ["java", "-Xms32m", "-Xmx256m", "-XX:+UseG1GC", "-jar", "/app/deadlines_api.jar"]

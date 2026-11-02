@@ -61,10 +61,6 @@ class JwtAuthFilter(
 
             val user: User = userRepository.findByUsernameIgnoreCase(username).orElseThrow { BadCredentialsException("") }
 
-            if (!jwtService.isTokenValid(jwt, username)) {
-                throw BadCredentialsException("")
-            }
-
             if (SecurityContextHolder.getContext().authentication == null) {
                 val authToken = UsernamePasswordAuthenticationToken(user, null, user.authorities)
                 SecurityContextHolder.getContext().authentication = authToken

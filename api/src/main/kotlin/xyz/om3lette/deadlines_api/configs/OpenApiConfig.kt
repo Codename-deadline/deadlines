@@ -10,11 +10,15 @@ import io.swagger.v3.oas.models.responses.ApiResponse
 import io.swagger.v3.oas.models.security.SecurityScheme
 import io.swagger.v3.oas.models.tags.Tag
 import org.springdoc.core.customizers.OpenApiCustomizer
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import xyz.om3lette.deadlines_api.data.common.validation.ValidationErrorResponse
 
 @Configuration
+@ConditionalOnClass(OpenAPI::class)
+@ConditionalOnProperty(prefix = "springdoc.api-docs", name = ["enabled"], havingValue = "true")
 class OpenApiConfig {
 
     @Bean

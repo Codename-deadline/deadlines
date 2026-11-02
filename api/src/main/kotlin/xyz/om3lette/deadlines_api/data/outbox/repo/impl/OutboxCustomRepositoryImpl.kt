@@ -46,7 +46,7 @@ class OutboxCustomRepositoryImpl(
                     )
                 )
             FROM deadline_notification_recipients
-            WHERE deadline_id = :deadline_id
+            WHERE deadline_id = :deadline_id AND is_completed = false
         """.trimIndent()
 
         em.createNativeQuery(sql)

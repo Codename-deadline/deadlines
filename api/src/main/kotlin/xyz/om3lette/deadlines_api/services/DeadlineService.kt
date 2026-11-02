@@ -331,7 +331,7 @@ class DeadlineService(
         }
 
         deadlineRepository.save(deadline)
-        if (oldDue != deadline.due) {
+        if (!deadline.isCompleted && oldDue != deadline.due) {
             notificationService.notifyDeadlineDueChanged(deadline.id, oldDue, deadline.due)
         }
     }

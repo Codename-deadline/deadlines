@@ -16,9 +16,6 @@ The outbox publisher sends both types to `private.integration.notifications`:
 The JSON `type` field identifies the notification. Existing outbox payloads
 without it are treated as reminders. `notification_outbox.notification_id` is an
 optional reference to a scheduled reminder; due-date changes leave it null.
-Due-date changes notify subscribers even when the deadline is completed, while
-scheduled reminders continue to exclude completed deadlines. Bot handling of the
-new notification type is a separate change.
 
 ## OpenAPI contract
 

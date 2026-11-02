@@ -142,8 +142,8 @@ class NotificationIntegrationTests {
 
     @Test
     @Transactional
-    fun `due changes on completed deadlines capture context and dates without a reminder id`() {
-        fixtures(completed = true)
+    fun `due changes on active deadlines capture context and dates without a reminder id`() {
+        fixtures()
         val deadline = em.find(Deadline::class.java, deadlineId)
         val oldDue = deadline.due
         val newDue = Instant.now().plus(3, ChronoUnit.DAYS).truncatedTo(ChronoUnit.SECONDS)
@@ -179,7 +179,7 @@ class NotificationIntegrationTests {
 
     @Test
     @Transactional
-    fun `completed deadlines remain in the view but do not receive scheduled reminders`() {
+    fun `completed deadlines remain in the view but do not receive notifications`() {
         fixtures(completed = true)
         insertReminder()
 
@@ -191,6 +191,7 @@ class NotificationIntegrationTests {
                 deadlineId
             )
         )
+        notificationService.notifyDeadlineDueChanged(deadlineId, Instant.EPOCH, Instant.now())
         notificationService.enqueueScheduledReminders(batchSize)
 
         assertEquals(emptyList(), payloads())
@@ -214,7 +215,7 @@ class NotificationIntegrationTests {
     fun `deadline changes and outbox deliveries roll back together`() {
         val transactionTemplate = TransactionTemplate(transactionManager)
         transactionTemplate.executeWithoutResult {
-            fixtures(completed = true)
+            fixtures()
         }
         val oldDue = jdbc.queryForObject("SELECT due FROM deadlines WHERE id = ?", OffsetDateTime::class.java, deadlineId)
 

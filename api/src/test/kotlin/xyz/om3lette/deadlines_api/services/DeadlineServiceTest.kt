@@ -311,7 +311,6 @@ class DeadlineServiceTest {
         @Test
         fun `changing due date on completed deadline does not schedule notifications`() {
             deadline.isCompleted = true
-            val oldDue = deadline.due
             val newDue = Instant.now().plusSeconds(60 * 60)
 
             deadlineService.patchDeadline(issuer, deadline.id, null, null, null, newDue)
@@ -319,7 +318,7 @@ class DeadlineServiceTest {
             assertEquals(newDue, deadline.due)
             verify(exactly = 0) { deadlineNotificationPlannerService.reconcileNotifications(any(), any()) }
             verify(exactly = 0) { deadlineNotificationPlannerService.deleteNotifications(any()) }
-            verify(exactly = 1) { notificationService.notifyDeadlineDueChanged(deadline.id, oldDue, newDue) }
+            verify(exactly = 0) { notificationService.notifyDeadlineDueChanged(any(), any(), any()) }
         }
 
         @Test
@@ -350,13 +349,15 @@ class DeadlineServiceTest {
                 { assertEquals(newDue, deadline.due) },
                 { assertTrue(deadline.isCompleted) },
                 { verify(exactly = 1) { deadlineNotificationPlannerService.deleteNotifications(deadline) } },
-                { verify(exactly = 0) { deadlineNotificationPlannerService.reconcileNotifications(any(), any()) } }
+                { verify(exactly = 0) { deadlineNotificationPlannerService.reconcileNotifications(any(), any()) } },
+                { verify(exactly = 0) { notificationService.notifyDeadlineDueChanged(any(), any(), any()) } }
             )
         }
 
         @Test
         fun `changing due date while reopening reschedules once`() {
             deadline.isCompleted = true
+            val oldDue = deadline.due
             val newDue = Instant.now().plusSeconds(60 * 60)
 
             deadlineService.patchDeadline(issuer, deadline.id, null, null, false, newDue)
@@ -365,7 +366,8 @@ class DeadlineServiceTest {
                 { assertEquals(newDue, deadline.due) },
                 { assertEquals(false, deadline.isCompleted) },
                 { verify(exactly = 1) { deadlineNotificationPlannerService.reconcileNotifications(deadline, any()) } },
-                { verify(exactly = 0) { deadlineNotificationPlannerService.deleteNotifications(any()) } }
+                { verify(exactly = 0) { deadlineNotificationPlannerService.deleteNotifications(any()) } },
+                { verify(exactly = 1) { notificationService.notifyDeadlineDueChanged(deadline.id, oldDue, newDue) } }
             )
         }
 

@@ -28,8 +28,15 @@ provide(SCOPE_TYPE_KEY, props.scopeType);
     :title="title"
     closable
   >
-    <n-tabs justify-content="space-evenly">
+    <n-tabs class="entity-dialog-tabs" justify-content="space-evenly">
       <slot />
     </n-tabs>
   </n-card>
 </template>
+
+<style scoped>
+/* space-evenly disables Naive UI's tab gaps. */
+.entity-dialog-tabs > :deep(.n-tabs-nav .n-tabs-wrapper) {
+  column-gap: 1rem;
+}
+</style>

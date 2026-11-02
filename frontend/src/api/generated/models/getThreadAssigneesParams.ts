@@ -8,4 +8,9 @@
 export type GetThreadAssigneesParams = {
   /** @minimum 0 */
   page: number;
+  /**
+   * @minimum 2
+   * @maximum 10
+   */
+  size: number;
 };

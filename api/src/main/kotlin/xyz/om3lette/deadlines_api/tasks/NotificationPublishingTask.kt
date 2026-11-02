@@ -5,21 +5,19 @@ import org.springframework.scheduling.annotation.EnableAsync
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import xyz.om3lette.deadlines_api.configs.properties.OutboxProperties
-import xyz.om3lette.deadlines_api.data.notifications.repo.DeadlineNotificationRepository
+import xyz.om3lette.deadlines_api.services.notifications.NotificationService
 
 
 @Service
 @EnableAsync
 class NotificationPublishingTask(
-    private val deadlineNotificationRepository: DeadlineNotificationRepository,
+    private val notificationService: NotificationService,
     outboxProperties: OutboxProperties
 ) {
     private val batchSize = outboxProperties.batchSize
 
-    // FIXME: Notification with no chats to send to never get updated from 'I' status
-    // as they never reach outbox (no chats are interested in receiving them)
     @Async
     @Scheduled(fixedRate = 60 * 1000)
     fun run() =
-        deadlineNotificationRepository.findNotificationRecipientsAndInsertIntoOutbox(batchSize)
+        notificationService.enqueueScheduledReminders(batchSize)
 }

@@ -45,8 +45,10 @@ class TranslationKey(StrEnum):
     TIME_ONE_WEEK = "time.one_week"
     TIME_ONE_MONTH = "time.one_month"
 
+    NOTIFICATIONS_DEADLINE_HEADER = "notifications.deadline_header"
     NOTIFICATIONS_DEADLINE_EXPIRY = "notifications.deadline_expiry"
     NOTIFICATIONS_DEADLINE_OVERDUE = "notifications.deadline_overdue"
+    NOTIFICATIONS_DEADLINE_DUE_CHANGED = "notifications.deadline_due_changed"
     NOTIFICATIONS_GO_TO_DEADLINE = "notifications.go_to_deadline"
 
     PROMPT_ACCEPT = "prompt.accept"

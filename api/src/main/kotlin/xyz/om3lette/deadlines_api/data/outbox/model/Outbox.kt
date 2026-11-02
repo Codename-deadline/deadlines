@@ -17,8 +17,8 @@ data class Outbox(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long,
 
-    @Column(nullable = false)
-    val notificationId: Long,
+    @Column
+    val notificationId: Long? = null,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 32)

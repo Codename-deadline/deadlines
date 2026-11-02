@@ -26,6 +26,7 @@ import xyz.om3lette.deadlines_api.data.user.model.User
 import xyz.om3lette.deadlines_api.exceptions.enums.ErrorCode
 import xyz.om3lette.deadlines_api.exceptions.type.StatusCodeException
 import xyz.om3lette.deadlines_api.services.notifications.DeadlineNotificationPlannerService
+import xyz.om3lette.deadlines_api.services.notifications.NotificationService
 import xyz.om3lette.deadlines_api.services.permission.PermissionContext
 import xyz.om3lette.deadlines_api.services.permission.PermissionService
 import xyz.om3lette.deadlines_api.util.jpaRepository.findByIdOr404
@@ -41,7 +42,8 @@ class DeadlineService(
     private val threadRepository: ThreadRepository,
     private val deadlineRepository: DeadlineRepository,
     private val deadlineNotificationPlannerService: DeadlineNotificationPlannerService,
-    private val permissionService: PermissionService
+    private val permissionService: PermissionService,
+    private val notificationService: NotificationService
 ) {
     @Transactional
     fun createDeadline(
@@ -299,6 +301,7 @@ class DeadlineService(
             permissionService.canUpdate(issuer, DeadlineScope(deadline))
         )
         val wasCompleted = deadline.isCompleted
+        val oldDue = deadline.due
 
         if (due != null) {
             val now = Instant.now()
@@ -328,6 +331,9 @@ class DeadlineService(
         }
 
         deadlineRepository.save(deadline)
+        if (!deadline.isCompleted && oldDue != deadline.due) {
+            notificationService.notifyDeadlineDueChanged(deadline.id, oldDue, deadline.due)
+        }
     }
 
     fun getDeadlineAssignees(

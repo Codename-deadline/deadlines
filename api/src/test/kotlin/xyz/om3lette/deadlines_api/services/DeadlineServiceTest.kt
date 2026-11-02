@@ -34,6 +34,7 @@ import xyz.om3lette.deadlines_api.data.user.model.User
 import xyz.om3lette.deadlines_api.exceptions.enums.ErrorCode
 import xyz.om3lette.deadlines_api.exceptions.type.StatusCodeException
 import xyz.om3lette.deadlines_api.services.notifications.DeadlineNotificationPlannerService
+import xyz.om3lette.deadlines_api.services.notifications.NotificationService
 import xyz.om3lette.deadlines_api.services.permission.PermissionService
 import java.time.Instant
 import java.util.Optional
@@ -47,13 +48,15 @@ class DeadlineServiceTest {
     private val deadlineRepository: DeadlineRepository = mockk()
     private val deadlineNotificationPlannerService: DeadlineNotificationPlannerService = mockk()
     private val permissionService: PermissionService = mockk()
+    private val notificationService: NotificationService = mockk()
     private val deadlineService = DeadlineService(
         DeadlinesProperties(maxAssignees = maxAssignees),
         userScopeRepository,
         threadRepository,
         deadlineRepository,
         deadlineNotificationPlannerService,
-        permissionService
+        permissionService,
+        notificationService
     )
 
     private lateinit var issuer: User
@@ -269,6 +272,7 @@ class DeadlineServiceTest {
             every { deadlineRepository.save(deadline) } returns deadline
             every { deadlineNotificationPlannerService.deleteNotifications(deadline) } just Runs
             every { deadlineNotificationPlannerService.reconcileNotifications(deadline, any()) } just Runs
+            every { notificationService.notifyDeadlineDueChanged(deadline.id, any(), any()) } just Runs
         }
 
         @Test
@@ -293,6 +297,7 @@ class DeadlineServiceTest {
 
         @Test
         fun `changing due date on active deadline reschedules notifications`() {
+            val oldDue = deadline.due
             val newDue = Instant.now().plusSeconds(60 * 60)
 
             deadlineService.patchDeadline(issuer, deadline.id, null, null, null, newDue)
@@ -300,6 +305,7 @@ class DeadlineServiceTest {
             assertEquals(newDue, deadline.due)
             verify(exactly = 1) { deadlineNotificationPlannerService.reconcileNotifications(deadline, any()) }
             verify(exactly = 0) { deadlineNotificationPlannerService.deleteNotifications(any()) }
+            verify(exactly = 1) { notificationService.notifyDeadlineDueChanged(deadline.id, oldDue, newDue) }
         }
 
         @Test
@@ -312,6 +318,25 @@ class DeadlineServiceTest {
             assertEquals(newDue, deadline.due)
             verify(exactly = 0) { deadlineNotificationPlannerService.reconcileNotifications(any(), any()) }
             verify(exactly = 0) { deadlineNotificationPlannerService.deleteNotifications(any()) }
+            verify(exactly = 0) { notificationService.notifyDeadlineDueChanged(any(), any(), any()) }
+        }
+
+        @Test
+        fun `unchanged due date does not send change notification`() {
+            deadline.due = Instant.now().plusSeconds(60 * 60)
+
+            deadlineService.patchDeadline(issuer, deadline.id, null, null, null, deadline.due)
+
+            verify(exactly = 0) { notificationService.notifyDeadlineDueChanged(any(), any(), any()) }
+        }
+
+        @Test
+        fun `invalid due date does not send change notification`() {
+            assertThrows<StatusCodeException> {
+                deadlineService.patchDeadline(issuer, deadline.id, null, null, null, Instant.EPOCH)
+            }
+
+            verify(exactly = 0) { notificationService.notifyDeadlineDueChanged(any(), any(), any()) }
         }
 
         @Test
@@ -324,13 +349,15 @@ class DeadlineServiceTest {
                 { assertEquals(newDue, deadline.due) },
                 { assertTrue(deadline.isCompleted) },
                 { verify(exactly = 1) { deadlineNotificationPlannerService.deleteNotifications(deadline) } },
-                { verify(exactly = 0) { deadlineNotificationPlannerService.reconcileNotifications(any(), any()) } }
+                { verify(exactly = 0) { deadlineNotificationPlannerService.reconcileNotifications(any(), any()) } },
+                { verify(exactly = 0) { notificationService.notifyDeadlineDueChanged(any(), any(), any()) } }
             )
         }
 
         @Test
         fun `changing due date while reopening reschedules once`() {
             deadline.isCompleted = true
+            val oldDue = deadline.due
             val newDue = Instant.now().plusSeconds(60 * 60)
 
             deadlineService.patchDeadline(issuer, deadline.id, null, null, false, newDue)
@@ -339,7 +366,8 @@ class DeadlineServiceTest {
                 { assertEquals(newDue, deadline.due) },
                 { assertEquals(false, deadline.isCompleted) },
                 { verify(exactly = 1) { deadlineNotificationPlannerService.reconcileNotifications(deadline, any()) } },
-                { verify(exactly = 0) { deadlineNotificationPlannerService.deleteNotifications(any()) } }
+                { verify(exactly = 0) { deadlineNotificationPlannerService.deleteNotifications(any()) } },
+                { verify(exactly = 1) { notificationService.notifyDeadlineDueChanged(deadline.id, oldDue, newDue) } }
             )
         }
 
@@ -349,6 +377,7 @@ class DeadlineServiceTest {
 
             verify(exactly = 0) { deadlineNotificationPlannerService.reconcileNotifications(any(), any()) }
             verify(exactly = 0) { deadlineNotificationPlannerService.deleteNotifications(any()) }
+            verify(exactly = 0) { notificationService.notifyDeadlineDueChanged(any(), any(), any()) }
         }
     }
 }

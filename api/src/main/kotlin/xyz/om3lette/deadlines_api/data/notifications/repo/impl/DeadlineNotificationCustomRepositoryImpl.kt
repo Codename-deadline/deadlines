@@ -15,99 +15,12 @@ class DeadlineNotificationCustomRepositoryImpl(
     override fun findNotificationRecipientsAndInsertIntoOutbox(batchSize: Int) {
         val sql = """
             WITH due AS (
-                SELECT dn.id
+                SELECT dn.id AS notification_id, dn.type, dn.deadline_id
                 FROM deadline_notifications dn
                 WHERE dn.send_at <= now() AND dn.status = 'P'
                 ORDER BY dn.send_at, dn.id
                 LIMIT :batch_size
                 FOR UPDATE OF dn SKIP LOCKED
-            ),
-            moved AS (
-                UPDATE deadline_notifications dn
-                SET status = 'I'
-                FROM due
-                WHERE dn.id = due.id
-                RETURNING dn.id AS notification_id, dn.type, dn.deadline_id
-            ),
-            notification_context AS (
-                SELECT
-                    m.notification_id,
-                    m.type,
-                    d.id AS deadline_id,
-                    d.title AS deadline_title,
-                    d.due,
-                    d.is_completed,
-                    t.id AS thread_id,
-                    t.title AS thread_title,
-                    o.id AS organization_id,
-                    o.title AS organization_title
-                FROM moved m
-                JOIN deadlines d ON d.id = m.deadline_id
-                JOIN threads t ON t.id = d.thread_id
-                JOIN organizations o ON o.id = t.organization_id
-            ),
-            candidates AS (
-                SELECT cs.chat_id,
-                       nc.*,
-                       1 AS precedence
-                FROM notification_context nc
-                 JOIN chat_subscriptions cs ON cs.scope_type = 'DDL' AND cs.scope_id = nc.deadline_id
-                WHERE nc.is_completed = false
-                
-                UNION ALL
-                
-                SELECT cs.chat_id,
-                       nc.*,
-                       2 AS precedence
-                FROM notification_context nc
-                 JOIN chat_subscriptions cs ON cs.scope_type = 'THR' AND cs.scope_id = nc.thread_id
-                WHERE nc.is_completed = false
-                
-                UNION ALL
-                
-                SELECT cs.chat_id,
-                       nc.*,
-                       3 AS precedence
-                FROM notification_context nc
-                 JOIN chat_subscriptions cs ON cs.scope_type = 'ORG' AND cs.scope_id = nc.organization_id
-                WHERE nc.is_completed = false
-            ),
-            selected AS (
-                SELECT
-                    notification_id,
-                    chat_id,
-                    type,
-                    deadline_id,
-                    deadline_title,
-                    due,
-                    thread_id,
-                    thread_title,
-                    organization_id,
-                    organization_title
-                FROM (
-                    SELECT *,
-                        ROW_NUMBER() OVER (PARTITION BY chat_id, notification_id ORDER BY precedence) AS rn
-                    FROM candidates
-                ) t
-                WHERE rn = 1
-            ),
-            selected_with_messenger AS (
-                SELECT
-                    notification_id,
-                    messenger_chat_id,
-                    type,
-                    deadline_id,
-                    deadline_title,
-                    due,
-                    thread_id,
-                    thread_title,
-                    organization_id,
-                    organization_title,
-                    messenger,
-                    language,
-                    time_zone
-                FROM selected s
-                JOIN chats c ON c.id = s.chat_id
             ),
             inserted AS (
                 INSERT INTO notification_outbox (
@@ -131,6 +44,7 @@ class DeadlineNotificationCustomRepositoryImpl(
                     100,
                     'private.integration.notifications',
                     jsonb_build_object(
+                        'type', 'DEADLINE_REMINDER',
                         'chatId', messenger_chat_id,
                         'timeZone', time_zone,
                         'timeRemaining', type,
@@ -144,23 +58,27 @@ class DeadlineNotificationCustomRepositoryImpl(
                             'title', thread_title
                         ),
                         'deadline', jsonb_build_object(
-                            'id', deadline_id,
+                            'id', r.deadline_id,
                             'title', deadline_title,
                             'due', due
                         )
                     )
-                FROM selected_with_messenger
+                FROM due m
+                JOIN deadline_notification_recipients r ON r.deadline_id = m.deadline_id
+                WHERE r.is_completed = false
                 RETURNING notification_id
             )
             UPDATE deadline_notifications dn
-            SET status = 'S'
-            FROM moved m
-            WHERE dn.id = m.notification_id
-                AND NOT EXISTS (
+            SET status = CASE
+                WHEN EXISTS (
                     SELECT 1
                     FROM inserted i
                     WHERE i.notification_id = m.notification_id
-                )
+                ) THEN 'I'
+                ELSE 'S'
+            END
+            FROM due m
+            WHERE dn.id = m.notification_id
         """.trimIndent()
 
         em.createNativeQuery(sql)

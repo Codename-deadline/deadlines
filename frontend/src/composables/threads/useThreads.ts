@@ -12,7 +12,6 @@ import {
   useGetThreadAssignees,
 } from "@/api/generated/endpoints/threads/threads";
 import type { ThreadResponseWithRole } from "@/api/generated/models";
-import { useDefaultQueryEnabled } from "@/composables/shared/useDefaultQueryEnabled";
 import { usePagedList } from "@/composables/shared/usePagedList";
 
 export const userAssignedThreadsPrefix = getGetUserThreadsQueryKey({ page: 0 }).slice(0, -1);
@@ -37,6 +36,7 @@ export function useOrganizationThreads(organizationId: MaybeRefOrGetter<number>)
     return {
       key: organizationThreadsKey(id),
       enabled: id > 0,
+      requiresAuth: false,
       fetchPage: (page, signal) => getThreads(id, { page }, { signal }),
       map: toThreadWithRole,
     };
@@ -44,9 +44,8 @@ export function useOrganizationThreads(organizationId: MaybeRefOrGetter<number>)
 }
 
 export function useThread(threadId: MaybeRefOrGetter<number>) {
-  const defaultEnabled = useDefaultQueryEnabled();
   const query = useGetThread(threadId, () => ({
-    query: { enabled: defaultEnabled() && toValue(threadId) > 0 },
+    query: { enabled: toValue(threadId) > 0 },
   }));
   return { ...query, thread: computed(() => (query.data.value ? toThread(query.data.value) : undefined)) };
 }
@@ -58,12 +57,11 @@ export async function resolveThread(threadId: number, cache: ReturnType<typeof u
 }
 
 export function useThreadAssignees(threadId: MaybeRefOrGetter<number>, page: MaybeRefOrGetter<number>) {
-  const defaultEnabled = useDefaultQueryEnabled();
   const query = useGetThreadAssignees(
     threadId,
     () => ({ page: toValue(page) }),
     () => ({
-      query: { enabled: defaultEnabled() && toValue(threadId) > 0 },
+      query: { enabled: toValue(threadId) > 0 },
     }),
   );
   return {

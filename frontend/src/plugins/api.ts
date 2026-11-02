@@ -77,10 +77,9 @@ export function installApi(app: App, pinia: Pinia) {
         for (const entry of queries.getEntries({ active: true })) {
           if (stopped || tokens.sessionVersion !== version) break;
 
-          const isPublic = entry.meta.sessionBound === false;
-          if (isPublic ? !publicEntries.has(entry) : !defaultEnabled()) continue;
+          const isSessionIndependent = entry.meta.sessionBound === false;
+          if (isSessionIndependent && !publicEntries.has(entry)) continue;
           if (entry.options && toValue(entry.options.enabled)) {
-            // Failures remain visible in query state, as with useQuery's automatic refresh.
             void queries.refresh(entry).catch(() => {});
           }
         }

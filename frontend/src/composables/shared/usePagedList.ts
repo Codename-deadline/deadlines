@@ -7,12 +7,17 @@ export function usePagedList<T extends { id: number }, TModel extends { id: numb
   options: () => {
     key: EntryKey;
     enabled?: boolean;
+    // Authentication is required unless a scoped read explicitly opts out.
+    requiresAuth?: boolean;
     fetchPage: (page: number, signal: AbortSignal) => Promise<{ data: T[]; totalPages: number }>;
     map: (dto: T) => TModel;
   },
 ) {
   const defaultEnabled = useDefaultQueryEnabled();
-  const enabled = () => defaultEnabled() && options().enabled !== false;
+  const enabled = () => {
+    const { enabled: isEnabled = true, requiresAuth = true } = options();
+    return isEnabled && (!requiresAuth || defaultEnabled());
+  };
   const nextPageError = shallowRef<unknown>(null);
 
   const query = useInfiniteQuery<{ data: T[]; totalPages: number }, Error, number>(() => {

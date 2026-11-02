@@ -17,22 +17,19 @@ import {
 } from "@/api/generated/endpoints/deadlines/deadlines";
 import type { AttachmentResponse } from "@/api/generated/models";
 import { clearQueryEntries, refreshQueryEntries } from "@/composables/shared/queryCache";
-import { useDefaultQueryEnabled } from "@/composables/shared/useDefaultQueryEnabled";
 import { deadlineListsPrefix, userAssignedDeadlinesPrefix } from "./useDeadlines";
 
 export function useDeadlineAttachments(deadlineId: MaybeRefOrGetter<number>) {
-  const enabled = useDefaultQueryEnabled();
   const query = useGetDeadlineAttachmentsMetadata(deadlineId, () => ({
-    query: { enabled: enabled() && toValue(deadlineId) > 0 },
+    query: { enabled: toValue(deadlineId) > 0 },
   }));
 
   return { ...query, attachments: computed(() => query.data.value?.map(toAttachment) ?? []) };
 }
 
 export function useAttachment(attachmentId: MaybeRefOrGetter<number>) {
-  const enabled = useDefaultQueryEnabled();
   const query = useGetAttachmentMetadata(attachmentId, () => ({
-    query: { enabled: enabled() && toValue(attachmentId) > 0 },
+    query: { enabled: toValue(attachmentId) > 0 },
   }));
 
   return { ...query, attachment: computed(() => (query.data.value ? toAttachment(query.data.value) : undefined)) };

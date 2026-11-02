@@ -8,11 +8,14 @@ import { normalizeUsername } from "@/utils/validation";
 import QueryError from "../QueryError.vue";
 
 const props = defineProps<{ organizationId?: number }>();
-const { t } = useI18n();
 const username = defineModel<string>();
-const search = ref("");
+const { t } = useI18n();
+
+const search = ref<string>("");
 const { usernames, error, isLoading: loading, retry } = useUsernameHints(search, () => props.organizationId);
+
 const options = computed(() => usernames.value.map((value) => ({ label: value, value })));
+
 const updateSearch = useDebounceFn((value: string) => { search.value = normalizeUsername(value); }, 250);
 const handleSearch = (value: string) => {
   search.value = "";

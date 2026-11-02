@@ -12,7 +12,6 @@ import {
   useGetDeadlineAssignees,
 } from "@/api/generated/endpoints/deadlines/deadlines";
 import type { DeadlineResponseWithRole } from "@/api/generated/models";
-import { useDefaultQueryEnabled } from "@/composables/shared/useDefaultQueryEnabled";
 import { usePagedList } from "@/composables/shared/usePagedList";
 
 export const userAssignedDeadlinesPrefix = getGetUserDeadlinesQueryKey({ page: 0 }).slice(0, -1);
@@ -37,6 +36,7 @@ export function useThreadDeadlines(threadId: MaybeRefOrGetter<number>) {
     return {
       key: threadDeadlinesKey(id),
       enabled: id > 0,
+      requiresAuth: false,
       fetchPage: (page, signal) => getDeadlines(id, { page }, { signal }),
       map: toDeadline,
     };
@@ -44,9 +44,8 @@ export function useThreadDeadlines(threadId: MaybeRefOrGetter<number>) {
 }
 
 export function useDeadline(deadlineId: MaybeRefOrGetter<number>) {
-  const enabled = useDefaultQueryEnabled();
   const query = useGetDeadline(deadlineId, () => ({
-    query: { enabled: enabled() && toValue(deadlineId) > 0 },
+    query: { enabled: toValue(deadlineId) > 0 },
   }));
 
   return { ...query, deadline: computed(() => (query.data.value ? toDeadline(query.data.value) : undefined)) };
@@ -60,9 +59,8 @@ export async function resolveDeadline(deadlineId: number, cache: ReturnType<type
 }
 
 export function useDeadlineAssignees(deadlineId: MaybeRefOrGetter<number>) {
-  const enabled = useDefaultQueryEnabled();
   const query = useGetDeadlineAssignees(deadlineId, () => ({
-    query: { enabled: enabled() && toValue(deadlineId) > 0 },
+    query: { enabled: toValue(deadlineId) > 0 },
   }));
 
   return { ...query, members: computed(() => query.data.value?.map(toMember) ?? []) };

@@ -5,7 +5,10 @@ from common.application.protocols.translator import Translator
 from common.application.translation import TranslationKey
 from common.infrastructure.i18n.mappings import TIME_REMAINING_TRANSLATION_KEYS
 from common.infrastructure.kafka.enums.time_remaining import TimeRemaining
-from common.infrastructure.kafka.schemas.notification_event import NotificationEvent
+from common.infrastructure.kafka.schemas.deadline_due_changed_event import (
+    DeadlineDueChangedNotificationEvent,
+)
+from common.infrastructure.kafka.schemas.notification_event import Notification
 
 
 def _format_utc_offset(offset: timedelta) -> str:
@@ -15,25 +18,40 @@ def _format_utc_offset(offset: timedelta) -> str:
     return f"UTC{sign}{hours:02d}:{minutes:02d}"
 
 
-def render_notification(event: NotificationEvent, translator: Translator) -> str:
-    if event.deadline.due.tzinfo is None or event.deadline.due.utcoffset() is None:
+def _format_due(value: datetime, time_zone: str) -> str:
+    if value.tzinfo is None or value.utcoffset() is None:
         raise ValueError("Deadline due must be timezone-aware")
-    due: datetime = event.deadline.due.astimezone(ZoneInfo(event.time_zone))
+    due = value.astimezone(ZoneInfo(time_zone))
     offset: timedelta | None = due.utcoffset()
     if offset is None:
         raise ValueError("Deadline due must be timezone-aware")
 
-    translation_key = TranslationKey.NOTIFICATIONS_DEADLINE_OVERDUE
-    params = {
-        "title": event.deadline.title,
-        "organization": event.organization.title,
-        "thread": event.thread.title,
-        "due": f"{due.strftime('%H:%M %d.%m.%Y')} {_format_utc_offset(offset)}",
-    }
-    if event.timeRemaining is not TimeRemaining.NO_TIME:
-        translation_key = TranslationKey.NOTIFICATIONS_DEADLINE_EXPIRY
-        params["time_remaining"] = translator.translate(
-            TIME_REMAINING_TRANSLATION_KEYS[event.timeRemaining], event.language
-        )
+    return f"{due.strftime('%H:%M %d.%m.%Y')} {_format_utc_offset(offset)}"
 
-    return translator.translate(translation_key, event.language, **params)
+
+def render_notification(event: Notification, translator: Translator) -> str:
+    header = translator.translate(
+        TranslationKey.NOTIFICATIONS_DEADLINE_HEADER,
+        event.language,
+        title=event.deadline.title,
+        organization=event.organization.title,
+        thread=event.thread.title,
+    )
+    if isinstance(event, DeadlineDueChangedNotificationEvent):
+        body = translator.translate(
+            TranslationKey.NOTIFICATIONS_DEADLINE_DUE_CHANGED,
+            event.language,
+            old_due=_format_due(event.old_due, event.time_zone),
+            new_due=_format_due(event.new_due, event.time_zone),
+        )
+    else:
+        translation_key = TranslationKey.NOTIFICATIONS_DEADLINE_OVERDUE
+        params = {"due": _format_due(event.deadline.due, event.time_zone)}
+        if event.time_remaining is not TimeRemaining.NO_TIME:
+            translation_key = TranslationKey.NOTIFICATIONS_DEADLINE_EXPIRY
+            params["time_remaining"] = translator.translate(
+                TIME_REMAINING_TRANSLATION_KEYS[event.time_remaining], event.language
+            )
+        body = translator.translate(translation_key, event.language, **params)
+
+    return f"{header}\n\n{body}"

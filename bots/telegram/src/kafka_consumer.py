@@ -13,7 +13,7 @@ from common.infrastructure.kafka.notification_renderer import render_notificatio
 from common.infrastructure.kafka.schemas.account_linkage_event import (
     AccountLinkageEvent,
 )
-from common.infrastructure.kafka.schemas.notification_event import NotificationEvent
+from common.infrastructure.kafka.schemas.notification_event import Notification
 from common.infrastructure.kafka.schemas.otp_event import OtpEvent
 
 
@@ -30,7 +30,7 @@ def build_telegram_consumer(
             VerificationInteraction.ACCOUNT_LINKING,
         )
 
-    async def handle_notification(event: NotificationEvent) -> None:
+    async def handle_notification(event: Notification) -> None:
         await messenger.send_message(
             event.chat_id,
             render_notification(event, translator),

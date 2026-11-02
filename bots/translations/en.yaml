@@ -37,7 +37,7 @@ en:
         ## Commands:
         1) `/sub_org <ORGANIZATION_ID:Number>` -  Subscribes chat to the given organization
         2) `/sub_thr <THREAD_ID:Number>` - Subscribes chat to the given thread
-        3) `/sub_ddl <DEADLINE_ID:Number>` - Subscribes chat to the given deadline. 
+        3) `/sub_ddl <DEADLINE_ID:Number>` - Subscribes chat to the given deadline.
         4) `/unsub_org <ORGANIZATION_ID:Number>` - Unsubscribes chat from the given organization
         5) `/unsub_thr <THREAD_ID:Number>` - Unsubscribes chat from the given thread
         6) `/unsub_ddl <DEADLINE_ID:Number>` - Unsubscribes chat from the given deadline
@@ -97,8 +97,10 @@ en:
     one_week: "1 week"
     one_month: "1 month"
   notifications:
-    deadline_expiry: "# %title\n\nOrganization: %organization\nThread: %thread\n\nDue: %due\nLess than **%time_remaining** remaining"
-    deadline_overdue: "# %title\n\nOrganization: %organization\nThread: %thread\n\nDue: %due\n**Deadline is now overdue.**\n_Better late than never._"
+    deadline_header: "# %title\n\nOrganization: %organization\nThread: %thread"
+    deadline_expiry: "Due: %due\nLess than **%time_remaining** remaining"
+    deadline_overdue: "Due: %due\n**Deadline is now overdue.**\n_Better late than never._"
+    deadline_due_changed: "**Due date changed**\nFrom: %old_due\nTo: %new_due"
     go_to_deadline: "Go to deadline"
   prompt:
     accept: "Yes"

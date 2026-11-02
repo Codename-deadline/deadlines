@@ -97,8 +97,10 @@ ru:
     one_week: "1 недели"
     one_month: "1 месяца"
   notifications:
-    deadline_expiry: "# %title\n\nОрганизация: %organization\nРаздел: %thread\n\nКрайний срок: %due\nОсталось менее **%time_remaining**"
-    deadline_overdue: "# %title\n\nОрганизация: %organization\nРаздел: %thread\n\nКрайний срок: %due\n**Срок выполнения истёк.**\n_Лучше поздно, чем никогда._"
+    deadline_header: "# %title\n\nОрганизация: %organization\nРаздел: %thread"
+    deadline_expiry: "Крайний срок: %due\nОсталось менее **%time_remaining**"
+    deadline_overdue: "Крайний срок: %due\n**Срок выполнения истёк.**\n_Лучше поздно, чем никогда._"
+    deadline_due_changed: "**Крайний срок изменён**\nБыло: %old_due\nСтало: %new_due"
     go_to_deadline: "Перейти к дедлайну"
   prompt:
     accept: "Да"

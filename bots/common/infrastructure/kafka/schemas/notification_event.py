@@ -1,26 +1,30 @@
-from datetime import datetime
+from typing import Annotated, Literal
 
-from common.application.enums import Language
+from pydantic import Discriminator, Tag
+
 from common.infrastructure.kafka.enums.time_remaining import TimeRemaining
-from common.infrastructure.kafka.schemas.base_kafka_event import BaseKafkaEvent
+from common.infrastructure.kafka.schemas.base_notification_event import (
+    BaseNotificationEvent,
+)
+from common.infrastructure.kafka.schemas.deadline_due_changed_event import (
+    DeadlineDueChangedNotificationEvent,
+)
 
 
-class RawEntityPayload(BaseKafkaEvent):
-    id: int
-    title: str
+class DeadlineReminderNotificationEvent(BaseNotificationEvent):
+    type: Literal["DEADLINE_REMINDER"] = "DEADLINE_REMINDER"
+    time_remaining: TimeRemaining
 
 
-class DeadlinePayload(BaseKafkaEvent):
-    id: int
-    title: str
-    due: datetime
+def _notification_type(value: object) -> str | None:
+    if isinstance(value, dict):
+        # Messages published before notification types were introduced are reminders.
+        return value.get("type", "DEADLINE_REMINDER")
+    return getattr(value, "type", None)
 
 
-class NotificationEvent(BaseKafkaEvent):
-    chat_id: int
-    language: Language
-    organization: RawEntityPayload
-    thread: RawEntityPayload
-    deadline: DeadlinePayload
-    time_zone: str = "Etc/UTC"
-    timeRemaining: TimeRemaining
+type Notification = Annotated[
+    Annotated[DeadlineReminderNotificationEvent, Tag("DEADLINE_REMINDER")]
+    | Annotated[DeadlineDueChangedNotificationEvent, Tag("DEADLINE_DUE_CHANGED")],
+    Discriminator(_notification_type),
+]

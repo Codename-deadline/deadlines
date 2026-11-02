@@ -97,7 +97,7 @@ class GlobalConsumer:
                 continue
             try:
                 await event_handler.handler(
-                    event_handler.event_mapping.model_validate_json(msg.value or "{}")
+                    event_handler.event_mapping.validate_json(msg.value or "{}")
                 )
             except ValidationError as error:
                 await self._move_to_dead_letter(msg, error)

@@ -110,15 +110,6 @@ interface UserScopeRepository : JpaRepository<UserScope, UserScopeId> {
     """)
     fun countDeadlineAssignees(deadlineId: Long, scopeType: ScopeType = ScopeType.DEADLINE): Long
 
-    @Query("""
-        SELECT us FROM UserScope us
-        WHERE us.scopeId = :deadlineId
-            AND us.scopeType = :scopeType
-        ORDER BY us.role DESC, us.assignedAt ASC
-    """)
-    fun findAllDeadlineAssignees(deadlineId: Long, scopeType: ScopeType = ScopeType.DEADLINE): List<UserScope>
-
-
     @Modifying
     @Transactional
     @Query(

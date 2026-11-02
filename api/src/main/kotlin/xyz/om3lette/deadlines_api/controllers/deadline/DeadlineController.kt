@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
+import jakarta.validation.constraints.Max
+import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Positive
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -13,7 +15,9 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import xyz.om3lette.deadlines_api.data.common.constraints.PaginationConstraints
 import xyz.om3lette.deadlines_api.data.scopes.deadline.requests.AddDeadlineAssigneeRequest
 import xyz.om3lette.deadlines_api.data.scopes.deadline.requests.PatchDeadlineRequest
 import xyz.om3lette.deadlines_api.data.user.model.User
@@ -68,13 +72,18 @@ class DeadlineController(
     @Operation(
         operationId = "getDeadlineAssignees",
         summary = "Get deadline assignees",
-        description = "Returns a list of explicit thread assignees." +
+        description = "Returns a page of explicit deadline assignees. " +
                       "Higher role users in the organization or thread are not included."
     )
     fun getAssignees(
         @AuthenticationPrincipal user: User?,
-        @PathVariable @Positive deadlineId: Long
-    ) = deadlineService.getDeadlineAssignees(user, deadlineId)
+        @PathVariable @Positive deadlineId: Long,
+        @RequestParam("page") @Min(PaginationConstraints.PAGE_MIN) pageNumber: Int,
+        @RequestParam("size")
+        @Min(PaginationConstraints.PAGE_SIZE_MIN)
+        @Max(PaginationConstraints.PAGE_SIZE_MAX)
+        pageSize: Int
+    ) = deadlineService.getDeadlineAssignees(user, deadlineId, pageNumber, pageSize)
 
     @DeleteMapping("/assignees/{assigneeUsername}")
     @Operation(operationId = "removeDeadlineAssignee", summary = "Remove an assignee")

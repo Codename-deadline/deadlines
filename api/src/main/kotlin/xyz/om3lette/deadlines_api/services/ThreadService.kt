@@ -282,7 +282,8 @@ class ThreadService(
             permissionService.hasAccess(issuer, ThreadScope(thread))
         )
 
-        val pageRequest = PageRequest.of(pageNumber, pageSize, Sort.by("role").descending())
+        val pageRequest = PageRequest.of(pageNumber, pageSize, Sort.by("role")
+            .descending().and(Sort.by("assignedAt", "user.id")))
         return userScopeRepository.findAllByScopeIdAndScopeType(
             threadId, ScopeType.THREAD, pageRequest
         ).toPaginationResponse { it.toResponse() }

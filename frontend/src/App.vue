@@ -59,6 +59,10 @@ const canShowRoute = computed(
     || route.path.startsWith("/auth")
     || SEMI_PUBLIC_ROUTES.includes(String(route.name)),
 );
+watch(canShowRoute, (allowed) => {
+  if (!allowed) void router.replace({ path: "/auth" });
+}, { immediate: true });
+
 if (route.path.includes("auth") && user.value) {
   router.push({ path: "/" });
 }

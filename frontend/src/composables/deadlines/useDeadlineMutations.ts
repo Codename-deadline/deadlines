@@ -1,7 +1,6 @@
 import { useQueryCache } from "@pinia/colada";
 import { type MaybeRefOrGetter, toValue } from "vue";
 import {
-  getGetDeadlineAssigneesQueryKey,
   getGetDeadlineQueryKey,
   useAddDeadlineAssignee,
   useCreateDeadline,
@@ -14,7 +13,12 @@ import { getGetThreadQueryKey } from "@/api/generated/endpoints/threads/threads"
 import { refreshQueryEntries } from "@/composables/shared/queryCache";
 import { threadPrefix, userAssignedThreadsPrefix } from "@/composables/threads/useThreads";
 import { useCurrentScopeStore } from "@/stores/CurrentScopeStore";
-import { clearDeadline, refreshDeadlineAttachmentAccess, removeDeadlineRows } from "./deadlineCache";
+import {
+  clearDeadline,
+  deadlineAssigneesPrefix,
+  refreshDeadlineAttachmentAccess,
+  removeDeadlineRows,
+} from "./deadlineCache";
 import { threadDeadlinesPrefix, userAssignedDeadlinesPrefix } from "./useDeadlines";
 
 type ParentContext = { threadId: number };
@@ -42,10 +46,7 @@ export function useDeadlineMutations(threadId: MaybeRefOrGetter<number>) {
       refreshLists(parent),
       refreshQueryEntries(cache, { key: getGetDeadlineQueryKey(id) }, "all"),
       ...(assignees
-        ? [
-            refreshQueryEntries(cache, { key: getGetDeadlineAssigneesQueryKey(id) }),
-            refreshDeadlineAttachmentAccess(cache, id),
-          ]
+        ? [refreshQueryEntries(cache, { key: deadlineAssigneesPrefix(id) }), refreshDeadlineAttachmentAccess(cache, id)]
         : []),
     ]);
 

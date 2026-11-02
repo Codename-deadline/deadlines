@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useWindowSize } from "@vueuse/core";
 import { type FormInst, type FormRules, NButton, NDivider, NForm, NFormItem, NInput, NPopconfirm, NTabPane, useMessage } from "naive-ui";
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
@@ -14,8 +13,8 @@ import QueryError from "@/components/home/common/QueryError.vue";
 import { useOrganizationMutations } from "@/composables/organizations/useOrganizationMutations";
 import { useOrganization, useOrganizationMembers } from "@/composables/organizations/useOrganizations";
 import { useEntityEdit } from "@/composables/shared/useEntityEdit";
+import { useMemberPagination } from "@/composables/shared/useMemberPagination";
 import { useRequestError } from "@/composables/shared/useRequestError";
-import { DEFAULT_MEMBERS_PAGE_SIZE } from "@/constants/defaults";
 import { ORG_OWNER_ROLE } from "@/constants/roles";
 import { tEntityActionConfirmation, tEntityToastAction, tFormError } from "@/locales/utils";
 import emitter from "@/plugins/emitter";
@@ -33,8 +32,6 @@ const mutations = useOrganizationMutations();
 const scope = useCurrentScopeStore();
 const detail = useOrganization(() => props.entity.id);
 
-const { height } = useWindowSize();
-const membersToLoad = height.value >= 550 ? DEFAULT_MEMBERS_PAGE_SIZE : 2;
 
 const patchFormRef = ref<FormInst | null>(null);
 const invitationFormRef = ref<FormInst | null>(null);
@@ -47,14 +44,11 @@ const isOrganizationPersonal = computed(() => organization.value.type === "PERSO
 const canManageMembers = computed(() => organization.value.permissions.manageRoles);
 const canInvite = computed(() => organization.value.permissions.invite);
 
-const memberPage = ref(0);
-const membersQuery = useOrganizationMembers(() => props.entity.id, memberPage, membersToLoad);
-// Reset current page to 0 on entity update
-watch(() => props.entity.id, () => { memberPage.value = 0; });
-// Ensure 0 < currentPage < totalPages (upperbound)
-watch(membersQuery.totalPages, (pages) => {
-  if (pages > 0 && memberPage.value >= pages) memberPage.value = pages - 1;
-});
+const { pagination, page: memberPage, pageSize: membersToLoad, clampPage } = useMemberPagination(() => props.entity.id);
+const membersQuery = useOrganizationMembers(() => props.entity.id, pagination);
+watch(membersQuery.data, (data) => {
+  if (data) clampPage(data.totalPages);
+}, { immediate: true });
 
 const { patchFormModel, patchFormRules, handlePatch } = useEntityEdit({
   scopeType: "organization",

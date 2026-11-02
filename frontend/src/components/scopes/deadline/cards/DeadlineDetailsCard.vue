@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Calendar } from "@vicons/fa";
-import { NCard, NCollapse, NCollapseItem, NDivider, NIcon } from 'naive-ui';
+import { NCard, NCollapse, NCollapseItem, NDivider, NIcon, NPagination } from 'naive-ui';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { DeadlineModel } from '@/api/adapters/deadline';
@@ -17,11 +17,15 @@ import DeadlineStatusButton from "../DeadlineStatusButton.vue";
 const props = defineProps<{
   deadline: DeadlineModel,
   assignees: MemberModel[],
+  assigneePage: number,
+  assigneePageSize: number,
+  assigneeTotalPages: number,
   isLoadingAssignees?: boolean,
   isLoadingStatusChange?: boolean
 }>();
 const emit = defineEmits<{
-  statusChange: [currentStatus: boolean]
+  statusChange: [currentStatus: boolean],
+  assigneesPageChange: [page: number]
 }>();
 
 const { t } = useI18n();
@@ -64,7 +68,7 @@ const state = computed(() => computeDeadlineState(props.deadline));
         </span>
       </div>
       <n-collapse>
-        <n-collapse-item :title="`${t('scopes.deadline.assigned-to')} (${props.assignees.length})`" name="1">
+        <n-collapse-item :title="`${t('scopes.deadline.assigned-to')} (${deadline.stats.assignees})`" name="1">
           <div v-if="isLoadingAssignees" class="grid">
             <SkeletonGrid :show="isLoadingAssignees" :count="3" :card-height="32" />
           </div>
@@ -76,6 +80,16 @@ const state = computed(() => computeDeadlineState(props.deadline));
               <user-avatar :user="assignee.user"/>
             </div>
           </template>
+          <n-pagination
+            v-if="assigneeTotalPages > 1"
+            class="mt-3"
+            :page="assigneePage + 1"
+            :page-count="assigneeTotalPages"
+            :page-slot="5"
+            :simple="assigneePageSize === 2"
+            :disabled="isLoadingAssignees"
+            @update:page="emit('assigneesPageChange', $event - 1)"
+          />
         </n-collapse-item>
       </n-collapse>
     </div>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Cog } from "@vicons/fa";
 import { NButton, NIcon } from "naive-ui";
-import { computed, onUnmounted, ref } from "vue";
+import { computed, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import type { AttachmentModel } from "@/api/adapters/attachment";
 import GlobalHeader from "@/components/home/common/GlobalHeader.vue";
@@ -16,6 +16,7 @@ import EditDeadlineAttachmentDialog from "@/components/scopes/deadline/EditDeadl
 import { useAttachmentDownload, useAttachmentMutations, useDeadlineAttachments } from "@/composables/deadlines/useDeadlineAttachments";
 import { useDeadlineMutations } from "@/composables/deadlines/useDeadlineMutations";
 import { useDeadline, useDeadlineAssignees } from "@/composables/deadlines/useDeadlines";
+import { useMemberPagination } from "@/composables/shared/useMemberPagination";
 import { useRequestError } from "@/composables/shared/useRequestError";
 import { MINUTE_MS } from "@/constants/time";
 import emitter from "@/plugins/emitter";
@@ -29,7 +30,11 @@ const tokens = useTokenStore();
 const deadlineId = computed(() => parsePositiveRouteId(route.query.ddlId) ?? 0);
 const detail = useDeadline(deadlineId);
 const deadline = detail.deadline;
-const assignees = useDeadlineAssignees(deadlineId);
+const { pagination, page: assigneePage, pageSize: assigneePageSize, clampPage } = useMemberPagination(deadlineId);
+const assignees = useDeadlineAssignees(deadlineId, pagination);
+watch(assignees.data, (data) => {
+  if (data) clampPage(data.totalPages);
+}, { immediate: true });
 const attachments = useDeadlineAttachments(deadlineId);
 
 const mutations = useDeadlineMutations(() => deadline.value?.threadId ?? 0);
@@ -112,6 +117,10 @@ const handleAttachmentFile = async (attachment: AttachmentModel, disposition: "a
           @status-change="handleDeadlineStatusChange"
           :deadline="deadline"
           :assignees="assignees.members.value"
+          :assignee-page="assigneePage"
+          :assignee-page-size="assigneePageSize"
+          :assignee-total-pages="assignees.totalPages.value"
+          @assignees-page-change="assigneePage = $event"
           :is-loading-assignees="assignees.isLoading.value"
           :is-loading-status-change="mutations.patch.isLoading.value"
         />

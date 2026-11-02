@@ -12,6 +12,7 @@ import {
   useGetThreadAssignees,
 } from "@/api/generated/endpoints/threads/threads";
 import type { ThreadResponseWithRole } from "@/api/generated/models";
+import type { MemberPagination } from "@/composables/shared/useMemberPagination";
 import { usePagedList } from "@/composables/shared/usePagedList";
 
 export const userAssignedThreadsPrefix = getGetUserThreadsQueryKey({ page: 0 }).slice(0, -1);
@@ -56,14 +57,10 @@ export async function resolveThread(threadId: number, cache: ReturnType<typeof u
   return state.data ? toThread(state.data) : null;
 }
 
-export function useThreadAssignees(threadId: MaybeRefOrGetter<number>, page: MaybeRefOrGetter<number>) {
-  const query = useGetThreadAssignees(
-    threadId,
-    () => ({ page: toValue(page) }),
-    () => ({
-      query: { enabled: toValue(threadId) > 0 },
-    }),
-  );
+export function useThreadAssignees(threadId: MaybeRefOrGetter<number>, pagination: MaybeRefOrGetter<MemberPagination>) {
+  const query = useGetThreadAssignees(threadId, pagination, () => ({
+    query: { enabled: toValue(threadId) > 0 },
+  }));
   return {
     ...query,
     members: computed(() => query.data.value?.data.map(toMember) ?? []),

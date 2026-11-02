@@ -10,6 +10,8 @@ import { clearQueryEntries, refreshQueryEntries, removeInfiniteQueryItems } from
 import { deadlineListsPrefix, threadDeadlinesPrefix, userAssignedDeadlinesPrefix } from "./useDeadlines";
 
 type QueryCache = ReturnType<typeof useQueryCache>;
+export const deadlineAssigneesPrefix = (id: number) =>
+  getGetDeadlineAssigneesQueryKey(id, { page: 0, size: 10 }).slice(0, -1);
 const detailsPrefix = getGetDeadlineQueryKey(0).slice(0, -1);
 const attachmentsPrefix = getGetAttachmentMetadataQueryKey(0).slice(0, -1);
 
@@ -31,7 +33,7 @@ export function clearDeadline(cache: QueryCache, id: number) {
 
   for (const key of [
     getGetDeadlineQueryKey(id),
-    getGetDeadlineAssigneesQueryKey(id),
+    deadlineAssigneesPrefix(id),
     getGetDeadlineAttachmentsMetadataQueryKey(id),
   ]) {
     clearQueryEntries(cache, key);
@@ -75,7 +77,7 @@ export function refreshDeadlineAccess(cache: QueryCache) {
     userAssignedDeadlinesPrefix,
     deadlineListsPrefix,
     detailsPrefix,
-    getGetDeadlineAssigneesQueryKey(0).slice(0, -1),
+    deadlineAssigneesPrefix(0).slice(0, -1),
     getGetDeadlineAttachmentsMetadataQueryKey(0).slice(0, -1),
     attachmentsPrefix,
   ];

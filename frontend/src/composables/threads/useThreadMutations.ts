@@ -44,7 +44,7 @@ export function useThreadMutations(organizationId: MaybeRefOrGetter<number>) {
       refreshQueryEntries(cache, { key: getGetThreadQueryKey(id) }, "all"),
       ...(assignees
         ? [
-            refreshQueryEntries(cache, { key: getGetThreadAssigneesQueryKey(id, { page: 0 }).slice(0, -1) }),
+            refreshQueryEntries(cache, { key: getGetThreadAssigneesQueryKey(id, { page: 0, size: 10 }).slice(0, -1) }),
             refreshDeadlineAccess(cache),
           ]
         : []),
@@ -91,7 +91,7 @@ export function useThreadMutations(organizationId: MaybeRefOrGetter<number>) {
 
         for (const key of [
           getGetThreadQueryKey(threadId),
-          getGetThreadAssigneesQueryKey(threadId, { page: 0 }).slice(0, -1),
+          getGetThreadAssigneesQueryKey(threadId, { page: 0, size: 10 }).slice(0, -1),
         ]) {
           clearQueryEntries(cache, key);
         }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { type FormInst, type FormRules, NButton, NForm, NFormItem, NInput, NPopconfirm, NSwitch, NTabPane, useMessage } from "naive-ui";
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 import { type DeadlineModel, toDeadlineRole, toPatchDeadlineRequest } from "@/api/adapters/deadline";
@@ -13,6 +13,7 @@ import QueryError from "@/components/home/common/QueryError.vue";
 import { useDeadlineMutations } from "@/composables/deadlines/useDeadlineMutations";
 import { useDeadline, useDeadlineAssignees } from "@/composables/deadlines/useDeadlines";
 import { useEntityEdit } from "@/composables/shared/useEntityEdit";
+import { useMemberPagination } from "@/composables/shared/useMemberPagination";
 import { useRequestError } from "@/composables/shared/useRequestError";
 import { useThread } from "@/composables/threads/useThreads";
 import { MIN_DEADLINE_DURATION_MS } from "@/constants/forms";
@@ -89,8 +90,11 @@ const handleDelete = async () => {
   }
 };
 
-// This endpoint returns all assignees; it has no server pagination parameters.
-const assignees = useDeadlineAssignees(() => props.entity.id);
+const { pagination, page: memberPage, pageSize: membersToLoad, clampPage } = useMemberPagination(() => props.entity.id);
+const assignees = useDeadlineAssignees(() => props.entity.id, pagination);
+watch(assignees.data, (data) => {
+  if (data) clampPage(data.totalPages);
+}, { immediate: true });
 const canManageMembers = computed(() => deadline.value.permissions.manageAssignees);
 const handleRoleUpdate = async (member: MemberModel, role: AnyRole) => {
   if (member.role === role || mutations.role.isLoading.value) return;
@@ -159,6 +163,7 @@ const handleInvitationSubmission = () => {
   <EntityDialoglayout
     scope-type="deadline"
     :title="deadline.title"
+    :users-to-load="membersToLoad"
   >
     <n-tab-pane name="settings" :tab="t('scopes.common.form-sections.settings')" class="max-h-[80vh] overflow-y-auto">
       <QueryError :error="detail.error.value" :loading="detail.isLoading.value" @retry="detail.refetch()" />
@@ -230,7 +235,8 @@ const handleInvitationSubmission = () => {
     </n-tab-pane>
     <n-tab-pane name="members" :tab="t('scopes.common.members')">
       <MembersTab
-        :members="assignees.members.value" :page="0" :total-pages="1"
+        :members="assignees.members.value" :page="memberPage" :total-pages="assignees.totalPages.value"
+        @page-change="(page) => memberPage = page"
         :loading="assignees.isLoading.value" :error="assignees.error.value"
         :is-saving="mutations.role.isLoading.value || mutations.removeAssignee.isLoading.value"
         :members-stats="deadline.stats.assignees"

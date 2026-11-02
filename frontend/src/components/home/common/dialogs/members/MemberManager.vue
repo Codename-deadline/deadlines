@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { TrashAlt } from '@vicons/fa';
 import { NButton, NPagination, NPopconfirm, NSkeleton } from 'naive-ui';
-import { computed } from 'vue';
+import { type ComputedRef, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { MemberModel } from '@/api/adapters/user';
 import type { UserScopeResponseRole as AnyRole } from '@/api/generated/models';
@@ -32,10 +32,10 @@ const emit = defineEmits<{
 const { t } = useI18n();
 const { user } = useCurrentUser();
 
-const pageSize = injectOrThrow<number>(PAGE_SIZE_KEY);
+const pageSize = injectOrThrow<ComputedRef<number>>(PAGE_SIZE_KEY);
 
 const membersToRender = computed(() => props.members);
-const placeholdersToRender = computed<number>(() => Math.max(0, pageSize - membersToRender.value.length));
+const placeholdersToRender = computed<number>(() => Math.max(0, pageSize.value - membersToRender.value.length));
 
 const metadataStore = useMetadataStore();
 const rolesMetadata = computed(() => metadataStore.metadata.roles?.value);
@@ -120,8 +120,10 @@ const isOrganizationOwner = (member: MemberModel) => member.role === ORG_OWNER_R
   </section>
   <div class="flex justify-center">
     <n-pagination
-      :disabled="isLoadingMembers || isSaving"
       @update:page="(value) => emit('pageChange', value - 1)"
+      :disabled="isLoadingMembers || isSaving"
+      :page-slot="5"
+      :simple="pageSize === 2"
       :page-count="totalPages"
       :page="page + 1"
       class="mt-3"

@@ -3,7 +3,12 @@ import { effectScope, nextTick, ref, watch } from "vue";
 import { getGetDeadlineAssigneesQueryKey } from "@/api/generated/endpoints/deadlines/deadlines";
 import { getGetMembersQueryKey } from "@/api/generated/endpoints/organizations/organizations";
 import { getGetThreadAssigneesQueryKey } from "@/api/generated/endpoints/threads/threads";
-import { useMemberPagination } from "@/composables/shared/useMemberPagination";
+import {
+  DESKTOP_PAGE_SIZE,
+  MOBILE_LANDSCAPE_PAGE_SIZE,
+  MOBILE_PORTRAIT_PAGE_SIZE,
+  useMemberPagination,
+} from "@/composables/shared/useMemberPagination";
 
 const width = ref(1440);
 const height = ref(1080);
@@ -44,16 +49,29 @@ test("resizing preserves the first item's position and publishes page and size t
   const snapshots: unknown[] = [];
   const stop = watch(active.pagination, (value) => snapshots.push(value), { flush: "sync" });
 
+  const portrait = {
+    page: Math.floor((3 * DESKTOP_PAGE_SIZE) / MOBILE_PORTRAIT_PAGE_SIZE),
+    size: MOBILE_PORTRAIT_PAGE_SIZE,
+  };
+  const landscape = {
+    page: Math.floor((portrait.page * portrait.size) / MOBILE_LANDSCAPE_PAGE_SIZE),
+    size: MOBILE_LANDSCAPE_PAGE_SIZE,
+  };
+  const desktop = {
+    page: Math.floor((landscape.page * landscape.size) / DESKTOP_PAGE_SIZE),
+    size: DESKTOP_PAGE_SIZE,
+  };
+
   await resize(390, 844);
-  expect(active.pagination.value).toEqual({ page: 6, size: 5 });
+  expect(active.pagination.value).toEqual(portrait);
   await resize(844, 390);
-  expect(active.pagination.value).toEqual({ page: 15, size: 2 });
+  expect(active.pagination.value).toEqual(landscape);
   await resize(1440, 1080);
-  expect(active.pagination.value).toEqual({ page: 3, size: 10 });
+  expect(active.pagination.value).toEqual(desktop);
   expect(snapshots).toEqual([
-    { page: 6, size: 5 },
-    { page: 15, size: 2 },
-    { page: 3, size: 10 },
+    ...(DESKTOP_PAGE_SIZE !== MOBILE_PORTRAIT_PAGE_SIZE ? [portrait] : []),
+    ...(MOBILE_PORTRAIT_PAGE_SIZE !== MOBILE_LANDSCAPE_PAGE_SIZE ? [landscape] : []),
+    ...(MOBILE_LANDSCAPE_PAGE_SIZE !== DESKTOP_PAGE_SIZE ? [desktop] : []),
   ]);
   stop();
 });
@@ -63,13 +81,13 @@ test("initial phone orientation and short desktop windows determine page size", 
   height.value = 390;
 
   active = scope();
-  expect(active.pageSize.value).toBe(2);
+  expect(active.pageSize.value).toBe(MOBILE_LANDSCAPE_PAGE_SIZE);
   await resize(960, 600);
-  expect(active.pageSize.value).toBe(2);
+  expect(active.pageSize.value).toBe(MOBILE_LANDSCAPE_PAGE_SIZE);
   await resize(1440, 800);
-  expect(active.pageSize.value).toBe(5);
+  expect(active.pageSize.value).toBe(MOBILE_PORTRAIT_PAGE_SIZE);
   await resize(1440, 400);
-  expect(active.pageSize.value).toBe(2);
+  expect(active.pageSize.value).toBe(MOBILE_LANDSCAPE_PAGE_SIZE);
 });
 
 test("resizing is debounced and remains correct when the requested size changes back", async () => {
@@ -80,9 +98,9 @@ test("resizing is debounced and remains correct when the requested size changes 
 
   await nextTick();
   await vi.advanceTimersByTimeAsync(100);
-  expect(active.pagination.value).toEqual({ page: 2, size: 10 });
+  expect(active.pagination.value).toEqual({ page: 2, size: DESKTOP_PAGE_SIZE });
   await resize(1440, 1080);
-  expect(active.pagination.value).toEqual({ page: 2, size: 10 });
+  expect(active.pagination.value).toEqual({ page: 2, size: DESKTOP_PAGE_SIZE });
 });
 
 test("entity changes reset the page; resolved empty and shortened lists clamp it", () => {
@@ -95,7 +113,7 @@ test("entity changes reset the page; resolved empty and shortened lists clamp it
   expect(active.page.value).toBe(0);
   active.page.value = 2;
   active.entityId.value = 7;
-  expect(active.pagination.value).toEqual({ page: 0, size: 10 });
+  expect(active.pagination.value).toEqual({ page: 0, size: DESKTOP_PAGE_SIZE });
 });
 
 describe.each([
@@ -105,11 +123,11 @@ describe.each([
 ] as const)("%s pagination cache", (_, key) => {
   test("separates page sizes and lets mutations invalidate every page and size", () => {
     active = scope();
-    const desktop = key(1, { page: 2, size: 10 });
-    const phone = key(1, { page: 2, size: 2 });
+    const desktop = key(1, { page: 2, size: DESKTOP_PAGE_SIZE });
+    const phone = key(1, { page: 2, size: MOBILE_LANDSCAPE_PAGE_SIZE });
 
     expect(desktop).not.toEqual(phone);
     expect(desktop.slice(0, -1)).toEqual(phone.slice(0, -1));
-    expect(desktop.slice(0, -1)).not.toEqual(key(2, { page: 2, size: 10 }).slice(0, -1));
+    expect(desktop.slice(0, -1)).not.toEqual(key(2, { page: 2, size: DESKTOP_PAGE_SIZE }).slice(0, -1));
   });
 });

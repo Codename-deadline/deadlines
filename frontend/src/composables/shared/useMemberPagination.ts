@@ -3,9 +3,9 @@ import { computed, type MaybeRefOrGetter, shallowRef, toValue, watch } from "vue
 
 export type MemberPagination = { page: number; size: number };
 
-const MOBILE_LANDSCAPE_PAGE_SIZE: number = 2;
-const MOBILE_PORTRAIT_PAGE_SIZE: number = 5;
-const DESKTOP_PAGE_SIZE: number = 5;
+export const MOBILE_LANDSCAPE_PAGE_SIZE: number = 2;
+export const MOBILE_PORTRAIT_PAGE_SIZE: number = 5;
+export const DESKTOP_PAGE_SIZE: number = 5;
 
 /** Keep API pages, rendered rows and placeholders in sync across viewport changes. */
 export function useMemberPagination(entityId: MaybeRefOrGetter<number>) {

@@ -103,7 +103,7 @@ const handleAttachmentFile = async (attachment: AttachmentModel, disposition: "a
     landscape-mobile:ml-16
   ">
     <div class="w-9/10 sm:w-5/6 xl:w-2/3">
-      <sub-header>
+      <sub-header fallback="Deadlines" :fallback-is-name="true">
         <n-button v-if="deadline?.permissions.update" role="button" text @click="isEditingDeadline = true">
           <template #icon>
             <n-icon><cog /></n-icon>

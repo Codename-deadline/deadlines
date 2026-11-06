@@ -102,7 +102,7 @@ const handleSignOutAll = async () => {
   <global-header/>
   <main class="my-8 flex w-full justify-center">
     <div class="w-9/10 sm:w-4/6 md:w-1/2 xl:w-3/8">
-      <sub-header/>
+      <sub-header fallback="/"/>
       <section v-if="user" class="space-y-6 mt-4">
         <n-card class="card">
           <div class="flex justify-center">

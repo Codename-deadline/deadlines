@@ -4,8 +4,8 @@ plugins {
     kotlin("plugin.jpa") version "2.4.21"
 	id("org.springframework.boot") version "4.1.2"
 	id("io.spring.dependency-management") version "1.1.7"
-    id("com.google.protobuf") version "0.10.0"
-	id("io.github.ben-manes.versions") version "0.66.0"
+    id("com.google.protobuf") version "0.10.1"
+	id("io.github.ben-manes.versions") version "0.67.0"
 }
 
 group = "xyz.om3lette"
@@ -46,6 +46,8 @@ dependencyManagement {
         dependency("com.google.guava:guava:33.7.2-jre")
         // GHSA-gwq9-9ffj-mvrv, GHSA-q233-g92q-qxp6, GHSA-xqrx-qh46-34m7
         dependency("org.xerial.snappy:snappy-java:1.1.10.9")
+        // GHSA-ghc9-756g-vrcv
+        dependency("org.json:json:20260814")
     }
 }
 
@@ -92,13 +94,13 @@ dependencies {
         exclude(module = "lz4-java")
     }
     // Original package is archived. Community maintained fork.
-    implementation("at.yawk.lz4:lz4-java:1.12.1")
+    implementation("at.yawk.lz4:lz4-java:1.14.0")
 
     implementation("io.hypersistence:hypersistence-utils-hibernate-73:3.16.0")
-    implementation("tools.jackson.module:jackson-module-kotlin:3.2.4")
+    implementation("tools.jackson.module:jackson-module-kotlin")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("redis.clients:jedis")
-	implementation(platform("software.amazon.awssdk:bom:2.57.7"))
+	implementation(platform("software.amazon.awssdk:bom:2.57.12"))
 	implementation("software.amazon.awssdk:s3")
 	implementation("software.amazon.awssdk:apache5-client")
 	implementation("org.apache.tika:tika-core:4.2.0")
@@ -124,7 +126,7 @@ dependencies {
 	testImplementation("org.testcontainers:testcontainers-postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-grpc-server-test")
     testImplementation("org.springframework.security:spring-security-test")
-	testImplementation("io.mockk:mockk:1.14.11")
+	testImplementation("io.mockk:mockk:1.14.12")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 

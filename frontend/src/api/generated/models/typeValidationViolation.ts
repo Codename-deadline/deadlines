@@ -8,7 +8,7 @@ import type { TypeValidationViolationExpected } from "./typeValidationViolationE
 import type { TypeValidationViolationReason } from "./typeValidationViolationReason.ts";
 
 export interface TypeValidationViolation {
-  expected?: TypeValidationViolationExpected;
-  field?: string;
+  expected: TypeValidationViolationExpected;
+  field: string;
   reason: TypeValidationViolationReason;
 }

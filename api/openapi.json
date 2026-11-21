@@ -130,6 +130,17 @@
         ],
         "type" : "object"
       },
+      "BetweenValidationReason" : {
+        "allOf" : [
+          {
+            "$ref" : "#/components/schemas/ValidationReason"
+          }
+        ],
+        "enum" : [
+          "length.between",
+          "items.between"
+        ]
+      },
       "BetweenValidationViolation" : {
         "properties" : {
           "field" : {
@@ -150,7 +161,13 @@
             ],
             "type" : "string"
           }
-        }
+        },
+        "required" : [
+          "field",
+          "max",
+          "min",
+          "reason"
+        ]
       },
       "BotDTO" : {
         "properties" : {
@@ -551,6 +568,17 @@
         ],
         "type" : "object"
       },
+      "ExactValidationReason" : {
+        "allOf" : [
+          {
+            "$ref" : "#/components/schemas/ValidationReason"
+          }
+        ],
+        "enum" : [
+          "length.exact",
+          "items.exact"
+        ]
+      },
       "ExactValidationViolation" : {
         "properties" : {
           "exact" : {
@@ -567,7 +595,12 @@
             ],
             "type" : "string"
           }
-        }
+        },
+        "required" : [
+          "exact",
+          "field",
+          "reason"
+        ]
       },
       "FileMetadata" : {
         "properties" : {
@@ -614,6 +647,18 @@
         ],
         "type" : "object"
       },
+      "MaximumValidationReason" : {
+        "allOf" : [
+          {
+            "$ref" : "#/components/schemas/ValidationReason"
+          }
+        ],
+        "enum" : [
+          "length.max",
+          "items.max",
+          "value.max"
+        ]
+      },
       "MaximumValidationViolation" : {
         "properties" : {
           "field" : {
@@ -631,7 +676,12 @@
             ],
             "type" : "string"
           }
-        }
+        },
+        "required" : [
+          "field",
+          "max",
+          "reason"
+        ]
       },
       "MemberInvitationRequest" : {
         "properties" : {
@@ -708,6 +758,18 @@
         ],
         "type" : "object"
       },
+      "MinimumValidationReason" : {
+        "allOf" : [
+          {
+            "$ref" : "#/components/schemas/ValidationReason"
+          }
+        ],
+        "enum" : [
+          "length.min",
+          "items.min",
+          "value.min"
+        ]
+      },
       "MinimumValidationViolation" : {
         "properties" : {
           "field" : {
@@ -725,7 +787,12 @@
             ],
             "type" : "string"
           }
-        }
+        },
+        "required" : [
+          "field",
+          "min",
+          "reason"
+        ]
       },
       "OK" : {
         "allOf" : [
@@ -749,6 +816,16 @@
           "tokenPair"
         ]
       },
+      "OneOfValidationReason" : {
+        "allOf" : [
+          {
+            "$ref" : "#/components/schemas/ValidationReason"
+          }
+        ],
+        "enum" : [
+          "value.one-of"
+        ]
+      },
       "OneOfValidationViolation" : {
         "properties" : {
           "allowed" : {
@@ -766,7 +843,12 @@
             ],
             "type" : "string"
           }
-        }
+        },
+        "required" : [
+          "allowed",
+          "field",
+          "reason"
+        ]
       },
       "OrganizationCreatedResponse" : {
         "properties" : {
@@ -1346,6 +1428,22 @@
         ],
         "type" : "object"
       },
+      "SimpleValidationReason" : {
+        "allOf" : [
+          {
+            "$ref" : "#/components/schemas/ValidationReason"
+          }
+        ],
+        "enum" : [
+          "required",
+          "not-blank",
+          "value.positive",
+          "invalid",
+          "format.digits-only",
+          "format.uuid",
+          "format.timestamp"
+        ]
+      },
       "SimpleValidationViolation" : {
         "properties" : {
           "field" : {
@@ -1363,7 +1461,11 @@
             ],
             "type" : "string"
           }
-        }
+        },
+        "required" : [
+          "field",
+          "reason"
+        ]
       },
       "ThreadCreatedResponse" : {
         "properties" : {
@@ -1569,6 +1671,16 @@
         ],
         "type" : "object"
       },
+      "TypeValidationReason" : {
+        "allOf" : [
+          {
+            "$ref" : "#/components/schemas/ValidationReason"
+          }
+        ],
+        "enum" : [
+          "type.invalid"
+        ]
+      },
       "TypeValidationViolation" : {
         "properties" : {
           "expected" : {
@@ -1591,7 +1703,12 @@
             ],
             "type" : "string"
           }
-        }
+        },
+        "required" : [
+          "expected",
+          "field",
+          "reason"
+        ]
       },
       "UnlinkMessengerAccountRequest" : {
         "properties" : {
@@ -1762,14 +1879,21 @@
             },
             "type" : "array"
           }
-        }
+        },
+        "required" : [
+          "code",
+          "violations"
+        ]
       },
       "ValidationReason" : {
         "properties" : {
           "code" : {
             "type" : "string"
           }
-        }
+        },
+        "required" : [
+          "code"
+        ]
       },
       "ValidationViolation" : {
         "discriminator" : {
@@ -1826,7 +1950,11 @@
           "reason" : {
             "$ref" : "#/components/schemas/ValidationReason"
           }
-        }
+        },
+        "required" : [
+          "field",
+          "reason"
+        ]
       },
       "VerifyOtpRequest" : {
         "properties" : {

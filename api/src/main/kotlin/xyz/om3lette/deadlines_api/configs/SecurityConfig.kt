@@ -41,6 +41,8 @@ class SecurityConfig(
             api("/metadata/**"),
             api("/roles/metadata"),
             "/v3/api-docs/**",
+            "/v3/api-docs.yaml",
+            "/swagger-ui.html",
             "/swagger-ui/**",
             "/actuator/health",
         )

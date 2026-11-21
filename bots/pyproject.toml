@@ -1,23 +1,21 @@
 [project]
 name = "deadlines-bots"
 version = "0.1.0"
-requires-python = ">=3.14"
+requires-python = ">=3.15"
 dependencies = [
     "aiokafka>=0.15.0,<0.16.0",
-    "grpcio==1.85.1",
-    "grpcio-tools==1.85.1",
+    "grpcio==1.85.3",
+    "grpcio-tools==1.85.3",
     "pydantic>=2.13.5,<3.0.0",
     "python-dotenv>=1.2.4,<2.0.0",
     "python-i18n==0.3.9",
-    "pyyaml==6.0.3",
+    "pyyaml~=6.0",
     "telegramify-markdown>=1.4.2,<1.5.0",
     "tzdata>=2026.6,<2027.0",
 ]
 
 [project.optional-dependencies]
-telegram = [
-    "aiogram~=3.31.0",
-]
+telegram = ["aiogram~=3.33.0"]
 
 [dependency-groups]
 dev = [
@@ -39,18 +37,10 @@ add-bounds = "major"
 
 [tool.ruff]
 target-version = "py314"
-exclude = [
-    "common/infrastructure/grpc/generated",
-]
+exclude = ["common/infrastructure/grpc/generated"]
 
 [tool.ruff.lint]
-select = [
-    "E",
-    "F",
-    "I",
-    "PL",
-    "UP",
-]
+select = ["E", "F", "I", "PL", "UP"]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
@@ -59,13 +49,5 @@ select = [
 [tool.basedpyright]
 pythonVersion = "3.14"
 typeCheckingMode = "standard"
-include = [
-    "common",
-    "console",
-    "telegram",
-    "tests",
-]
-exclude = [
-    "common/infrastructure/grpc/generated",
-    ".venv",
-]
+include = ["common", "console", "telegram", "tests"]
+exclude = ["common/infrastructure/grpc/generated", ".venv"]

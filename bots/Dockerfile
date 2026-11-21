@@ -1,4 +1,4 @@
-FROM python:3.14-alpine AS builder
+FROM python:3.15-alpine AS builder
 
 # Build context is the repo root
 WORKDIR /bot

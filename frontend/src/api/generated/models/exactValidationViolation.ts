@@ -7,7 +7,7 @@
 import type { ExactValidationViolationReason } from "./exactValidationViolationReason.ts";
 
 export interface ExactValidationViolation {
-  exact?: number;
-  field?: string;
+  exact: number;
+  field: string;
   reason: ExactValidationViolationReason;
 }

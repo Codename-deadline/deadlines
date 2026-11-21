@@ -44,6 +44,12 @@ spring:
     producer:
       buffer-memory: ${KAFKA_PRODUCER_BUFFER_MEMORY:8388608}
 
+server:
+  request:
+    header:
+      forwarded:
+        use-prefix: true
+
 management:
   endpoints:
     access:
@@ -100,6 +106,6 @@ integration:
 
 springdoc:
   api-docs:
-    enabled: ${SPRINGDOC_API_DOCS_ENABLED:false}
+    enabled: ${SPRINGDOC_API_DOCS_ENABLED:true}
   swagger-ui:
-    enabled: ${SPRINGDOC_SWAGGER_UI_ENABLED:false}
+    enabled: ${SPRINGDOC_SWAGGER_UI_ENABLED:true}

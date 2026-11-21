@@ -6,5 +6,5 @@
  */
 
 export interface ValidationReason {
-  code?: string;
+  code: string;
 }

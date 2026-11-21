@@ -7,8 +7,8 @@
 import type { BetweenValidationViolationReason } from "./betweenValidationViolationReason.ts";
 
 export interface BetweenValidationViolation {
-  field?: string;
-  max?: number;
-  min?: number;
+  field: string;
+  max: number;
+  min: number;
   reason: BetweenValidationViolationReason;
 }

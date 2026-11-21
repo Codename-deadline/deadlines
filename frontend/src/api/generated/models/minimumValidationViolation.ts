@@ -7,7 +7,7 @@
 import type { MinimumValidationViolationReason } from "./minimumValidationViolationReason.ts";
 
 export interface MinimumValidationViolation {
-  field?: string;
-  min?: number;
+  field: string;
+  min: number;
   reason: MinimumValidationViolationReason;
 }

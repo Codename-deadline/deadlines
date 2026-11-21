@@ -15,30 +15,30 @@ import type { ValidationReason } from "./validationReason.ts";
 
 export type ValidationViolation =
   | (SimpleValidationViolation & {
-      field?: string;
-      reason?: ValidationReason;
+      field: string;
+      reason: ValidationReason;
     })
   | (MinimumValidationViolation & {
-      field?: string;
-      reason?: ValidationReason;
+      field: string;
+      reason: ValidationReason;
     })
   | (MaximumValidationViolation & {
-      field?: string;
-      reason?: ValidationReason;
+      field: string;
+      reason: ValidationReason;
     })
   | (BetweenValidationViolation & {
-      field?: string;
-      reason?: ValidationReason;
+      field: string;
+      reason: ValidationReason;
     })
   | (ExactValidationViolation & {
-      field?: string;
-      reason?: ValidationReason;
+      field: string;
+      reason: ValidationReason;
     })
   | (OneOfValidationViolation & {
-      field?: string;
-      reason?: ValidationReason;
+      field: string;
+      reason: ValidationReason;
     })
   | (TypeValidationViolation & {
-      field?: string;
-      reason?: ValidationReason;
+      field: string;
+      reason: ValidationReason;
     });

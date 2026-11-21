@@ -2,7 +2,7 @@ plugins {
 	kotlin("jvm") version "2.4.21"
 	kotlin("plugin.spring") version "2.4.21"
     kotlin("plugin.jpa") version "2.4.21"
-	id("org.springframework.boot") version "4.1.2"
+	id("org.springframework.boot") version "4.2.0"
 	id("io.spring.dependency-management") version "1.1.7"
     id("com.google.protobuf") version "0.10.1"
 	id("io.github.ben-manes.versions") version "0.67.0"
@@ -46,25 +46,7 @@ dependencyManagement {
         dependency("com.google.guava:guava:33.7.2-jre")
         // GHSA-gwq9-9ffj-mvrv, GHSA-q233-g92q-qxp6, GHSA-xqrx-qh46-34m7
         dependency("org.xerial.snappy:snappy-java:1.1.10.9")
-        // GHSA-ghc9-756g-vrcv
-        dependency("org.json:json:20260814")
     }
-}
-
-// Keep documentation generation available without shipping its runtime in the API.
-val apiDocumentation = configurations.create("apiDocumentation")
-configurations.compileOnly { extendsFrom(apiDocumentation) }
-configurations.testImplementation { extendsFrom(apiDocumentation) }
-
-val includeApiDocs = providers
-    .gradleProperty("apiDocs")
-    .map(String::toBoolean)
-    .getOrElse(false)
-tasks.bootJar {
-    if (includeApiDocs) classpath(apiDocumentation)
-}
-tasks.bootRun {
-    if (includeApiDocs) classpath(apiDocumentation)
 }
 
 dependencies {
@@ -79,11 +61,7 @@ dependencies {
         exclude(group = "io.lettuce", module = "lettuce-core")
     }
     implementation("org.springframework.boot:spring-boot-starter-grpc-server")
-    // Makes annotations always available given that the springdoc-openapi-starter is optional
-    implementation("io.swagger.core.v3:swagger-annotations-jakarta:2.2.55")
-    apiDocumentation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.0")
-    // Swagger's model resolver uses Jackson 2, independently of Spring MVC's Jackson 3 mapper.
-    apiDocumentation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.2.1")
 
 	implementation("org.springframework.boot:spring-boot-flyway")
 	implementation("org.flywaydb:flyway-core")
@@ -94,13 +72,13 @@ dependencies {
         exclude(module = "lz4-java")
     }
     // Original package is archived. Community maintained fork.
-    implementation("at.yawk.lz4:lz4-java:1.14.0")
+    implementation("at.yawk.lz4:lz4-java:1.14.1")
 
     implementation("io.hypersistence:hypersistence-utils-hibernate-73:3.16.0")
     implementation("tools.jackson.module:jackson-module-kotlin")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("redis.clients:jedis")
-	implementation(platform("software.amazon.awssdk:bom:2.57.12"))
+	implementation(platform("software.amazon.awssdk:bom:2.59.7"))
 	implementation("software.amazon.awssdk:s3")
 	implementation("software.amazon.awssdk:apache5-client")
 	implementation("org.apache.tika:tika-core:4.2.0")

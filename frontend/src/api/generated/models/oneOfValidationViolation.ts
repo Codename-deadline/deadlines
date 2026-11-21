@@ -7,7 +7,7 @@
 import type { OneOfValidationViolationReason } from "./oneOfValidationViolationReason.ts";
 
 export interface OneOfValidationViolation {
-  allowed?: string[];
-  field?: string;
+  allowed: string[];
+  field: string;
   reason: OneOfValidationViolationReason;
 }

@@ -7,6 +7,6 @@
 import type { SimpleValidationViolationReason } from "./simpleValidationViolationReason.ts";
 
 export interface SimpleValidationViolation {
-  field?: string;
+  field: string;
   reason: SimpleValidationViolationReason;
 }

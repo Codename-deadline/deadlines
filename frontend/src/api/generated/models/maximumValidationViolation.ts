@@ -7,7 +7,7 @@
 import type { MaximumValidationViolationReason } from "./maximumValidationViolationReason.ts";
 
 export interface MaximumValidationViolation {
-  field?: string;
-  max?: number;
+  field: string;
+  max: number;
   reason: MaximumValidationViolationReason;
 }

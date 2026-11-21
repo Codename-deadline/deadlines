@@ -8,6 +8,6 @@ import type { ValidationErrorResponseCode } from "./validationErrorResponseCode.
 import type { ValidationViolation } from "./validationViolation.ts";
 
 export interface ValidationErrorResponse {
-  code?: ValidationErrorResponseCode;
-  violations?: ValidationViolation[];
+  code: ValidationErrorResponseCode;
+  violations: ValidationViolation[];
 }

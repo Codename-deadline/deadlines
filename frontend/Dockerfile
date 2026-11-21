@@ -2,7 +2,7 @@ FROM oven/bun:1.4-alpine AS builder
 WORKDIR /deadlines
 
 COPY package.json bun.lock ./
-RUN bun i --frozen-lock
+RUN bun i --frozen-lockfile
 
 COPY tsconfig.json tsconfig.app.json tsconfig.api.json tsconfig.node.json vite.config.ts index.html ./
 COPY src src

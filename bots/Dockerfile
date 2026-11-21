@@ -26,7 +26,7 @@ RUN chmod +x run.sh
 COPY bots/config.template.yaml config.yaml
 
 
-FROM python:3.14-alpine
+FROM python:3.15-alpine
 
 WORKDIR /bot
 ARG PLATFORM

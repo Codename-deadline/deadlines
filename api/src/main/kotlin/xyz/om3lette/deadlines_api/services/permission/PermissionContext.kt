@@ -2,7 +2,7 @@ package xyz.om3lette.deadlines_api.services.permission
 
 import org.springframework.stereotype.Component
 import org.springframework.web.context.annotation.RequestScope
-import xyz.om3lette.deadlines_api.data.permissions.dto.DeadlineScope
+import xyz.om3lette.deadlines_api.data.permissions.dto.EventScope
 import xyz.om3lette.deadlines_api.data.permissions.dto.OrganizationScope
 import xyz.om3lette.deadlines_api.data.permissions.dto.PermissionScope
 import xyz.om3lette.deadlines_api.data.permissions.dto.ThreadScope
@@ -42,11 +42,11 @@ class PermissionContext {
                 val threadRole = get(permissionScope.thread.id, ScopeType.THREAD)
                 return listOf(orgRole, threadRole ?: orgRole).maxBy { it.rank }
             }
-            is DeadlineScope -> {
+            is EventScope -> {
                 val maxOfThreadAndOrgRole = getHighestRole(
-                    ThreadScope(permissionScope.deadline.thread)
+                    ThreadScope(permissionScope.event.thread)
                 ) ?: return null
-                val deadlineRole = get(permissionScope.deadline.id, ScopeType.DEADLINE)
+                val deadlineRole = get(permissionScope.event.id, ScopeType.DEADLINE)
                 return listOf(maxOfThreadAndOrgRole, deadlineRole ?: maxOfThreadAndOrgRole).maxBy { it.rank }
             }
         }

@@ -3,19 +3,20 @@ import { Calendar } from "@vicons/fa";
 import { NCard, NCollapse, NCollapseItem, NDivider, NIcon, NPagination } from 'naive-ui';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type { DeadlineModel } from '@/api/adapters/deadline';
+import type { EventModel } from '@/api/adapters/event';
 import type { MemberModel } from "@/api/adapters/user";
 import ShortLongTimeDisplay from "@/components/home/common/ShortLongTimeDisplay.vue";
 import SkeletonGrid from '@/components/home/common/SkeletonGrid.vue';
 import UserAvatar from "@/components/home/common/UserAvatar.vue";
 import DeadlineHeader from "@/components/home/deadlines/DeadlineHeader.vue";
+import { EVENT_PRESENTATIONS } from "@/domain/events";
 import { useCurrentScopeStore } from "@/stores/CurrentScopeStore";
 import { useLocalizationStore } from "@/stores/LocalizationStore";
-import { computeDeadlineState } from "@/utils/state";
+import { computeEventState } from "@/utils/state";
 import DeadlineStatusButton from "../DeadlineStatusButton.vue";
 
 const props = defineProps<{
-  deadline: DeadlineModel,
+  deadline: EventModel,
   assignees: MemberModel[],
   assigneePage: number,
   assigneePageSize: number,
@@ -36,7 +37,8 @@ const parentTitles = computed(() => {
   return { organization: currentScopeStore.organization?.title, thread: currentScopeStore.thread?.title }
 })
 
-const state = computed(() => computeDeadlineState(props.deadline));
+const state = computed(() => computeEventState(props.deadline));
+const presentation = computed(() => EVENT_PRESENTATIONS[props.deadline.kind]);
 </script>
 
 <template>
@@ -59,7 +61,7 @@ const state = computed(() => computeDeadlineState(props.deadline));
           <Calendar/>
         </NIcon>
         <span class="flex space-x-1 font-medium">
-          <span>{{ t("scopes.common.due") }}</span>
+          <span>{{ t(presentation.dueLabelKey) }}</span>
           <short-long-time-display
             :time="deadline.due"
             :time-zone="localizationStore.timeZone"
@@ -93,7 +95,7 @@ const state = computed(() => computeDeadlineState(props.deadline));
         </n-collapse-item>
       </n-collapse>
     </div>
-    <div v-if="deadline.permissions.update">
+    <div v-if="deadline.permissions.update && presentation.supportsCompletion">
       <n-divider/>
       <div class="flex flex-col items-center">
         <DeadlineStatusButton

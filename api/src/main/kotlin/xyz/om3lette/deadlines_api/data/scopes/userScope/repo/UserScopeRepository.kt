@@ -97,7 +97,7 @@ interface UserScopeRepository : JpaRepository<UserScope, UserScopeId> {
                     SELECT t.id FROM Thread t WHERE t.organization.id = :organizationId
                 ))
                 OR (us.scopeType = 'DDL' AND us.scopeId IN (
-                    SELECT d.id FROM Deadline d WHERE d.thread.organization.id = :organizationId
+                    SELECT d.id FROM Event d WHERE d.thread.organization.id = :organizationId
                 ))
             )
     """)
@@ -142,7 +142,7 @@ interface UserScopeRepository : JpaRepository<UserScope, UserScopeId> {
                         SELECT t.id FROM Thread t WHERE t.organization.id = :orgId
                     ))
                     OR (us.scopeType = 'DDL' AND us.scopeId IN (
-                        SELECT d.id FROM Deadline d WHERE d.thread.organization.id = :orgId
+                        SELECT d.id FROM Event d WHERE d.thread.organization.id = :orgId
                     ))
                 )
         """

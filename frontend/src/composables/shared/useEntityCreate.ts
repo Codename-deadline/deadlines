@@ -9,6 +9,7 @@ import { useRequestError } from "./useRequestError";
 
 export function useEntityCreate<T extends object>(config: {
   scopeType: ScopeType;
+  entityName?: MaybeRefOrGetter<string>;
   formRef: Ref<FormInst | null>;
   initialFormModel: T;
   extraFormRules?: FormRules;
@@ -36,7 +37,11 @@ export function useEntityCreate<T extends object>(config: {
 
     try {
       await config.create(formModel.value as T, invitationFormModel.value);
-      message.success(tEntityToastAction(t, config.scopeType, "created"));
+      message.success(
+        config.entityName
+          ? t("scopes.toasts.entity-created", { entity: toValue(config.entityName) })
+          : tEntityToastAction(t, config.scopeType, "created"),
+      );
       emitter.emit("closeCreateEntityDialog");
     } catch (error) {
       displayError(error);

@@ -18,10 +18,10 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import xyz.om3lette.deadlines_api.data.common.constraints.PaginationConstraints
-import xyz.om3lette.deadlines_api.data.scopes.deadline.requests.AddDeadlineAssigneeRequest
-import xyz.om3lette.deadlines_api.data.scopes.deadline.requests.PatchDeadlineRequest
+import xyz.om3lette.deadlines_api.data.scopes.event.requests.AddEventAssigneeRequest
+import xyz.om3lette.deadlines_api.data.scopes.event.requests.PatchEventRequest
 import xyz.om3lette.deadlines_api.data.user.model.User
-import xyz.om3lette.deadlines_api.services.DeadlineService
+import xyz.om3lette.deadlines_api.services.EventService
 
 
 @SecurityRequirement(name = "bearerAuth")
@@ -29,29 +29,29 @@ import xyz.om3lette.deadlines_api.services.DeadlineService
 @RequestMapping("/deadlines/{deadlineId}")
 @Tag(name = "Deadlines")
 class DeadlineController(
-    val deadlineService: DeadlineService
+    val eventService: EventService
 ) {
     @DeleteMapping
     @Operation(summary = "Delete deadline")
     fun deleteDeadline(
         @AuthenticationPrincipal user: User,
         @PathVariable @Positive deadlineId: Long
-    ) = deadlineService.deleteDeadline(user, deadlineId)
+    ) = eventService.deleteEvent(user, deadlineId)
 
     @GetMapping
     @Operation(summary = "Get deadline data")
     fun getDeadline(
         @AuthenticationPrincipal user: User?,
         @PathVariable @Positive deadlineId: Long
-    ) = deadlineService.getDeadline(user, deadlineId)
+    ) = eventService.getEvent(user, deadlineId)
 
     @PatchMapping
     @Operation(summary = "Update deadline data")
     fun patchDeadline(
         @AuthenticationPrincipal user: User,
         @PathVariable @Positive deadlineId: Long,
-        @Valid @RequestBody request: PatchDeadlineRequest
-    ) = deadlineService.patchDeadline(
+        @Valid @RequestBody request: PatchEventRequest
+    ) = eventService.patchEvent(
         user,
         deadlineId,
         request.title,
@@ -65,8 +65,8 @@ class DeadlineController(
     fun addAssignees(
         @AuthenticationPrincipal user: User,
         @PathVariable @Positive deadlineId: Long,
-        @Valid @RequestBody request: AddDeadlineAssigneeRequest
-    ) = deadlineService.addAssignee(user, deadlineId, request.username, request.role)
+        @Valid @RequestBody request: AddEventAssigneeRequest
+    ) = eventService.addAssignee(user, deadlineId, request.username, request.role)
 
     @GetMapping("/assignees")
     @Operation(
@@ -83,7 +83,7 @@ class DeadlineController(
         @Min(PaginationConstraints.PAGE_SIZE_MIN)
         @Max(PaginationConstraints.PAGE_SIZE_MAX)
         pageSize: Int
-    ) = deadlineService.getDeadlineAssignees(user, deadlineId, pageNumber, pageSize)
+    ) = eventService.getEventAssignees(user, deadlineId, pageNumber, pageSize)
 
     @DeleteMapping("/assignees/{assigneeUsername}")
     @Operation(operationId = "removeDeadlineAssignee", summary = "Remove an assignee")
@@ -91,6 +91,6 @@ class DeadlineController(
         @AuthenticationPrincipal user: User,
         @PathVariable @Positive deadlineId: Long,
         @PathVariable assigneeUsername: String
-    ) = deadlineService.removeAssignee(user, deadlineId, assigneeUsername)
+    ) = eventService.removeAssignee(user, deadlineId, assigneeUsername)
 
 }

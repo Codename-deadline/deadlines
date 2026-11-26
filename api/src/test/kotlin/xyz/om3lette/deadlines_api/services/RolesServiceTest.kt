@@ -20,8 +20,8 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import xyz.om3lette.deadlines_api.DomainObjectBuilder
 import xyz.om3lette.deadlines_api.data.permissions.dto.PermissionRoleDTO
-import xyz.om3lette.deadlines_api.data.scopes.deadline.model.Deadline
-import xyz.om3lette.deadlines_api.data.scopes.deadline.repo.DeadlineRepository
+import xyz.om3lette.deadlines_api.data.scopes.event.model.Event
+import xyz.om3lette.deadlines_api.data.scopes.event.repo.EventRepository
 import xyz.om3lette.deadlines_api.data.scopes.organization.model.Organization
 import xyz.om3lette.deadlines_api.data.scopes.organization.repo.OrganizationRepository
 import xyz.om3lette.deadlines_api.data.scopes.thread.model.Thread
@@ -48,7 +48,7 @@ class RolesServiceTest {
     lateinit var organizationRepository: OrganizationRepository
 
     @MockK
-    lateinit var deadlineRepository: DeadlineRepository
+    lateinit var eventRepository: EventRepository
 
     @MockK
     lateinit var threadsRepository: ThreadRepository
@@ -61,7 +61,7 @@ class RolesServiceTest {
 
     private lateinit var organization: Organization
     private lateinit var thread: Thread
-    private lateinit var deadline: Deadline
+    private lateinit var deadline: Event
 
     private lateinit var dummyUserBob: User
 
@@ -74,7 +74,7 @@ class RolesServiceTest {
         thread = DomainObjectBuilder.thread(organization)
         deadline = DomainObjectBuilder.deadline(thread)
         every { threadsRepository.findById(thread.id) } returns Optional.of(thread)
-        every { deadlineRepository.findById(deadline.id) } returns Optional.of(deadline)
+        every { eventRepository.findById(deadline.id) } returns Optional.of(deadline)
         every { organizationRepository.findByIdForUpdate(organization.id) } returns organization
 
         dummyUserBob = DomainObjectBuilder.userBob()

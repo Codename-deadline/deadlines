@@ -18,13 +18,13 @@ interface ThreadRepository : JpaRepository<Thread, Long> {
 
     @Query("""
         SELECT t
-        FROM Thread t 
-        WHERE EXISTS (  
-            SELECT 1  
-            FROM UserScope us  
-            WHERE us.scopeId = t.id  
+        FROM Thread t
+        WHERE EXISTS (
+            SELECT 1
+            FROM UserScope us
+            WHERE us.scopeId = t.id
               AND us.scopeType = 'THR'
-              AND us.user.id = :userId  
+              AND us.user.id = :userId
         )
     """)
     fun findAllByUser(userId: Long, pageable: Pageable): Page<Thread>
@@ -33,8 +33,8 @@ interface ThreadRepository : JpaRepository<Thread, Long> {
         SELECT
             t.id as threadId,
             (SELECT COUNT(us) FROM UserScope us WHERE us.scopeId = t.id AND us.scopeType = 'THR') as assignees,
-            (SELECT COUNT(d.id) FROM Deadline d WHERE d.thread = t) as deadlines,
-            (SELECT COUNT(d.id) FROM Deadline d WHERE d.thread = t AND d.isCompleted = TRUE) as completedDeadlines
+            (SELECT COUNT(d.id) FROM Event d WHERE d.thread = t AND d.kind = 'DEADLINE') as deadlines,
+            (SELECT COUNT(d.id) FROM Event d WHERE d.thread = t AND d.kind = 'DEADLINE' AND d.isCompleted = TRUE) as completedDeadlines
         FROM Thread t
         WHERE t.id IN :ids
     """)

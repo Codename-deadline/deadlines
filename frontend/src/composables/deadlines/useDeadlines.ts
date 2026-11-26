@@ -1,6 +1,6 @@
 import type { useQueryCache } from "@pinia/colada";
 import { computed, type MaybeRefOrGetter, toValue } from "vue";
-import { type DeadlineModel, toDeadline } from "@/api/adapters/deadline";
+import { type EventModel, toEvent } from "@/api/adapters/event";
 import { toMember } from "@/api/adapters/user";
 import {
   getDeadlines,
@@ -11,7 +11,7 @@ import {
   useGetDeadline,
   useGetDeadlineAssignees,
 } from "@/api/generated/endpoints/deadlines/deadlines";
-import type { DeadlineResponseWithRole } from "@/api/generated/models";
+import type { EventResponseWithRole } from "@/api/generated/models";
 import type { MemberPagination } from "@/composables/shared/useMemberPagination";
 import { usePagedList } from "@/composables/shared/usePagedList";
 
@@ -22,16 +22,16 @@ export const userAssignedDeadlinesKey = [...userAssignedDeadlinesPrefix, "infini
 export const threadDeadlinesKey = (id: number) => [...threadDeadlinesPrefix(id), "infinite"] as const;
 
 export function useUserAssignedDeadlines(enabled: MaybeRefOrGetter<boolean> = true) {
-  return usePagedList<DeadlineResponseWithRole, DeadlineModel>(() => ({
+  return usePagedList<EventResponseWithRole, EventModel>(() => ({
     key: userAssignedDeadlinesKey,
     enabled: toValue(enabled),
     fetchPage: (page, signal) => getUserDeadlines({ page }, { signal }),
-    map: toDeadline,
+    map: toEvent,
   }));
 }
 
 export function useThreadDeadlines(threadId: MaybeRefOrGetter<number>) {
-  return usePagedList<DeadlineResponseWithRole, DeadlineModel>(() => {
+  return usePagedList<EventResponseWithRole, EventModel>(() => {
     const id = toValue(threadId);
 
     return {
@@ -39,7 +39,7 @@ export function useThreadDeadlines(threadId: MaybeRefOrGetter<number>) {
       enabled: id > 0,
       requiresAuth: false,
       fetchPage: (page, signal) => getDeadlines(id, { page }, { signal }),
-      map: toDeadline,
+      map: toEvent,
     };
   });
 }
@@ -49,14 +49,14 @@ export function useDeadline(deadlineId: MaybeRefOrGetter<number>) {
     query: { enabled: toValue(deadlineId) > 0 },
   }));
 
-  return { ...query, deadline: computed(() => (query.data.value ? toDeadline(query.data.value) : undefined)) };
+  return { ...query, deadline: computed(() => (query.data.value ? toEvent(query.data.value) : undefined)) };
 }
 
 export async function resolveDeadline(deadlineId: number, cache: ReturnType<typeof useQueryCache>) {
   const entry = cache.ensure(getGetDeadlineQueryOptions(deadlineId, { query: { enabled: true } }));
   const state = await cache.refresh(entry);
 
-  return state.data ? toDeadline(state.data) : null;
+  return state.data ? toEvent(state.data) : null;
 }
 
 export function useDeadlineAssignees(

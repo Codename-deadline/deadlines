@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { type DeadlineModel, toDeadline } from "@/api/adapters/deadline";
+import { type EventModel, toEvent } from "@/api/adapters/event";
 import { type OrganizationModel, toOrganization } from "@/api/adapters/organization";
 import { type ThreadModel, toThread } from "@/api/adapters/thread";
 import { getGetDeadlineQueryKey } from "@/api/generated/endpoints/deadlines/deadlines";
@@ -13,12 +13,12 @@ import type { ScopeType } from "@/types/scope";
 type ScopeEntity =
   | { entity: OrganizationModel; type: "organization" }
   | { entity: ThreadModel; type: "thread" }
-  | { entity: DeadlineModel; type: "deadline" };
+  | { entity: EventModel; type: "deadline" };
 
 export type ScopeHierarchy = {
   organization: OrganizationModel | null;
   thread: ThreadModel | null;
-  deadline: DeadlineModel | null;
+  deadline: EventModel | null;
 };
 
 export const useCurrentScopeStore = defineStore("currentScope", () => {
@@ -33,7 +33,7 @@ export const useCurrentScopeStore = defineStore("currentScope", () => {
   const thread = useCachedEntity(threadId, getGetThreadQueryKey, toThread<ThreadResponse>);
 
   const deadlineId = ref<number | null>(null);
-  const deadline = useCachedEntity(deadlineId, getGetDeadlineQueryKey, toDeadline);
+  const deadline = useCachedEntity(deadlineId, getGetDeadlineQueryKey, toEvent);
 
   function withScope(config: ScopeEntity) {
     switch (config.type) {

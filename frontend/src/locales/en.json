@@ -188,8 +188,9 @@
       },
       "deadline": {
         "not-found": "The deadline was not found.",
-        "invalid-timestamp": "The deadline must be at least {min} minutes in the future. Only {remaining} minutes remain.",
-        "assignee-limit-exceeded": "Assignee limit exceeded."
+        "invalid-timestamp": "The date must be at least {min} minutes in the future. Only {remaining} minutes remain.",
+        "assignee-limit-exceeded": "Assignee limit exceeded.",
+        "alert-completion-not-allowed": "Alerts are important dates and have no completion status."
       },
       "integration": {
         "account-not-available": "This account is already linked to another user.",
@@ -295,7 +296,7 @@
     "buttons": {
       "organizations": "Organizations",
       "threads": "Threads",
-      "deadlines": "Deadlines",
+      "deadlines": "Dates",
       "invitations": "Invitations"
     }
   },
@@ -395,7 +396,7 @@
         "username": "Username",
         "invitations": "Invitations",
         "visibility": "Visibility",
-        "due-date": "Due date",
+        "due-date": "Date and time",
         "filename": "Filename",
         "file": "File",
         "file-size": "Size",
@@ -460,8 +461,8 @@
     },
     "deadline": {
       "name": "Deadline",
-      "header": "Deadlines",
-      "description": "Manage and track all deadlines",
+      "header": "Deadlines and alerts",
+      "description": "Track due dates and important events",
       "no-assignees": "No assignees yet",
       "assigned-to": "Assigned to",
       "files": "files",
@@ -482,7 +483,7 @@
         "ambiguous": "This local time occurs twice. Choose which occurrence to use:",
         "earlier": "Earlier occurrence (UTC{offset})",
         "later": "Later occurrence (UTC{offset})",
-        "minimum": "The deadline must be at least {minutes} minutes in the future."
+        "minimum": "The date must be at least {minutes} minutes in the future."
       },
       "role": {
         "assignee": "Assignee"
@@ -490,9 +491,21 @@
       "state": {
         "open": "Open",
         "overdue": "Overdue",
-        "completed": "Completed"
+        "completed": "Completed",
+        "upcoming": "Upcoming",
+        "occurred": "Occurred"
       },
-      "no-attachments": "No attachments yet"
+      "no-attachments": "No attachments yet",
+      "entry-type": "Entry type",
+      "kind": {
+        "DEADLINE": "Deadline",
+        "ALERT": "Alert"
+      },
+      "kind-description": {
+        "DEADLINE": "A task with a due date.",
+        "ALERT": "An important date with reminders."
+      },
+      "alert-date": "Event date"
     },
     "invitation": {
       "header": "Invitations",

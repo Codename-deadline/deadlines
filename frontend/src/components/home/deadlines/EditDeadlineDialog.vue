@@ -3,7 +3,7 @@ import { type FormInst, type FormRules, NButton, NForm, NFormItem, NInput, NPopc
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
-import { type DeadlineModel, toDeadlineRole, toPatchDeadlineRequest } from "@/api/adapters/deadline";
+import { type EventModel, toEventRole, toPatchEventRequest } from "@/api/adapters/event";
 import type { MemberModel } from "@/api/adapters/user";
 import type { UserScopeResponseRole as AnyRole } from "@/api/generated/models";
 import EntityDialoglayout from "@/components/home/common/dialogs/EntityDialoglayout.vue";
@@ -18,7 +18,8 @@ import { useRequestError } from "@/composables/shared/useRequestError";
 import { useThread } from "@/composables/threads/useThreads";
 import { MIN_DEADLINE_DURATION_MS } from "@/constants/forms";
 import { MINUTE_MS } from "@/constants/time";
-import { tEntityActionConfirmation, tEntityToastAction, tFormError } from "@/locales/utils";
+import { EVENT_PRESENTATIONS } from "@/domain/events";
+import { tFormError } from "@/locales/utils";
 import emitter from "@/plugins/emitter";
 import { useCurrentScopeStore } from "@/stores/CurrentScopeStore";
 import { useLocalizationStore } from "@/stores/LocalizationStore";
@@ -26,7 +27,7 @@ import { parsePositiveRouteId } from "@/utils/route";
 import { normalizeUsername } from "@/utils/validation";
 import DeadlineDatePicker from "./DeadlineDatePicker.vue";
 
-const props = defineProps<{ entity: DeadlineModel }>();
+const props = defineProps<{ entity: EventModel }>();
 const { t } = useI18n();
 const message = useMessage();
 const router = useRouter();
@@ -36,11 +37,14 @@ const localizationStore = useLocalizationStore();
 
 const detail = useDeadline(() => props.entity.id);
 const deadline = computed(() => detail.deadline.value ?? props.entity);
+const presentation = computed(() => EVENT_PRESENTATIONS[deadline.value.kind]);
+const entityName = computed(() => t(presentation.value.nameKey));
 const mutations = useDeadlineMutations(() => props.entity.threadId);
 
 const patchFormRef = ref<FormInst | null>(null);
 const { patchFormModel, patchFormRules, handlePatch } = useEntityEdit({
   scopeType: "deadline",
+  entityName,
   formRef: patchFormRef,
   initialFormModel: {
     title: props.entity.title,
@@ -62,8 +66,9 @@ const { patchFormModel, patchFormRules, handlePatch } = useEntityEdit({
   isLoading: mutations.patch.isLoading,
   patch: (model) => mutations.patch.mutateAsync({
     deadlineId: props.entity.id,
-    patchDeadlineRequest: toPatchDeadlineRequest({
+    patchEventRequest: toPatchEventRequest({
       ...model,
+      isCompleted: presentation.value.completionPatch(model.isCompleted),
       due: model.due === deadline.value.due ? undefined : model.due,
     }),
   }),
@@ -80,7 +85,7 @@ const handleDelete = async () => {
   try {
     await mutations.remove.mutateAsync({ deadlineId: props.entity.id });
     emitter.emit("closeEditEntityDialog");
-    message.success(tEntityToastAction(t, "deadline", "deleted"));
+    message.success(t("scopes.toasts.entity-deleted", { entity: entityName.value }));
 
     if (wasSelected && router.currentRoute.value.fullPath === path) {
       await router.push({ path: "/deadlines", query: { thrId: props.entity.threadId } });
@@ -102,7 +107,7 @@ const handleRoleUpdate = async (member: MemberModel, role: AnyRole) => {
   try {
     await mutations.role.mutateAsync({
       deadlineId: props.entity.id,
-      changeRoleRequest: { subjectUsername: member.user.username, newRole: toDeadlineRole(role) },
+      changeRoleRequest: { subjectUsername: member.user.username, newRole: toEventRole(role) },
     });
     message.success(t("scopes.toasts.role-assigned"));
   } catch (error) {
@@ -145,9 +150,9 @@ const handleInvitationSubmission = () => {
     try {
       await mutations.addAssignee.mutateAsync({
         deadlineId: props.entity.id,
-        addDeadlineAssigneeRequest: {
+        addEventAssigneeRequest: {
           username: normalizeUsername(invitationFormModel.value.username.trim()),
-          role: toDeadlineRole(invitationFormModel.value.role),
+          role: toEventRole(invitationFormModel.value.role),
         },
       });
       invitationFormModel.value.username = "";
@@ -184,7 +189,7 @@ const handleInvitationSubmission = () => {
           />
         </n-form-item>
         <div class="flex-col sm:flex justify-around sm:gap-4">
-          <n-form-item class="flex-2" :label="t('scopes.common.form-labels.due-date')" path="due">
+          <n-form-item class="flex-2" :label="t(presentation.dateLabelKey)" path="due">
             <deadline-date-picker
               v-model:value="patchFormModel.due"
               :disabled="!deadline.permissions.update"
@@ -192,6 +197,7 @@ const handleInvitationSubmission = () => {
             />
           </n-form-item>
           <n-form-item
+            v-if="presentation.supportsCompletion"
             :label="t('scopes.common.form-labels.is-completed')"
             path="isCompleted"
             class="flex-1"
@@ -224,7 +230,7 @@ const handleInvitationSubmission = () => {
                 {{ t("actions.delete") }}
               </n-button>
             </template>
-            {{ tEntityActionConfirmation(t, "deadline", "delete") }}
+            {{ t('actions.confirmation', { action: t('actions.to-confirm.delete-entity', { entity: entityName }) }) }}
           </n-popconfirm>
           <div></div>
           <n-button role="button" :disabled="!deadline.permissions.update" :loading="mutations.patch.isLoading.value" @click="handlePatch" class="rounded-lg!" type="info">

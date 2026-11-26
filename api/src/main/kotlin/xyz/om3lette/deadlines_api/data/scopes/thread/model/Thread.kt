@@ -17,7 +17,7 @@ import jakarta.validation.constraints.Size
 import org.hibernate.annotations.OnDelete
 import org.hibernate.annotations.OnDeleteAction
 import xyz.om3lette.deadlines_api.data.scopes.common.constraints.ScopeTextConstraints
-import xyz.om3lette.deadlines_api.data.scopes.deadline.model.Deadline
+import xyz.om3lette.deadlines_api.data.scopes.event.model.Event
 import xyz.om3lette.deadlines_api.data.scopes.organization.model.Organization
 import xyz.om3lette.deadlines_api.data.scopes.thread.dto.ThreadDTO
 import xyz.om3lette.deadlines_api.data.scopes.thread.dto.ThreadPermissions
@@ -51,7 +51,7 @@ data class Thread(
 
     @OneToMany(mappedBy = "thread", cascade = [CascadeType.ALL], orphanRemoval = true)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    val deadlines: MutableList<Deadline> = mutableListOf(),
+    val deadlines: MutableList<Event> = mutableListOf(),
 
 ) {
     fun toDTO() = ThreadDTO(

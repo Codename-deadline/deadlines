@@ -8,7 +8,7 @@ import org.hibernate.annotations.OnDeleteAction
 import xyz.om3lette.deadlines_api.data.attachments.constraints.AttachmentConstraints
 import xyz.om3lette.deadlines_api.data.attachments.reponse.AttachmentPermissions
 import xyz.om3lette.deadlines_api.data.attachments.reponse.AttachmentResponse
-import xyz.om3lette.deadlines_api.data.scopes.deadline.model.Deadline
+import xyz.om3lette.deadlines_api.data.scopes.event.model.Event
 import xyz.om3lette.deadlines_api.data.user.model.User
 import java.time.Instant
 
@@ -42,7 +42,7 @@ data class Attachment(
     @ManyToOne(fetch = FetchType.EAGER)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "deadline_id", nullable = false)
-    val deadline: Deadline,
+    val event: Event,
 
     @Column(nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
     var uploadedAt: Instant
@@ -53,7 +53,7 @@ data class Attachment(
         mimeType,
         sizeBytes,
         uploadedBy?.toMinimalResponse(),
-        deadline.id,
+        event.id,
         uploadedAt,
         permissions
     )

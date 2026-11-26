@@ -10,6 +10,9 @@ from common.infrastructure.kafka.integration_events import (
     IntegrationEventHandlers,
     build_integration_consumer,
 )
+from common.infrastructure.kafka.notification_presentation import (
+    NOTIFICATION_PRESENTATIONS,
+)
 from common.infrastructure.kafka.notification_renderer import render_notification
 from common.infrastructure.kafka.schemas.account_linkage_event import (
     AccountLinkageEvent,
@@ -42,9 +45,10 @@ def build_console_consumer(
             event.chat_id,
             render_notification(event, translator),
             AppRedirect(
-                path=f"/deadline?ddlId={event.deadline.id}",
+                path=f"/deadline?ddlId={event.event.id}",
                 display_text=translator.translate(
-                    TranslationKey.NOTIFICATIONS_GO_TO_DEADLINE, event.language
+                    NOTIFICATION_PRESENTATIONS[event.event.kind].action,
+                    event.language,
                 ),
             ),
         )

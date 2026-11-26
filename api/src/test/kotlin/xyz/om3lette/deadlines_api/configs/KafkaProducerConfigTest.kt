@@ -40,8 +40,8 @@ class KafkaProducerConfigTest {
         val events = listOf(
             OtpEvent("123456", 42, Language.EN),
             UserMessengerAccountLinkageEvent("request", 42),
-            DeadlineNotificationEvent(42, "UTC", Language.EN,
-                RawDeadline(1, Instant.EPOCH, "Deadline"), TimeRemaining.entries.first(),
+            EventReminderNotification(42, "UTC", Language.EN,
+                RawEvent(1, Instant.EPOCH, "Event"), TimeRemaining.entries.first(),
                 RawOrganization(2, "Organization"), RawThread(3, "Thread"))
         )
 

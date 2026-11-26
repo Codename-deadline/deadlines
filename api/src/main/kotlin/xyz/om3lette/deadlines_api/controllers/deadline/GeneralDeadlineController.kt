@@ -11,19 +11,19 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import xyz.om3lette.deadlines_api.data.common.constraints.PaginationConstraints
 import xyz.om3lette.deadlines_api.data.user.model.User
-import xyz.om3lette.deadlines_api.services.DeadlineService
+import xyz.om3lette.deadlines_api.services.EventService
 
 @SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/deadlines")
 @Tag(name = "Deadlines")
 class GeneralDeadlineController(
-    private val deadlineService: DeadlineService,
+    private val eventService: EventService,
 ) {
     @GetMapping("/me")
     @Operation(summary = "Get deadlines which are assigned to you")
     fun getUserDeadlines(
         @AuthenticationPrincipal user: User,
         @RequestParam("page") @Min(PaginationConstraints.PAGE_MIN) pageNumber: Int
-    ) = deadlineService.getDeadlinesByUser(user, pageNumber, 10)
+    ) = eventService.getEventsByUser(user, pageNumber, 10)
 }

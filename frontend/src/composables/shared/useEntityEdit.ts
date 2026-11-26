@@ -8,6 +8,7 @@ import { useRequestError } from "./useRequestError";
 /** Form behavior only. Mutations own server writes and cache synchronization. */
 export function useEntityEdit<T extends { title: string }>(config: {
   scopeType: ScopeType;
+  entityName?: MaybeRefOrGetter<string>;
   formRef: Ref<FormInst | null>;
   initialFormModel: T;
   extraFormRules?: FormRules;
@@ -31,7 +32,11 @@ export function useEntityEdit<T extends { title: string }>(config: {
       if (errors) return;
       try {
         await config.patch(patchFormModel.value as T);
-        message.success(tEntityToastAction(t, config.scopeType, "updated"));
+        message.success(
+          config.entityName
+            ? t("scopes.toasts.entity-updated", { entity: toValue(config.entityName) })
+            : tEntityToastAction(t, config.scopeType, "updated"),
+        );
       } catch (error) {
         displayError(error);
       }

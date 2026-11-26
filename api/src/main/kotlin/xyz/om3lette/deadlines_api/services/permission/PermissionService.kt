@@ -5,12 +5,12 @@ import org.springframework.stereotype.Service
 import xyz.om3lette.deadlines_api.configs.properties.UsersProperties
 import xyz.om3lette.deadlines_api.data.attachments.model.Attachment
 import xyz.om3lette.deadlines_api.data.attachments.reponse.AttachmentPermissions
-import xyz.om3lette.deadlines_api.data.permissions.dto.DeadlineScope
+import xyz.om3lette.deadlines_api.data.permissions.dto.EventScope
 import xyz.om3lette.deadlines_api.data.permissions.dto.OrganizationScope
 import xyz.om3lette.deadlines_api.data.permissions.dto.PermissionScope
 import xyz.om3lette.deadlines_api.data.permissions.dto.ThreadScope
-import xyz.om3lette.deadlines_api.data.scopes.deadline.dto.DeadlinePermissions
-import xyz.om3lette.deadlines_api.data.scopes.deadline.model.Deadline
+import xyz.om3lette.deadlines_api.data.scopes.event.dto.EventPermissions
+import xyz.om3lette.deadlines_api.data.scopes.event.model.Event
 import xyz.om3lette.deadlines_api.data.scopes.organization.dto.OrganizationPermissions
 import xyz.om3lette.deadlines_api.data.scopes.organization.enums.OrganizationType
 import xyz.om3lette.deadlines_api.data.scopes.organization.model.Organization
@@ -50,9 +50,9 @@ class PermissionService(
             }
         }
 
-    private fun roleForDeadlineLazy(user: User, deadline: Deadline): () -> ScopeRole? =
+    private fun roleForDeadlineLazy(user: User, deadline: Event): () -> ScopeRole? =
         {
-            permissionContext.getOrLoadBatch(DeadlineScope(deadline)) {
+            permissionContext.getOrLoadBatch(EventScope(deadline)) {
                 userScopeRepository.findUserRolesInScope(
                     userId = user.id, orgId = deadline.thread.organization.id, deadline.thread.id, deadline.id
                 )
@@ -63,7 +63,7 @@ class PermissionService(
         when (permissionScope) {
             is OrganizationScope -> roleForOrganizationLazy(issuer, permissionScope.orgId)
             is ThreadScope -> roleForThreadLazy(issuer, permissionScope.thread)
-            is DeadlineScope -> roleForDeadlineLazy(issuer, permissionScope.deadline)
+            is EventScope -> roleForDeadlineLazy(issuer, permissionScope.event)
         }
 
     /*
@@ -146,11 +146,11 @@ class PermissionService(
             )
         }
 
-    fun buildDeadlinePermissions(issuer: User?, deadline: Deadline) =
+    fun buildDeadlinePermissions(issuer: User?, deadline: Event) =
         if (issuer == null) {
-            DeadlinePermissions(update = false, delete = false, manageAssignees = false, manageAttachments = false)
+            EventPermissions(update = false, delete = false, manageAssignees = false, manageAttachments = false)
         } else {
-            DeadlinePermissions(
+            EventPermissions(
                 update = canUpdateDeadline(issuer, deadline),
                 delete = canDeleteDeadline(issuer, deadline),
                 manageAssignees = canManageDeadlineAssignees(issuer, deadline),
@@ -200,9 +200,9 @@ class PermissionService(
         }
 
     /*
-        Deadline permissions:
+        Event permissions:
      */
-    private fun hasDeadlineAccess(issuer: User?, deadline: Deadline): Boolean {
+    private fun hasDeadlineAccess(issuer: User?, deadline: Event): Boolean {
         if (deadline.thread.organization.type == OrganizationType.PUBLIC) return true
         if (issuer == null) return false
         return issuer.isAdminOrHasRoleAnd(roleForDeadlineLazy(issuer, deadline)) { role ->
@@ -215,17 +215,17 @@ class PermissionService(
             role.isEqualOrHigherThan(ScopeRole.THR_ADMIN)
         }
 
-    private fun canDeleteDeadline(issuer: User, deadline: Deadline): Boolean =
+    private fun canDeleteDeadline(issuer: User, deadline: Event): Boolean =
         issuer.isAdminOrHasRoleAnd(roleForDeadlineLazy(issuer, deadline)) { role ->
             role.isEqualOrHigherThan(ScopeRole.THR_ADMIN)
         }
 
-    private fun canUpdateDeadline(issuer: User, deadline: Deadline): Boolean =
+    private fun canUpdateDeadline(issuer: User, deadline: Event): Boolean =
         issuer.isAdminOrHasRoleAnd(roleForDeadlineLazy(issuer, deadline)) { role ->
             role.isEqualOrHigherThan(ScopeRole.THR_ADMIN)
         }
 
-    private fun canManageDeadlineAssignees(issuer: User, deadline: Deadline): Boolean =
+    private fun canManageDeadlineAssignees(issuer: User, deadline: Event): Boolean =
         issuer.isAdminOrHasRoleAnd(roleForDeadlineLazy(issuer, deadline)) { role ->
             role.isEqualOrHigherThan(ScopeRole.THR_ADMIN)
         }
@@ -233,7 +233,7 @@ class PermissionService(
     // ===========================
     // Deadlines attachments
     // ===========================
-    fun canManageDeadlineAttachments(issuer: User, deadline: Deadline): Boolean =
+    fun canManageDeadlineAttachments(issuer: User, deadline: Event): Boolean =
         issuer.isAdminOrHasRoleAnd(roleForDeadlineLazy(issuer, deadline)) { role ->
             role.isEqualOrHigherThan(ScopeRole.DDL_ASSIGNEE)
         }
@@ -242,7 +242,7 @@ class PermissionService(
         issuer.isAdminOr { issuer.id == attachment.uploadedBy?.id }
 
     fun canDeleteDeadlineAttachment(issuer: User, attachment: Attachment): Boolean =
-        issuer.isAdminOrHasRoleAnd(roleForDeadlineLazy(issuer, attachment.deadline)) { role ->
+        issuer.isAdminOrHasRoleAnd(roleForDeadlineLazy(issuer, attachment.event)) { role ->
             role.isEqualOrHigherThan(ScopeRole.THR_ADMIN) || issuer.id == attachment.uploadedBy?.id
         }
 
@@ -253,7 +253,7 @@ class PermissionService(
         when (permissionScope) {
             is OrganizationScope -> canManageOrganizationMembers(issuer, permissionScope.orgId)
             is ThreadScope -> canManageThreadAssignees(issuer, permissionScope.thread)
-            is DeadlineScope -> canManageDeadlineAssignees(issuer, permissionScope.deadline)
+            is EventScope -> canManageDeadlineAssignees(issuer, permissionScope.event)
         }
 
     fun canRemoveAssignee(issuer: User, permissionScope: PermissionScope, memberRole: ScopeRole): Boolean {
@@ -262,7 +262,7 @@ class PermissionService(
         val userRole: ScopeRole = when (permissionScope) {
             is OrganizationScope -> roleForOrganizationLazy(issuer, permissionScope.orgId)
             is ThreadScope -> roleForThreadLazy(issuer, permissionScope.thread)
-            is DeadlineScope -> roleForDeadlineLazy(issuer, permissionScope.deadline)
+            is EventScope -> roleForDeadlineLazy(issuer, permissionScope.event)
         }() ?: return false
 
         return userRole.isHigherThan(memberRole)
@@ -283,21 +283,21 @@ class PermissionService(
                     false
                 }
             is ThreadScope -> hasThreadAccess(issuer, permissionScope.thread)
-            is DeadlineScope -> hasDeadlineAccess(issuer, permissionScope.deadline)
+            is EventScope -> hasDeadlineAccess(issuer, permissionScope.event)
         }
 
     fun canDelete(issuer: User, permissionScope: PermissionScope) =
         when (permissionScope) {
             is OrganizationScope -> canDeleteOrganization(issuer, permissionScope.orgId)
             is ThreadScope -> canDeleteThread(issuer, permissionScope.thread)
-            is DeadlineScope -> canDeleteDeadline(issuer, permissionScope.deadline)
+            is EventScope -> canDeleteDeadline(issuer, permissionScope.event)
         }
 
     fun canUpdate(issuer: User, permissionScope: PermissionScope) =
         when (permissionScope) {
             is OrganizationScope -> canUpdateOrganization(issuer, permissionScope.orgId)
             is ThreadScope -> canUpdateThread(issuer, permissionScope.thread)
-            is DeadlineScope -> canUpdateDeadline(issuer, permissionScope.deadline)
+            is EventScope -> canUpdateDeadline(issuer, permissionScope.event)
         }
 
     /*
@@ -320,7 +320,7 @@ class PermissionService(
         issuer.isAdminOr {
             accountsLinkedForMessenger < usersProperties.maxLinkedAccountsPerMessenger
         }
-    
+
     fun canManageIntegrationChat(issuer: User, issuerHasMessengerChatAdminRights: Boolean) =
         issuer.isAdminOr { issuerHasMessengerChatAdminRights }
 

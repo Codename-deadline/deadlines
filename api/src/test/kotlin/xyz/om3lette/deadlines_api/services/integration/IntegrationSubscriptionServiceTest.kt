@@ -15,10 +15,10 @@ import xyz.om3lette.deadlines_api.data.integration.chat.repo.ChatRepository
 import xyz.om3lette.deadlines_api.data.integration.chat.repo.ChatSubscriptionRepository
 import xyz.om3lette.deadlines_api.data.integration.common.enums.IntegrationResultKey
 import xyz.om3lette.deadlines_api.data.integration.messengerAccount.repo.UserMessengerAccountRepository
-import xyz.om3lette.deadlines_api.data.permissions.dto.DeadlineScope
+import xyz.om3lette.deadlines_api.data.permissions.dto.EventScope
 import xyz.om3lette.deadlines_api.data.permissions.dto.OrganizationScope
 import xyz.om3lette.deadlines_api.data.permissions.dto.ThreadScope
-import xyz.om3lette.deadlines_api.data.scopes.deadline.repo.DeadlineRepository
+import xyz.om3lette.deadlines_api.data.scopes.event.repo.EventRepository
 import xyz.om3lette.deadlines_api.data.scopes.organization.repo.OrganizationRepository
 import xyz.om3lette.deadlines_api.data.scopes.thread.repo.ThreadRepository
 import xyz.om3lette.deadlines_api.data.scopes.userScope.enums.ScopeType
@@ -38,7 +38,7 @@ class IntegrationSubscriptionServiceTest {
     private val organizationRepository: OrganizationRepository = mockk()
     private val chatRepository: ChatRepository = mockk()
     private val chatSubscriptionRepository: ChatSubscriptionRepository = mockk()
-    private val deadlineRepository: DeadlineRepository = mockk()
+    private val eventRepository: EventRepository = mockk()
     private val threadRepository: ThreadRepository = mockk()
     private val languageResolver = IntegrationLanguageResolver(
         userMessengerAccountRepository,
@@ -51,7 +51,7 @@ class IntegrationSubscriptionServiceTest {
         organizationRepository,
         chatRepository,
         chatSubscriptionRepository,
-        deadlineRepository,
+        eventRepository,
         threadRepository,
         languageResolver
     )
@@ -112,8 +112,8 @@ class IntegrationSubscriptionServiceTest {
     fun `subscribeToDeadline saves deadline subscription`() {
         val savedSubscription = slot<ChatSubscription>()
         everyAccountExists()
-        every { deadlineRepository.findById(deadline.id) } returns Optional.of(deadline)
-        every { permissionService.hasAccess(user, any<DeadlineScope>()) } returns true
+        every { eventRepository.findById(deadline.id) } returns Optional.of(deadline)
+        every { permissionService.hasAccess(user, any<EventScope>()) } returns true
         everyChatExists()
         every { chatSubscriptionRepository.saveAndFlush(capture(savedSubscription)) } answers { savedSubscription.captured }
 
@@ -242,8 +242,8 @@ class IntegrationSubscriptionServiceTest {
     @Test
     fun `subscribeToDeadline fails when chat is missing`() {
         everyAccountExists()
-        every { deadlineRepository.findById(deadline.id) } returns Optional.of(deadline)
-        every { permissionService.hasAccess(user, any<DeadlineScope>()) } returns true
+        every { eventRepository.findById(deadline.id) } returns Optional.of(deadline)
+        every { permissionService.hasAccess(user, any<EventScope>()) } returns true
         every {
             chatRepository.findByMessengerChatIdAndMessenger(
                 IntegrationTestFixtures.MESSENGER_CHAT_ID, Messenger.TELEGRAM
@@ -266,7 +266,7 @@ class IntegrationSubscriptionServiceTest {
     @Test
     fun `subscribeToDeadline fails when deadline is missing`() {
         everyAccountExists()
-        every { deadlineRepository.findById(deadline.id) } returns Optional.empty()
+        every { eventRepository.findById(deadline.id) } returns Optional.empty()
 
         val exception = assertFailsWith<GrpcKeyLocaleException> {
             service.subscribeToDeadline(
@@ -284,8 +284,8 @@ class IntegrationSubscriptionServiceTest {
     @Test
     fun `subscribeToDeadline fails when permission is denied`() {
         everyAccountExists()
-        every { deadlineRepository.findById(deadline.id) } returns Optional.of(deadline)
-        every { permissionService.hasAccess(user, any<DeadlineScope>()) } returns false
+        every { eventRepository.findById(deadline.id) } returns Optional.of(deadline)
+        every { permissionService.hasAccess(user, any<EventScope>()) } returns false
 
         val exception = assertFailsWith<GrpcKeyLocaleException> {
             service.subscribeToDeadline(
@@ -329,7 +329,7 @@ class IntegrationSubscriptionServiceTest {
         everyChatExists()
         every { chatSubscriptionRepository.deleteByChatAndScopeIdAndScopeType(chat, organization.id, ScopeType.ORGANIZATION) } returns 1
         every { threadRepository.findAllIdsByOrganizationId(organization.id) } returns listOf(202, 203)
-        every { deadlineRepository.findAllIdsByOrganizationId(organization.id) } returns listOf(303)
+        every { eventRepository.findAllIdsByOrganizationId(organization.id) } returns listOf(303)
         every {
             chatSubscriptionRepository.deleteAllByChatAndScopeTypeAndScopeIdIn(chat, ScopeType.THREAD, listOf(202, 203))
         } returns 2
@@ -353,7 +353,7 @@ class IntegrationSubscriptionServiceTest {
         everyAccountExists()
         everyChatExists()
         every { chatSubscriptionRepository.deleteByChatAndScopeIdAndScopeType(chat, thread.id, ScopeType.THREAD) } returns 1
-        every { deadlineRepository.findAllIdsByThreadId(thread.id) } returns listOf(303, 304)
+        every { eventRepository.findAllIdsByThreadId(thread.id) } returns listOf(303, 304)
         every {
             chatSubscriptionRepository.deleteAllByChatAndScopeTypeAndScopeIdIn(chat, ScopeType.DEADLINE, listOf(303, 304))
         } returns 2

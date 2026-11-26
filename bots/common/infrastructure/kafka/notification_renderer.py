@@ -2,11 +2,13 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from common.application.protocols.translator import Translator
-from common.application.translation import TranslationKey
 from common.infrastructure.i18n.mappings import TIME_REMAINING_TRANSLATION_KEYS
 from common.infrastructure.kafka.enums.time_remaining import TimeRemaining
-from common.infrastructure.kafka.schemas.deadline_due_changed_event import (
-    DeadlineDueChangedNotificationEvent,
+from common.infrastructure.kafka.notification_presentation import (
+    NOTIFICATION_PRESENTATIONS,
+)
+from common.infrastructure.kafka.schemas.event_date_changed_notification import (
+    EventDateChangedNotification,
 )
 from common.infrastructure.kafka.schemas.notification_event import Notification
 
@@ -30,25 +32,26 @@ def _format_due(value: datetime, time_zone: str) -> str:
 
 
 def render_notification(event: Notification, translator: Translator) -> str:
+    presentation = NOTIFICATION_PRESENTATIONS[event.event.kind]
     header = translator.translate(
-        TranslationKey.NOTIFICATIONS_DEADLINE_HEADER,
+        presentation.header,
         event.language,
-        title=event.deadline.title,
+        title=event.event.title,
         organization=event.organization.title,
         thread=event.thread.title,
     )
-    if isinstance(event, DeadlineDueChangedNotificationEvent):
+    if isinstance(event, EventDateChangedNotification):
         body = translator.translate(
-            TranslationKey.NOTIFICATIONS_DEADLINE_DUE_CHANGED,
+            presentation.date_changed,
             event.language,
             old_due=_format_due(event.old_due, event.time_zone),
             new_due=_format_due(event.new_due, event.time_zone),
         )
     else:
-        translation_key = TranslationKey.NOTIFICATIONS_DEADLINE_OVERDUE
-        params = {"due": _format_due(event.deadline.due, event.time_zone)}
+        translation_key = presentation.occurred
+        params = {"due": _format_due(event.event.due, event.time_zone)}
         if event.time_remaining is not TimeRemaining.NO_TIME:
-            translation_key = TranslationKey.NOTIFICATIONS_DEADLINE_EXPIRY
+            translation_key = presentation.upcoming
             params["time_remaining"] = translator.translate(
                 TIME_REMAINING_TRANSLATION_KEYS[event.time_remaining], event.language
             )

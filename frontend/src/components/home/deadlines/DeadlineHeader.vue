@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { CircleAlert, CircleCheck, CircleDot, Paperclip } from '@lucide/vue';
+import { Bell, CircleAlert, CircleCheck, CircleDot, Paperclip } from '@lucide/vue';
 import { computed } from 'vue';
-import type { DeadlineModel } from '@/api/adapters/deadline';
-import { computeDeadlineState } from '@/utils/state';
+import type { EventModel } from '@/api/adapters/event';
+import { computeEventState } from '@/utils/state';
 import RoleTag from '../common/RoleTag.vue';
 import ScopeHierarchy from '../common/ScopeHierarchy.vue';
 import DeadlineStateTag from './DeadlineStateTag.vue';
 
 const props = withDefaults(
   defineProps<{
-    deadline: DeadlineModel
+    deadline: EventModel
     parentTitles?: { organization?: string, thread?: string },
     headerType: "h1" | "h3"
     iconSize?: number
@@ -19,16 +19,22 @@ const props = withDefaults(
   }
 );
 
-const state = computed(() => computeDeadlineState(props.deadline))
+const state = computed(() => computeEventState(props.deadline))
+const stateIcons = { open: CircleDot, overdue: CircleAlert, completed: CircleCheck, upcoming: Bell, occurred: Bell };
+const stateColors = {
+  open: "text-status-success/75",
+  overdue: "text-status-error/80",
+  completed: "text-status-info/75",
+  upcoming: "text-status-info/75",
+  occurred: "text-status-info/75",
+};
 </script>
 
 <template>
   <div
     class="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2 gap-y-1 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-y-0"
   >
-    <CircleDot v-if="state === 'open'" class="shrink-0 text-status-success/75" :size="iconSize" />
-    <CircleAlert v-else-if="state === 'overdue'" class="shrink-0 text-status-error/80" :size="iconSize" />
-    <CircleCheck v-else class="shrink-0 text-status-info/75" :size="iconSize" />
+    <component :is="stateIcons[state]" class="shrink-0" :class="stateColors[state]" :size="iconSize" />
 
     <component
       :is="headerType"

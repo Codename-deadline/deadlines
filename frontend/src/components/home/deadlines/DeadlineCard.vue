@@ -3,10 +3,10 @@ import { CalendarAlt, Cog, UserFriends } from "@vicons/fa";
 import { NButton } from "naive-ui";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
-import type { DeadlineModel } from "@/api/adapters/deadline";
+import type { EventModel } from "@/api/adapters/event";
 import { useLocalizationStore } from "@/stores/LocalizationStore";
 import { hasAnyEditPermission } from "@/utils/permissions";
-import { computeDeadlineState } from "@/utils/state";
+import { computeEventState } from "@/utils/state";
 import EntityCard from "../common/EntityCard.vue";
 import ShortLongTimeDisplay from "../common/ShortLongTimeDisplay.vue";
 import DeadlineHeader from "./DeadlineHeader.vue";
@@ -15,13 +15,13 @@ const { t } = useI18n();
 const localizationStore = useLocalizationStore();
 
 const props = defineProps<{
-  entity: DeadlineModel;
+  entity: EventModel;
 }>();
 const emit = defineEmits<{
   edit: [id: number];
 }>();
 
-const state = computed(() => computeDeadlineState(props.entity));
+const state = computed(() => computeEventState(props.entity));
 </script>
 
 <template>

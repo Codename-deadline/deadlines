@@ -97,6 +97,11 @@ en:
     one_week: "1 week"
     one_month: "1 month"
   notifications:
+    alert_header: "# %title\n\nAlert\nOrganization: %organization\nThread: %thread"
+    alert_upcoming: "Event date: %due\nLess than **%time_remaining** until the event"
+    alert_occurred: "Event date: %due\n**The important date has arrived.**"
+    alert_date_changed: "**Event date changed**\nFrom: %old_due\nTo: %new_due"
+    go_to_alert: "Go to alert"
     deadline_header: "# %title\n\nOrganization: %organization\nThread: %thread"
     deadline_expiry: "Due: %due\nLess than **%time_remaining** remaining"
     deadline_overdue: "Due: %due\n**Deadline is now overdue.**\n_Better late than never._"

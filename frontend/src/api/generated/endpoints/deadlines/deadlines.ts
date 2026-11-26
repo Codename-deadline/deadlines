@@ -11,19 +11,19 @@ import { toValue as toColadaValue } from "vue";
 import type { MaybeRefOrGetter } from "vue";
 
 import type {
-  AddDeadlineAssigneeRequest,
+  AddEventAssigneeRequest,
   AttachmentCreatedResponse,
   AttachmentResponse,
   CreateAttachmentBody,
-  CreateDeadlineRequest,
-  DeadlineCreatedResponse,
-  DeadlineResponseWithRole,
+  CreateEventRequest,
+  EventCreatedResponse,
+  EventResponseWithRole,
   GetDeadlineAssigneesParams,
   GetDeadlinesParams,
   GetUserDeadlinesParams,
-  PaginationResponseDeadlineResponseWithRole,
+  PaginationResponseEventResponseWithRole,
   PaginationResponseUserScopeResponse,
-  PatchDeadlineRequest,
+  PatchEventRequest,
 } from "../../models";
 
 import { apiRequest } from "../../../transport.ts";
@@ -72,8 +72,8 @@ export const getGetUserDeadlinesUrl = (params: GetUserDeadlinesParams) => {
 export const getUserDeadlines = async (
   params: GetUserDeadlinesParams,
   options?: Parameters<typeof apiRequest>[1],
-): Promise<PaginationResponseDeadlineResponseWithRole> => {
-  return apiRequest<PaginationResponseDeadlineResponseWithRole>(getGetUserDeadlinesUrl(params), {
+): Promise<PaginationResponseEventResponseWithRole> => {
+  return apiRequest<PaginationResponseEventResponseWithRole>(getGetUserDeadlinesUrl(params), {
     ...options,
     method: "GET",
   });
@@ -172,8 +172,8 @@ export const getGetDeadlineUrl = (deadlineId: number) => {
 export const getDeadline = async (
   deadlineId: number,
   options?: Parameters<typeof apiRequest>[1],
-): Promise<DeadlineResponseWithRole> => {
-  return apiRequest<DeadlineResponseWithRole>(getGetDeadlineUrl(deadlineId), {
+): Promise<EventResponseWithRole> => {
+  return apiRequest<EventResponseWithRole>(getGetDeadlineUrl(deadlineId), {
     ...options,
     method: "GET",
   });
@@ -225,20 +225,20 @@ export const getPatchDeadlineUrl = (deadlineId: number) => {
  */
 export const patchDeadline = async (
   deadlineId: number,
-  patchDeadlineRequest: PatchDeadlineRequest,
+  patchEventRequest: PatchEventRequest,
   options?: Parameters<typeof apiRequest>[1],
 ): Promise<void> => {
   return apiRequest<void>(getPatchDeadlineUrl(deadlineId), {
     ...options,
     method: "PATCH",
     headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
-    body: JSON.stringify(patchDeadlineRequest),
+    body: JSON.stringify(patchEventRequest),
   });
 };
 
 export type PatchDeadlineMutationVariables = {
   deadlineId: Parameters<typeof patchDeadline>[0];
-  patchDeadlineRequest: Parameters<typeof patchDeadline>[1];
+  patchEventRequest: Parameters<typeof patchDeadline>[1];
 };
 
 export function getPatchDeadlineMutationOptions<
@@ -255,7 +255,7 @@ export function getPatchDeadlineMutationOptions<
   return {
     ...coladaOptions?.mutation,
     mutation: (coladaVariables: PatchDeadlineMutationVariables) =>
-      coladaRequest(coladaVariables.deadlineId, coladaVariables.patchDeadlineRequest, coladaOptions?.request),
+      coladaRequest(coladaVariables.deadlineId, coladaVariables.patchEventRequest, coladaOptions?.request),
   };
 }
 
@@ -361,20 +361,20 @@ export const getAddDeadlineAssigneeUrl = (deadlineId: number) => {
  */
 export const addDeadlineAssignee = async (
   deadlineId: number,
-  addDeadlineAssigneeRequest: AddDeadlineAssigneeRequest,
+  addEventAssigneeRequest: AddEventAssigneeRequest,
   options?: Parameters<typeof apiRequest>[1],
 ): Promise<void> => {
   return apiRequest<void>(getAddDeadlineAssigneeUrl(deadlineId), {
     ...options,
     method: "POST",
     headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
-    body: JSON.stringify(addDeadlineAssigneeRequest),
+    body: JSON.stringify(addEventAssigneeRequest),
   });
 };
 
 export type AddDeadlineAssigneeMutationVariables = {
   deadlineId: Parameters<typeof addDeadlineAssignee>[0];
-  addDeadlineAssigneeRequest: Parameters<typeof addDeadlineAssignee>[1];
+  addEventAssigneeRequest: Parameters<typeof addDeadlineAssignee>[1];
 };
 
 export function getAddDeadlineAssigneeMutationOptions<
@@ -401,7 +401,7 @@ export function getAddDeadlineAssigneeMutationOptions<
   return {
     ...coladaOptions?.mutation,
     mutation: (coladaVariables: AddDeadlineAssigneeMutationVariables) =>
-      coladaRequest(coladaVariables.deadlineId, coladaVariables.addDeadlineAssigneeRequest, coladaOptions?.request),
+      coladaRequest(coladaVariables.deadlineId, coladaVariables.addEventAssigneeRequest, coladaOptions?.request),
   };
 }
 
@@ -645,8 +645,8 @@ export const getDeadlines = async (
   threadId: number,
   params: GetDeadlinesParams,
   options?: Parameters<typeof apiRequest>[1],
-): Promise<PaginationResponseDeadlineResponseWithRole> => {
-  return apiRequest<PaginationResponseDeadlineResponseWithRole>(getGetDeadlinesUrl(threadId, params), {
+): Promise<PaginationResponseEventResponseWithRole> => {
+  return apiRequest<PaginationResponseEventResponseWithRole>(getGetDeadlinesUrl(threadId, params), {
     ...options,
     method: "GET",
   });
@@ -707,20 +707,20 @@ export const getCreateDeadlineUrl = (threadId: number) => {
  */
 export const createDeadline = async (
   threadId: number,
-  createDeadlineRequest: CreateDeadlineRequest,
+  createEventRequest: CreateEventRequest,
   options?: Parameters<typeof apiRequest>[1],
-): Promise<DeadlineCreatedResponse> => {
-  return apiRequest<DeadlineCreatedResponse>(getCreateDeadlineUrl(threadId), {
+): Promise<EventCreatedResponse> => {
+  return apiRequest<EventCreatedResponse>(getCreateDeadlineUrl(threadId), {
     ...options,
     method: "POST",
     headers: getHeaders({ "Content-Type": "application/json" }, options?.headers),
-    body: JSON.stringify(createDeadlineRequest),
+    body: JSON.stringify(createEventRequest),
   });
 };
 
 export type CreateDeadlineMutationVariables = {
   threadId: Parameters<typeof createDeadline>[0];
-  createDeadlineRequest: Parameters<typeof createDeadline>[1];
+  createEventRequest: Parameters<typeof createDeadline>[1];
 };
 
 export function getCreateDeadlineMutationOptions<
@@ -737,7 +737,7 @@ export function getCreateDeadlineMutationOptions<
   return {
     ...coladaOptions?.mutation,
     mutation: (coladaVariables: CreateDeadlineMutationVariables) =>
-      coladaRequest(coladaVariables.threadId, coladaVariables.createDeadlineRequest, coladaOptions?.request),
+      coladaRequest(coladaVariables.threadId, coladaVariables.createEventRequest, coladaOptions?.request),
   };
 }
 

@@ -97,6 +97,11 @@ ru:
     one_week: "1 недели"
     one_month: "1 месяца"
   notifications:
+    alert_header: "# %title\n\nАлерт\nОрганизация: %organization\nРаздел: %thread"
+    alert_upcoming: "Дата события: %due\nДо события осталось менее **%time_remaining**"
+    alert_occurred: "Дата события: %due\n**Важная дата наступила.**"
+    alert_date_changed: "**Дата события изменена**\nБыло: %old_due\nСтало: %new_due"
+    go_to_alert: "Перейти к алерту"
     deadline_header: "# %title\n\nОрганизация: %organization\nРаздел: %thread"
     deadline_expiry: "Крайний срок: %due\nОсталось менее **%time_remaining**"
     deadline_overdue: "Крайний срок: %due\n**Срок выполнения истёк.**\n_Лучше поздно, чем никогда._"

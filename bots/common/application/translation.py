@@ -50,6 +50,11 @@ class TranslationKey(StrEnum):
     NOTIFICATIONS_DEADLINE_OVERDUE = "notifications.deadline_overdue"
     NOTIFICATIONS_DEADLINE_DUE_CHANGED = "notifications.deadline_due_changed"
     NOTIFICATIONS_GO_TO_DEADLINE = "notifications.go_to_deadline"
+    NOTIFICATIONS_ALERT_HEADER = "notifications.alert_header"
+    NOTIFICATIONS_ALERT_UPCOMING = "notifications.alert_upcoming"
+    NOTIFICATIONS_ALERT_OCCURRED = "notifications.alert_occurred"
+    NOTIFICATIONS_ALERT_DATE_CHANGED = "notifications.alert_date_changed"
+    NOTIFICATIONS_GO_TO_ALERT = "notifications.go_to_alert"
 
     PROMPT_ACCEPT = "prompt.accept"
     PROMPT_REJECT = "prompt.reject"

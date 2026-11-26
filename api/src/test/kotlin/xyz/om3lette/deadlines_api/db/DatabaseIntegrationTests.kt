@@ -24,8 +24,8 @@ import xyz.om3lette.deadlines_api.data.integration.bot.enums.Language
 import xyz.om3lette.deadlines_api.data.integration.bot.enums.Messenger
 import xyz.om3lette.deadlines_api.data.common.constraints.DatabaseConstraint
 import xyz.om3lette.deadlines_api.data.integration.common.enums.IntegrationResultKey
-import xyz.om3lette.deadlines_api.data.notifications.repo.DeadlineNotificationRepository
-import xyz.om3lette.deadlines_api.data.scopes.deadline.repo.DeadlineRepository
+import xyz.om3lette.deadlines_api.data.notifications.repo.EventReminderRepository
+import xyz.om3lette.deadlines_api.data.scopes.event.repo.EventRepository
 import xyz.om3lette.deadlines_api.data.scopes.organization.repo.OrganizationRepository
 import xyz.om3lette.deadlines_api.data.scopes.thread.repo.ThreadRepository
 import xyz.om3lette.deadlines_api.data.scopes.userScope.enums.ScopeRole
@@ -74,7 +74,7 @@ class DatabaseIntegrationTests {
     private lateinit var threadRepository: ThreadRepository
 
     @Autowired
-    private lateinit var deadlineRepository: DeadlineRepository
+    private lateinit var eventRepository: EventRepository
 
     @Autowired
     private lateinit var userScopeRepository: UserScopeRepository
@@ -89,7 +89,7 @@ class DatabaseIntegrationTests {
     private lateinit var integrationChatService: IntegrationChatService
 
     @Autowired
-    private lateinit var deadlineNotificationRepository: DeadlineNotificationRepository
+    private lateinit var eventReminderRepository: EventReminderRepository
 
     @Test
     @Transactional
@@ -245,7 +245,7 @@ class DatabaseIntegrationTests {
         )
         assertEquals(
             listOf(2201L),
-            deadlineRepository.findAllByUser(1011, Pageable.ofSize(10)).content.map { it.id }
+            eventRepository.findAllByUser(1011, Pageable.ofSize(10)).content.map { it.id }
         )
         assertEquals(
             setOf(ScopeType.ORGANIZATION, ScopeType.THREAD, ScopeType.DEADLINE),

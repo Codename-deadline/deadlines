@@ -3,16 +3,16 @@ import {
   mapPage,
   toAttachment,
   toChangeOrganizationOwnerRequest,
-  toCreateDeadlineRequest,
+  toCreateEventRequest,
   toCreateOrganizationRequest,
   toCreateOtpRequest,
   toCreateThreadRequest,
-  toDeadline,
+  toEvent,
   toInvitation,
   toMember,
   toOrganization,
   toOtpVerification,
-  toPatchDeadlineRequest,
+  toPatchEventRequest,
   toPatchUserRequest,
   toRegisterOtpRequest,
   toThreadWithRole,
@@ -30,11 +30,11 @@ test("toOrganization normalizes dates immutably", () => {
   expect(input).toEqual(original);
 });
 
-test("toDeadline normalizes dates and defaults", () => {
+test("toEvent normalizes dates and defaults", () => {
   const input = deadline();
   const original = structuredClone(input);
 
-  const result = toDeadline(input);
+  const result = toEvent(input);
 
   expect(result).toEqual({
     ...input,
@@ -248,17 +248,17 @@ test("toCreateOtpRequest normalizes usernames immutably", () => {
   expect(input.username).toBe("@@user ");
 });
 
-test("toCreateDeadlineRequest serializes the due date", () => {
-  const result = toCreateDeadlineRequest({ title: "Deadline", due: timestamp, invitations: [] });
+test("toCreateEventRequest serializes the due date", () => {
+  const result = toCreateEventRequest({ title: "Deadline", due: timestamp, invitations: [] });
 
   expect(result.due).toBe(instant);
 });
 
-describe("toPatchDeadlineRequest", () => {
+describe("toPatchEventRequest", () => {
   test("serializes epoch dates", () => {
     const input = { due: 0 };
 
-    const result = toPatchDeadlineRequest(input);
+    const result = toPatchEventRequest(input);
 
     expect(result).toEqual({ due: "1970-01-01T00:00:00Z" });
   });
@@ -266,7 +266,7 @@ describe("toPatchDeadlineRequest", () => {
   test("preserves null dates", () => {
     const input = { due: null };
 
-    const result = toPatchDeadlineRequest(input);
+    const result = toPatchEventRequest(input);
 
     expect(result).toEqual(input);
   });
@@ -274,7 +274,7 @@ describe("toPatchDeadlineRequest", () => {
   test("preserves unrelated fields", () => {
     const input = { isCompleted: true };
 
-    const result = toPatchDeadlineRequest(input);
+    const result = toPatchEventRequest(input);
 
     expect(result).toEqual(input);
   });
@@ -297,7 +297,7 @@ const createRequests = [
     name: "deadline",
     role: "DDL_ASSIGNEE",
     create: (invitations: InvitationInput[]) =>
-      toCreateDeadlineRequest({ title: "Deadline", due: timestamp, invitations }),
+      toCreateEventRequest({ title: "Deadline", due: timestamp, invitations }),
   },
 ];
 

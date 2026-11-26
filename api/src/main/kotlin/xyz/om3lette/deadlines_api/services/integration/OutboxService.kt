@@ -4,7 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import xyz.om3lette.deadlines_api.configs.properties.OutboxProperties
 import xyz.om3lette.deadlines_api.data.notifications.enums.NotificationStatus
-import xyz.om3lette.deadlines_api.data.notifications.repo.DeadlineNotificationRepository
+import xyz.om3lette.deadlines_api.data.notifications.repo.EventReminderRepository
 import xyz.om3lette.deadlines_api.data.outbox.enums.ProcessResult
 import xyz.om3lette.deadlines_api.data.outbox.model.Outbox
 import xyz.om3lette.deadlines_api.data.outbox.repo.OutboxRepository
@@ -14,7 +14,7 @@ import xyz.om3lette.deadlines_api.services.integration.outboxHandler.OutboxHandl
 @Service
 class OutboxService(
     private val outboxRepository: OutboxRepository,
-    private val deadlineNotificationRepository: DeadlineNotificationRepository,
+    private val eventReminderRepository: EventReminderRepository,
     handlers: List<OutboxHandler>,
     outboxProperties: OutboxProperties
 ) {
@@ -86,7 +86,7 @@ class OutboxService(
         }
 
         if (finalNotificationIds.isNotEmpty()) {
-            deadlineNotificationRepository.finalizeProcessedNotifications(finalNotificationIds)
+            eventReminderRepository.finalizeProcessedNotifications(finalNotificationIds)
         }
     }
 }

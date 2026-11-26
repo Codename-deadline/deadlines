@@ -42,7 +42,8 @@ class OutboxCustomRepositoryImpl(
                     'deadline', jsonb_build_object(
                         'id', deadline_id,
                         'title', deadline_title,
-                        'due', CAST(:new_due AS timestamptz)
+                        'due', CAST(:new_due AS timestamptz),
+                        'kind', kind
                     )
                 )
             FROM deadline_notification_recipients

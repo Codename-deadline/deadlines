@@ -5,7 +5,7 @@ import {
   getGetDeadlineAttachmentsMetadataQueryKey,
   getGetDeadlineQueryKey,
 } from "@/api/generated/endpoints/deadlines/deadlines";
-import type { AttachmentResponse, DeadlineResponseWithRole } from "@/api/generated/models";
+import type { AttachmentResponse, EventResponseWithRole } from "@/api/generated/models";
 import { clearQueryEntries, refreshQueryEntries, removeInfiniteQueryItems } from "@/composables/shared/queryCache";
 import { deadlineListsPrefix, threadDeadlinesPrefix, userAssignedDeadlinesPrefix } from "./useDeadlines";
 
@@ -15,7 +15,7 @@ export const deadlineAssigneesPrefix = (id: number) =>
 const detailsPrefix = getGetDeadlineQueryKey(0).slice(0, -1);
 const attachmentsPrefix = getGetAttachmentMetadataQueryKey(0).slice(0, -1);
 
-export function removeDeadlineRows(cache: QueryCache, matches: (item: DeadlineResponseWithRole) => boolean) {
+export function removeDeadlineRows(cache: QueryCache, matches: (item: EventResponseWithRole) => boolean) {
   removeInfiniteQueryItems(cache, [userAssignedDeadlinesPrefix, deadlineListsPrefix], matches);
 }
 
@@ -44,7 +44,7 @@ export function clearThreadDeadlines(cache: QueryCache, threadId: number) {
   const ids = new Set<number>();
 
   for (const entry of cache.getEntries({ key: detailsPrefix })) {
-    const dto = entry.state.value.data as DeadlineResponseWithRole | undefined;
+    const dto = entry.state.value.data as EventResponseWithRole | undefined;
     if (dto?.threadId === threadId) ids.add(dto.id);
   }
 

@@ -15,17 +15,17 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import xyz.om3lette.deadlines_api.data.common.constraints.PaginationConstraints
-import xyz.om3lette.deadlines_api.data.scopes.deadline.requests.CreateDeadlineRequest
+import xyz.om3lette.deadlines_api.data.scopes.event.requests.CreateEventRequest
 import xyz.om3lette.deadlines_api.data.scopes.common.dto.UsernameRolePairList
 import xyz.om3lette.deadlines_api.data.user.model.User
-import xyz.om3lette.deadlines_api.services.DeadlineService
+import xyz.om3lette.deadlines_api.services.EventService
 
 @SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/threads/{threadId}/deadlines")
 @Tag(name = "Deadlines")
 class ThreadDeadlineController(
-    val deadlineService: DeadlineService
+    val eventService: EventService
 ) {
     @GetMapping
     @Operation(summary = "Get all deadlines threads")
@@ -33,20 +33,21 @@ class ThreadDeadlineController(
         @AuthenticationPrincipal user: User?,
         @PathVariable @Positive threadId: Long,
         @RequestParam("page") @Min(PaginationConstraints.PAGE_MIN) pageNumber: Int
-    ) = deadlineService.getDeadlinesByThread(user, threadId, pageNumber, 10)
+    ) = eventService.getEventsByThread(user, threadId, pageNumber, 10)
 
     @PostMapping
     @Operation(summary = "Create new deadline")
     fun createDeadline(
         @AuthenticationPrincipal user: User,
         @PathVariable @Positive threadId: Long,
-        @Valid @RequestBody request: CreateDeadlineRequest
-    ) = deadlineService.createDeadline(
+        @Valid @RequestBody request: CreateEventRequest
+    ) = eventService.createEvent(
         user,
         threadId,
         request.title,
         request.description,
         request.due,
-        UsernameRolePairList(request.invitations)
+        UsernameRolePairList(request.invitations),
+        request.kind
     )
 }

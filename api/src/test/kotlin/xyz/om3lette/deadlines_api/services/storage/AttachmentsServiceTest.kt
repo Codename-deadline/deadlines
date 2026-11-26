@@ -14,9 +14,9 @@ import xyz.om3lette.deadlines_api.configs.properties.StorageProperties
 import xyz.om3lette.deadlines_api.data.attachments.model.Attachment
 import xyz.om3lette.deadlines_api.data.attachments.repo.AttachmentRepository
 import xyz.om3lette.deadlines_api.data.attachments.reponse.AttachmentPermissions
-import xyz.om3lette.deadlines_api.data.permissions.dto.DeadlineScope
-import xyz.om3lette.deadlines_api.data.scopes.deadline.model.Deadline
-import xyz.om3lette.deadlines_api.data.scopes.deadline.repo.DeadlineRepository
+import xyz.om3lette.deadlines_api.data.permissions.dto.EventScope
+import xyz.om3lette.deadlines_api.data.scopes.event.model.Event
+import xyz.om3lette.deadlines_api.data.scopes.event.repo.EventRepository
 import xyz.om3lette.deadlines_api.exceptions.type.StatusCodeException
 import xyz.om3lette.deadlines_api.services.permission.PermissionService
 import java.time.Instant
@@ -26,7 +26,7 @@ import kotlin.test.assertEquals
 class AttachmentsServiceTest {
     private val permissionService: PermissionService = mockk()
     private val attachmentRepository: AttachmentRepository = mockk()
-    private val deadlineRepository: DeadlineRepository = mockk()
+    private val eventRepository: EventRepository = mockk()
     private val attachmentsService = AttachmentsService(
         s3Client = mockk<S3Client>(),
         s3Presigner = mockk<S3Presigner>(),
@@ -34,11 +34,11 @@ class AttachmentsServiceTest {
         attachmentsProperties = AttachmentsProperties(),
         permissionService = permissionService,
         attachmentRepository = attachmentRepository,
-        deadlineRepository = deadlineRepository,
+        eventRepository = eventRepository,
         fileCheckerService = mockk<FileCheckerService>()
     )
 
-    private lateinit var deadline: Deadline
+    private lateinit var deadline: Event
     private lateinit var attachment: Attachment
 
     @BeforeEach
@@ -53,13 +53,13 @@ class AttachmentsServiceTest {
             mimeType = "text/plain",
             sizeBytes = 1,
             uploadedBy = null,
-            deadline = deadline,
+            event = deadline,
             uploadedAt = Instant.EPOCH
         )
 
         every { attachmentRepository.findById(attachment.id) } returns Optional.of(attachment)
-        every { deadlineRepository.findById(deadline.id) } returns Optional.of(deadline)
-        every { permissionService.hasAccess(null, DeadlineScope(deadline)) } returns true
+        every { eventRepository.findById(deadline.id) } returns Optional.of(deadline)
+        every { permissionService.hasAccess(null, EventScope(deadline)) } returns true
         every {
             permissionService.buildDeadlineAttachmentPermissions(null, attachment)
         } returns AttachmentPermissions(update = false, delete = false)
@@ -70,24 +70,24 @@ class AttachmentsServiceTest {
         val result = attachmentsService.getAttachmentMetadata(null, attachment.id)
 
         assertEquals(AttachmentPermissions(update = false, delete = false), result.permissions)
-        verify(exactly = 1) { permissionService.hasAccess(null, DeadlineScope(deadline)) }
+        verify(exactly = 1) { permissionService.hasAccess(null, EventScope(deadline)) }
     }
 
     @Test
     fun `anonymous deadline attachments use deadline access check`() {
         every {
-            attachmentRepository.findAllByDeadlineOrderByUploadedAtDesc(deadline)
+            attachmentRepository.findAllByEventOrderByUploadedAtDesc(deadline)
         } returns listOf(attachment)
 
         val result = attachmentsService.getDeadlineAttachmentsMetadata(null, deadline.id)
 
         assertEquals(AttachmentPermissions(update = false, delete = false), result.single().permissions)
-        verify(exactly = 1) { permissionService.hasAccess(null, DeadlineScope(deadline)) }
+        verify(exactly = 1) { permissionService.hasAccess(null, EventScope(deadline)) }
     }
 
     @Test
     fun `anonymous attachment metadata is rejected when deadline access is denied`() {
-        every { permissionService.hasAccess(null, DeadlineScope(deadline)) } returns false
+        every { permissionService.hasAccess(null, EventScope(deadline)) } returns false
 
         val error = assertThrows<StatusCodeException> {
             attachmentsService.getAttachmentMetadata(null, attachment.id)

@@ -1,7 +1,7 @@
 {
   "components" : {
     "schemas" : {
-      "AddDeadlineAssigneeRequest" : {
+      "AddEventAssigneeRequest" : {
         "properties" : {
           "role" : {
             "enum" : [
@@ -286,7 +286,7 @@
         ],
         "type" : "object"
       },
-      "CreateDeadlineRequest" : {
+      "CreateEventRequest" : {
         "properties" : {
           "description" : {
             "maxLength" : 4096,
@@ -307,6 +307,14 @@
             "maxItems" : 10,
             "minItems" : 0,
             "type" : "array"
+          },
+          "kind" : {
+            "default" : "DEADLINE",
+            "enum" : [
+              "DEADLINE",
+              "ALERT"
+            ],
+            "type" : "string"
           },
           "title" : {
             "maxLength" : 128,
@@ -416,7 +424,7 @@
         ],
         "type" : "object"
       },
-      "DeadlineCreatedResponse" : {
+      "EventCreatedResponse" : {
         "properties" : {
           "assignees" : {
             "format" : "int32",
@@ -446,7 +454,7 @@
         ],
         "type" : "object"
       },
-      "DeadlinePermissions" : {
+      "EventPermissions" : {
         "properties" : {
           "delete" : {
             "type" : "boolean"
@@ -469,7 +477,7 @@
         ],
         "type" : "object"
       },
-      "DeadlineResponseWithRole" : {
+      "EventResponseWithRole" : {
         "properties" : {
           "createdAt" : {
             "format" : "date-time",
@@ -507,8 +515,15 @@
           "isCompleted" : {
             "type" : "boolean"
           },
+          "kind" : {
+            "enum" : [
+              "DEADLINE",
+              "ALERT"
+            ],
+            "type" : "string"
+          },
           "permissions" : {
-            "$ref" : "#/components/schemas/DeadlinePermissions"
+            "$ref" : "#/components/schemas/EventPermissions"
           },
           "role" : {
             "enum" : [
@@ -526,7 +541,7 @@
             ]
           },
           "stats" : {
-            "$ref" : "#/components/schemas/DeadlineStatsResponse"
+            "$ref" : "#/components/schemas/EventStatsResponse"
           },
           "threadId" : {
             "format" : "int64",
@@ -543,6 +558,7 @@
           "globalRole",
           "id",
           "isCompleted",
+          "kind",
           "permissions",
           "role",
           "stats",
@@ -551,7 +567,7 @@
         ],
         "type" : "object"
       },
-      "DeadlineStatsResponse" : {
+      "EventStatsResponse" : {
         "properties" : {
           "assignees" : {
             "format" : "int64",
@@ -1116,11 +1132,11 @@
         "type" : "object"
       },
       "OtpSignInResponse" : { },
-      "PaginationResponseDeadlineResponseWithRole" : {
+      "PaginationResponseEventResponseWithRole" : {
         "properties" : {
           "data" : {
             "items" : {
-              "$ref" : "#/components/schemas/DeadlineResponseWithRole"
+              "$ref" : "#/components/schemas/EventResponseWithRole"
             },
             "type" : "array"
           },
@@ -1234,7 +1250,7 @@
           "requestId"
         ]
       },
-      "PatchDeadlineRequest" : {
+      "PatchEventRequest" : {
         "properties" : {
           "description" : {
             "maxLength" : 4096,
@@ -1860,6 +1876,7 @@
               "deadline.not-found",
               "deadline.invalid-timestamp",
               "deadline.assignee-limit-exceeded",
+              "deadline.alert-completion-not-allowed",
               "integration.account-not-available",
               "integration.account-not-linked",
               "integration.last-account-unlink-forbidden",
@@ -2530,7 +2547,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PaginationResponseDeadlineResponseWithRole"
+                  "$ref" : "#/components/schemas/PaginationResponseEventResponseWithRole"
                 }
               }
             },
@@ -2617,7 +2634,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/DeadlineResponseWithRole"
+                  "$ref" : "#/components/schemas/EventResponseWithRole"
                 }
               }
             },
@@ -2662,7 +2679,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/PatchDeadlineRequest"
+                "$ref" : "#/components/schemas/PatchEventRequest"
               }
             }
           },
@@ -2781,7 +2798,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/AddDeadlineAssigneeRequest"
+                "$ref" : "#/components/schemas/AddEventAssigneeRequest"
               }
             }
           },
@@ -4689,7 +4706,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PaginationResponseDeadlineResponseWithRole"
+                  "$ref" : "#/components/schemas/PaginationResponseEventResponseWithRole"
                 }
               }
             },
@@ -4734,7 +4751,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/CreateDeadlineRequest"
+                "$ref" : "#/components/schemas/CreateEventRequest"
               }
             }
           },
@@ -4745,7 +4762,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/DeadlineCreatedResponse"
+                  "$ref" : "#/components/schemas/EventCreatedResponse"
                 }
               }
             },

@@ -42,7 +42,7 @@ const handleDeadlineStatusChange = async (currentStatus: boolean) => {
   if (!deadline.value || mutations.patch.isLoading.value) return;
 
   try {
-    await mutations.patch.mutateAsync({ deadlineId: deadlineId.value, patchDeadlineRequest: { isCompleted: !currentStatus } });
+    await mutations.patch.mutateAsync({ deadlineId: deadlineId.value, patchEventRequest: { isCompleted: !currentStatus } });
   } catch (error) {
     displayError(error);
   }

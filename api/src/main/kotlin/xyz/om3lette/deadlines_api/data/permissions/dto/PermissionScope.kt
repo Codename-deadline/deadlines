@@ -1,6 +1,6 @@
 package xyz.om3lette.deadlines_api.data.permissions.dto
 
-import xyz.om3lette.deadlines_api.data.scopes.deadline.model.Deadline
+import xyz.om3lette.deadlines_api.data.scopes.event.model.Event
 import xyz.om3lette.deadlines_api.data.scopes.organization.model.Organization
 import xyz.om3lette.deadlines_api.data.scopes.thread.model.Thread
 
@@ -13,4 +13,4 @@ data class OrganizationScope(
 
 data class ThreadScope(val thread: Thread) : PermissionScope
 
-data class DeadlineScope(val deadline: Deadline) : PermissionScope
+data class EventScope(val event: Event) : PermissionScope

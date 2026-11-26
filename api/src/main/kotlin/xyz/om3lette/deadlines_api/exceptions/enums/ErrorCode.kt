@@ -48,6 +48,7 @@ enum class ErrorCode(val code: String) {
     DDL_NOT_FOUND("deadline.not-found"),
     DDL_INVALID_TIMESTAMP("deadline.invalid-timestamp"),
     DDL_ASSIGNEE_LIMIT_EXCEEDED("deadline.assignee-limit-exceeded"),
+    DDL_ALERT_COMPLETION_NOT_ALLOWED("deadline.alert-completion-not-allowed"),
 
     INTEGRATION_ACCOUNT_ALREADY_IN_USE("integration.account-not-available"),
     INTEGRATION_ACCOUNT_NOT_LINKED("integration.account-not-linked"),

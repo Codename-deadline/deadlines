@@ -7,10 +7,10 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
     use = JsonTypeInfo.Id.NAME,
     property = "type",
     // Outbox rows written before notification types were introduced are reminders.
-    defaultImpl = DeadlineNotificationEvent::class
+    defaultImpl = EventReminderNotification::class
 )
 @JsonSubTypes(
-    JsonSubTypes.Type(value = DeadlineNotificationEvent::class, name = "DEADLINE_REMINDER"),
-    JsonSubTypes.Type(value = DeadlineDueChangedNotificationEvent::class, name = "DEADLINE_DUE_CHANGED")
+    JsonSubTypes.Type(value = EventReminderNotification::class, name = "DEADLINE_REMINDER"),
+    JsonSubTypes.Type(value = EventDateChangedNotification::class, name = "DEADLINE_DUE_CHANGED")
 )
 sealed interface NotificationEvent

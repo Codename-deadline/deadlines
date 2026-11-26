@@ -21,8 +21,8 @@ import xyz.om3lette.deadlines_api.data.attachments.model.Attachment
 import xyz.om3lette.deadlines_api.data.attachments.repo.AttachmentRepository
 import xyz.om3lette.deadlines_api.data.attachments.reponse.AttachmentCreatedResponse
 import xyz.om3lette.deadlines_api.data.attachments.reponse.AttachmentResponse
-import xyz.om3lette.deadlines_api.data.permissions.dto.DeadlineScope
-import xyz.om3lette.deadlines_api.data.scopes.deadline.repo.DeadlineRepository
+import xyz.om3lette.deadlines_api.data.permissions.dto.EventScope
+import xyz.om3lette.deadlines_api.data.scopes.event.repo.EventRepository
 import xyz.om3lette.deadlines_api.data.user.model.User
 import xyz.om3lette.deadlines_api.exceptions.enums.ErrorCode
 import xyz.om3lette.deadlines_api.exceptions.type.StatusCodeException
@@ -41,7 +41,7 @@ class AttachmentsService (
     attachmentsProperties: AttachmentsProperties,
     private val permissionService: PermissionService,
     private val attachmentRepository: AttachmentRepository,
-    private val deadlineRepository: DeadlineRepository,
+    private val eventRepository: EventRepository,
     private val fileCheckerService: FileCheckerService
 ) {
     private val logger = LoggerFactory.getLogger(AttachmentsService::class.java)
@@ -54,11 +54,11 @@ class AttachmentsService (
         fileStream: MultipartFile,
         filename: String
     ): AttachmentCreatedResponse {
-        val deadline = deadlineRepository.findByIdOr404(deadlineId, ErrorCode.DDL_NOT_FOUND)
+        val deadline = eventRepository.findByIdOr404(deadlineId, ErrorCode.DDL_NOT_FOUND)
         requirePermission(
             permissionService.canManageDeadlineAttachments(issuer, deadline)
         )
-        if (attachmentRepository.countByDeadline(deadline) >= maxAttachmentsPerDeadline) {
+        if (attachmentRepository.countByEvent(deadline) >= maxAttachmentsPerDeadline) {
             throw StatusCodeException(409, ErrorCode.ATTACHMENT_LIMIT_EXCEEDED)
         }
 
@@ -96,7 +96,7 @@ class AttachmentsService (
         // Avoid a db request by first validating the fileStream
         val mimeType = fileCheckerService.getAttachmentMimeTypeOrError(fileStream)
         requirePermission(
-            permissionService.canManageDeadlineAttachments(issuer, attachment.deadline)
+            permissionService.canManageDeadlineAttachments(issuer, attachment.event)
         )
 
         try {
@@ -118,7 +118,7 @@ class AttachmentsService (
         }
         val attachment = attachmentRepository.findByIdOr404(attachmentId, ErrorCode.ATTACHMENT_NOT_FOUND)
         requirePermission(
-            permissionService.canManageDeadlineAttachments(issuer, attachment.deadline)
+            permissionService.canManageDeadlineAttachments(issuer, attachment.event)
         )
 
         attachment.filename = filename // Check for null if new metadata is added
@@ -130,7 +130,7 @@ class AttachmentsService (
         val attachment = attachmentRepository.findByIdOr404(attachmentId, ErrorCode.ATTACHMENT_NOT_FOUND)
 
         requirePermission(
-            permissionService.canManageDeadlineAttachments(issuer, attachment.deadline)
+            permissionService.canManageDeadlineAttachments(issuer, attachment.event)
         )
 
         try {
@@ -162,13 +162,13 @@ class AttachmentsService (
         issuer: User?,
         deadlineId: Long
     ): List<AttachmentResponse> {
-        val deadline = deadlineRepository.findByIdOr404(deadlineId, ErrorCode.DDL_NOT_FOUND)
+        val deadline = eventRepository.findByIdOr404(deadlineId, ErrorCode.DDL_NOT_FOUND)
         requirePermission(
-            permissionService.hasAccess(issuer, DeadlineScope(deadline))
+            permissionService.hasAccess(issuer, EventScope(deadline))
         )
         // There is no pagination as it is logical frontend wise to fetch all the metadata at once,
         // while the `maxAttachmentsPerDeadline` insures that the response has an acceptable size
-        return attachmentRepository.findAllByDeadlineOrderByUploadedAtDesc(deadline).map { it.toResponse(
+        return attachmentRepository.findAllByEventOrderByUploadedAtDesc(deadline).map { it.toResponse(
             permissionService.buildDeadlineAttachmentPermissions(issuer, it)
         ) }
     }
@@ -176,9 +176,9 @@ class AttachmentsService (
 
     private fun getAttachmentByIdAndCheckPermissions(issuer: User?, attachmentId: Long): Attachment {
         val attachment = attachmentRepository.findByIdOr404(attachmentId, ErrorCode.ATTACHMENT_NOT_FOUND)
-        val deadline = attachment.deadline
+        val deadline = attachment.event
         requirePermission(
-            permissionService.hasAccess(issuer, DeadlineScope(deadline))
+            permissionService.hasAccess(issuer, EventScope(deadline))
         )
         return attachment
     }

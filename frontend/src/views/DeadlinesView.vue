@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import type { DeadlineModel } from "@/api/adapters/deadline";
+import type { EventModel } from "@/api/adapters/event";
 import PageLayout from "@/components/home/common/PageLayout.vue";
 import CreateDeadlineDialog from "@/components/home/deadlines/CreateDeadlineDialog.vue";
 import DeadlineCard from "@/components/home/deadlines/DeadlineCard.vue";
@@ -24,7 +24,7 @@ const showCreateDeadlineButton = computed(() =>
   scope.thread?.id === threadId.value && scope.thread.permissions.createDeadlines,
 );
 
-const onCardClick = (deadline: DeadlineModel) => {
+const onCardClick = (deadline: EventModel) => {
   router.push({ path: "/deadline", query: { ddlId: deadline.id } });
 };
 </script>

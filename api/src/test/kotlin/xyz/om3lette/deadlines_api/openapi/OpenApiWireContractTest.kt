@@ -18,14 +18,18 @@ import org.springframework.mock.web.MockMultipartFile
 import tools.jackson.databind.json.JsonMapper
 import xyz.om3lette.deadlines_api.config.TestInfraMocks
 import xyz.om3lette.deadlines_api.data.attachments.reponse.AttachmentCreatedResponse
-import xyz.om3lette.deadlines_api.data.scopes.deadline.dto.DeadlineDTO
-import xyz.om3lette.deadlines_api.data.scopes.deadline.dto.DeadlinePermissions
-import xyz.om3lette.deadlines_api.data.scopes.deadline.response.DeadlineResponse
-import xyz.om3lette.deadlines_api.data.scopes.deadline.response.DeadlineStatsResponse
+import xyz.om3lette.deadlines_api.data.scopes.event.dto.EventDTO
+import xyz.om3lette.deadlines_api.data.scopes.event.dto.EventPermissions
+import xyz.om3lette.deadlines_api.data.scopes.event.model.EventKind
+import xyz.om3lette.deadlines_api.data.scopes.common.dto.UsernameRolePairList
+import xyz.om3lette.deadlines_api.data.scopes.event.response.EventCreatedResponse
+import xyz.om3lette.deadlines_api.data.scopes.userScope.enums.ScopeRole
+import xyz.om3lette.deadlines_api.data.scopes.event.response.EventResponse
+import xyz.om3lette.deadlines_api.data.scopes.event.response.EventStatsResponse
 import xyz.om3lette.deadlines_api.data.user.model.User
 import xyz.om3lette.deadlines_api.data.user.repo.UserRepository
 import xyz.om3lette.deadlines_api.db.TestDatabaseConfig
-import xyz.om3lette.deadlines_api.services.DeadlineService
+import xyz.om3lette.deadlines_api.services.EventService
 import xyz.om3lette.deadlines_api.services.JwtService
 import xyz.om3lette.deadlines_api.services.storage.AttachmentsService
 import org.springframework.web.multipart.MultipartFile
@@ -54,7 +58,7 @@ class OpenApiWireContractTest {
     @Autowired private lateinit var jwtService: JwtService
     @MockitoBean private lateinit var users: UserRepository
     @MockitoBean private lateinit var attachments: AttachmentsService
-    @MockitoBean private lateinit var deadlines: DeadlineService
+    @MockitoBean private lateinit var deadlines: EventService
 
     private val client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build()
     private val mapper = JsonMapper.builder().build()
@@ -69,10 +73,10 @@ class OpenApiWireContractTest {
 
     @Test
     fun `live JSON serialization agrees with the documented Kotlin property names`() {
-        Mockito.`when`(deadlines.getDeadline(any(User::class.java), anyLong())).thenReturn(
-            DeadlineResponse(
-                DeadlineDTO(42, "Deadline", null, Instant.EPOCH, Instant.EPOCH, true, 3),
-                DeadlineStatsResponse(0, 0), DeadlinePermissions(false, false, false, false)
+        Mockito.`when`(deadlines.getEvent(any(User::class.java), anyLong())).thenReturn(
+            EventResponse(
+                EventDTO(42, "Event", null, Instant.EPOCH, Instant.EPOCH, true, 3, EventKind.DEADLINE),
+                EventStatsResponse(0, 0), EventPermissions(false, false, false, false)
             ).withRole(null, null)
         )
         val response = send("/api/deadlines/42")
@@ -80,6 +84,7 @@ class OpenApiWireContractTest {
         assertTrue(response.headers().firstValue("content-type").orElse("").startsWith("application/json"))
         val body = mapper.readTree(response.body())
         assertTrue(body.path("isCompleted").asBoolean())
+        assertEquals("DEADLINE", body.path("kind").asString())
         assertFalse(body.has("completed"))
         listOf("description", "role", "globalRole").forEach { field ->
             assertTrue(body.path(field).isNull, "$field must be present with a null value")
@@ -89,15 +94,37 @@ class OpenApiWireContractTest {
         Mockito.doAnswer { invocation ->
             completed = invocation.getArgument(4)
             null
-        }.`when`(deadlines).patchDeadline(any(User::class.java) ?: user, anyLong(), Mockito.isNull(), Mockito.isNull(), Mockito.anyBoolean(), Mockito.isNull())
+        }.`when`(deadlines).patchEvent(any(User::class.java) ?: user, anyLong(), Mockito.isNull(), Mockito.isNull(), Mockito.anyBoolean(), Mockito.isNull())
         val patch = send("/api/deadlines/42", "PATCH", "application/json", """{"isCompleted":true}""".toByteArray())
         assertEquals(200, patch.statusCode())
         assertEquals(true, completed)
 
         val docs = mapper.readTree(send("/v3/api-docs").body())
-        val properties = docs.path("components").path("schemas").path("DeadlineResponseWithRole").path("properties")
+        val properties = docs.path("components").path("schemas").path("EventResponseWithRole").path("properties")
         assertTrue(properties.has("isCompleted"))
         assertFalse(properties.has("completed"))
+    }
+
+    @Test
+    fun `creation accepts alerts and defaults omitted kind for existing clients`() {
+        val kinds = mutableListOf<EventKind>()
+        Mockito.doAnswer { invocation ->
+            kinds.add(invocation.getArgument(6))
+            EventCreatedResponse(42, 0, ScopeRole.ORG_OWNER)
+        }.`when`(deadlines).createEvent(
+            any(User::class.java) ?: user, anyLong(), any(String::class.java) ?: "",
+            Mockito.isNull(), any(Instant::class.java) ?: Instant.EPOCH,
+            any(UsernameRolePairList::class.java) ?: UsernameRolePairList(emptyList()),
+            any(EventKind::class.java) ?: EventKind.DEADLINE
+        )
+        val fields = """"title":"Event","due":"2026-12-01T12:00:00Z","invitations":[]"""
+        listOf("{$fields}", "{$fields,\"kind\":\"ALERT\"}").forEach { body ->
+            val response = send("/api/threads/3/deadlines", "POST", "application/json", body.toByteArray())
+            assertEquals(200, response.statusCode(), response.body())
+            assertEquals(42, mapper.readTree(response.body()).path("deadlineId").asInt())
+        }
+        assertEquals(listOf(EventKind.DEADLINE, EventKind.ALERT), kinds)
+        assertEquals(422, send("/api/threads/3/deadlines", "POST", "application/json", "{$fields,\"kind\":\"UNKNOWN\"}".toByteArray()).statusCode())
     }
 
     @Test

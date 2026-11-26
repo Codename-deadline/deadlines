@@ -6,12 +6,12 @@ from common.infrastructure.kafka.enums.time_remaining import TimeRemaining
 from common.infrastructure.kafka.schemas.base_notification_event import (
     BaseNotificationEvent,
 )
-from common.infrastructure.kafka.schemas.deadline_due_changed_event import (
-    DeadlineDueChangedNotificationEvent,
+from common.infrastructure.kafka.schemas.event_date_changed_notification import (
+    EventDateChangedNotification,
 )
 
 
-class DeadlineReminderNotificationEvent(BaseNotificationEvent):
+class EventReminderNotification(BaseNotificationEvent):
     type: Literal["DEADLINE_REMINDER"] = "DEADLINE_REMINDER"
     time_remaining: TimeRemaining
 
@@ -24,7 +24,7 @@ def _notification_type(value: object) -> str | None:
 
 
 type Notification = Annotated[
-    Annotated[DeadlineReminderNotificationEvent, Tag("DEADLINE_REMINDER")]
-    | Annotated[DeadlineDueChangedNotificationEvent, Tag("DEADLINE_DUE_CHANGED")],
+    Annotated[EventReminderNotification, Tag("DEADLINE_REMINDER")]
+    | Annotated[EventDateChangedNotification, Tag("DEADLINE_DUE_CHANGED")],
     Discriminator(_notification_type),
 ]

@@ -71,7 +71,7 @@ object DatabaseObjectBuilder {
         jdbc: JdbcTemplate,
         id: Long,
         threadId: Long,
-        title: String = "Database Test Deadline",
+        title: String = "Database Test Event",
         isCompleted: Boolean = false
     ) {
         jdbc.update(

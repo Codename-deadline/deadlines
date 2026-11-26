@@ -1,8 +1,7 @@
-import type { DeadlineModel } from "@/api/adapters/deadline";
-import type { DeadlineState } from "@/types/state";
+import type { EventModel } from "@/api/adapters/event";
+import { EVENT_PRESENTATIONS } from "@/domain/events";
+import type { EventState } from "@/types/state";
 
-export const computeDeadlineState = (deadline: Pick<DeadlineModel, "due" | "isCompleted">): DeadlineState => {
-  if (deadline.isCompleted) return "completed";
-  if (Date.now() > deadline.due) return "overdue";
-  return "open";
+export const computeEventState = (deadline: Pick<EventModel, "due" | "isCompleted" | "kind">): EventState => {
+  return EVENT_PRESENTATIONS[deadline.kind].state(deadline, Date.now());
 };

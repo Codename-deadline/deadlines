@@ -14,10 +14,10 @@ import xyz.om3lette.deadlines_api.data.integration.common.dto.IssuerContext
 import xyz.om3lette.deadlines_api.data.integration.common.enums.IntegrationResultKey
 import xyz.om3lette.deadlines_api.data.integration.common.response.IntegrationResult
 import xyz.om3lette.deadlines_api.data.integration.messengerAccount.repo.UserMessengerAccountRepository
-import xyz.om3lette.deadlines_api.data.permissions.dto.DeadlineScope
+import xyz.om3lette.deadlines_api.data.permissions.dto.EventScope
 import xyz.om3lette.deadlines_api.data.permissions.dto.OrganizationScope
 import xyz.om3lette.deadlines_api.data.permissions.dto.ThreadScope
-import xyz.om3lette.deadlines_api.data.scopes.deadline.repo.DeadlineRepository
+import xyz.om3lette.deadlines_api.data.scopes.event.repo.EventRepository
 import xyz.om3lette.deadlines_api.data.scopes.organization.repo.OrganizationRepository
 import xyz.om3lette.deadlines_api.data.scopes.thread.repo.ThreadRepository
 import xyz.om3lette.deadlines_api.data.scopes.userScope.enums.ScopeType
@@ -35,7 +35,7 @@ class IntegrationSubscriptionService(
     private val organizationRepository: OrganizationRepository,
     private val chatRepository: ChatRepository,
     private val chatSubscriptionRepository: ChatSubscriptionRepository,
-    private val deadlineRepository: DeadlineRepository,
+    private val eventRepository: EventRepository,
     private val threadRepository: ThreadRepository,
     private val languageResolver: IntegrationLanguageResolver,
 ) {
@@ -120,11 +120,11 @@ class IntegrationSubscriptionService(
         issuerHasMessengerChatAdminRights,
         ScopeType.DEADLINE,
     ) { issuer ->
-        val deadline = deadlineRepository.findById(targetId).orElseThrow {
+        val deadline = eventRepository.findById(targetId).orElseThrow {
             grpcException(Status.NOT_FOUND, IntegrationResultKey.DEADLINE_NOT_FOUND, issuer.language)
         }
         requirePermissionGrpc(
-            permissionService.hasAccess(issuer, DeadlineScope(deadline)),
+            permissionService.hasAccess(issuer, EventScope(deadline)),
             IntegrationResultKey.DEADLINE_ACCESS_DENIED.value(),
             { issuer.language }
         )
@@ -270,14 +270,14 @@ class IntegrationSubscriptionService(
                 deleted += deleteSubscriptionsByScopeIds(
                     chat,
                     ScopeType.DEADLINE,
-                    deadlineRepository.findAllIdsByOrganizationId(scopeId)
+                    eventRepository.findAllIdsByOrganizationId(scopeId)
                 )
             }
             ScopeType.THREAD -> {
                 deleted += deleteSubscriptionsByScopeIds(
                     chat,
                     ScopeType.DEADLINE,
-                    deadlineRepository.findAllIdsByThreadId(scopeId)
+                    eventRepository.findAllIdsByThreadId(scopeId)
                 )
             }
             ScopeType.DEADLINE -> Unit

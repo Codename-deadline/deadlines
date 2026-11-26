@@ -2,12 +2,12 @@ package xyz.om3lette.deadlines_api.services
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import xyz.om3lette.deadlines_api.data.permissions.dto.DeadlineScope
+import xyz.om3lette.deadlines_api.data.permissions.dto.EventScope
 import xyz.om3lette.deadlines_api.data.permissions.dto.OrganizationScope
 import xyz.om3lette.deadlines_api.data.permissions.dto.PermissionRoleDTO
 import xyz.om3lette.deadlines_api.data.permissions.dto.ThreadScope
 import xyz.om3lette.deadlines_api.data.roles.response.RolesMetadataResponse
-import xyz.om3lette.deadlines_api.data.scopes.deadline.repo.DeadlineRepository
+import xyz.om3lette.deadlines_api.data.scopes.event.repo.EventRepository
 import xyz.om3lette.deadlines_api.data.scopes.organization.repo.OrganizationRepository
 import xyz.om3lette.deadlines_api.data.scopes.thread.repo.ThreadRepository
 import xyz.om3lette.deadlines_api.data.scopes.userScope.enums.ScopeRole
@@ -25,7 +25,7 @@ class RolesService(
     private val userScopeRepository: UserScopeRepository,
     private val organizationRepository: OrganizationRepository,
     private val threadRepository: ThreadRepository,
-    private val deadlineRepository: DeadlineRepository,
+    private val eventRepository: EventRepository,
     private val permissionService: PermissionService
 ) {
     val metadata: RolesMetadataResponse by lazy {
@@ -62,7 +62,7 @@ class RolesService(
                 OrganizationScope(scopeId)
             }
             ScopeType.THREAD -> ThreadScope(threadRepository.findByIdOr404(scopeId, ErrorCode.THR_NOT_FOUND))
-            ScopeType.DEADLINE -> DeadlineScope(deadlineRepository.findByIdOr404(scopeId, ErrorCode.DDL_NOT_FOUND))
+            ScopeType.DEADLINE -> EventScope(eventRepository.findByIdOr404(scopeId, ErrorCode.DDL_NOT_FOUND))
         }
         requirePermission(
             permissionService.canChangeRole(issuer, permissionScope, newRole)

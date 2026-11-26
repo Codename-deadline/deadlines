@@ -43,6 +43,7 @@ export const ValidationErrorResponseCode = {
   "deadlinenot-found": "deadline.not-found",
   "deadlineinvalid-timestamp": "deadline.invalid-timestamp",
   "deadlineassignee-limit-exceeded": "deadline.assignee-limit-exceeded",
+  "deadlinealert-completion-not-allowed": "deadline.alert-completion-not-allowed",
   "integrationaccount-not-available": "integration.account-not-available",
   "integrationaccount-not-linked": "integration.account-not-linked",
   "integrationlast-account-unlink-forbidden": "integration.last-account-unlink-forbidden",

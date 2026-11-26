@@ -9,7 +9,7 @@ import tools.jackson.databind.json.JsonMapper
 import xyz.om3lette.deadlines_api.configs.properties.OutboxProperties
 import xyz.om3lette.deadlines_api.data.integration.bot.enums.Messenger
 import xyz.om3lette.deadlines_api.data.notifications.enums.NotificationStatus
-import xyz.om3lette.deadlines_api.data.notifications.repo.DeadlineNotificationRepository
+import xyz.om3lette.deadlines_api.data.notifications.repo.EventReminderRepository
 import xyz.om3lette.deadlines_api.data.outbox.enums.OutboxSource
 import xyz.om3lette.deadlines_api.data.outbox.enums.ProcessResult
 import xyz.om3lette.deadlines_api.data.outbox.model.Outbox
@@ -22,7 +22,7 @@ class OutboxServiceTest {
     @EnumSource(ProcessResult::class)
     fun `deliveries without reminder ids do not finalize scheduled reminders`(result: ProcessResult) {
         val repository = mockk<OutboxRepository>(relaxed = true)
-        val reminders = mockk<DeadlineNotificationRepository>(relaxed = true)
+        val reminders = mockk<EventReminderRepository>(relaxed = true)
         val handler = mockk<OutboxHandler>()
         val delivery = Outbox(
             id = 1,
@@ -55,7 +55,7 @@ class OutboxServiceTest {
     @EnumSource(ProcessResult::class)
     fun `terminal outcomes finalize only associated reminders in a mixed batch`(result: ProcessResult) {
         val repository = mockk<OutboxRepository>(relaxed = true)
-        val reminders = mockk<DeadlineNotificationRepository>(relaxed = true)
+        val reminders = mockk<EventReminderRepository>(relaxed = true)
         val handler = mockk<OutboxHandler>()
         val delivery = Outbox(
             id = 1,

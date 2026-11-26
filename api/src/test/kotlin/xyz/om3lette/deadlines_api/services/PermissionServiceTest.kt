@@ -16,12 +16,12 @@ import xyz.om3lette.deadlines_api.DomainObjectBuilder
 import xyz.om3lette.deadlines_api.configs.properties.UsersProperties
 import xyz.om3lette.deadlines_api.data.attachments.model.Attachment
 import xyz.om3lette.deadlines_api.data.attachments.reponse.AttachmentPermissions
-import xyz.om3lette.deadlines_api.data.permissions.dto.DeadlineScope
+import xyz.om3lette.deadlines_api.data.permissions.dto.EventScope
 import xyz.om3lette.deadlines_api.data.permissions.dto.OrganizationScope
 import xyz.om3lette.deadlines_api.data.permissions.dto.PermissionScope
 import xyz.om3lette.deadlines_api.data.permissions.dto.ThreadScope
-import xyz.om3lette.deadlines_api.data.scopes.deadline.dto.DeadlinePermissions
-import xyz.om3lette.deadlines_api.data.scopes.deadline.model.Deadline
+import xyz.om3lette.deadlines_api.data.scopes.event.dto.EventPermissions
+import xyz.om3lette.deadlines_api.data.scopes.event.model.Event
 import xyz.om3lette.deadlines_api.data.scopes.organization.dto.OrganizationPermissions
 import xyz.om3lette.deadlines_api.data.scopes.organization.enums.OrganizationType
 import xyz.om3lette.deadlines_api.data.scopes.organization.model.Organization
@@ -60,11 +60,11 @@ class PermissionServiceTest {
 
     private lateinit var organization: Organization
     private lateinit var thread: Thread
-    private lateinit var deadline: Deadline
+    private lateinit var deadline: Event
 
     fun orgScope() = OrganizationScope(organization.id, organization)
     fun thrScope() = ThreadScope(thread)
-    fun ddlScope() = DeadlineScope(deadline)
+    fun ddlScope() = EventScope(deadline)
 
     private val maxLinkedAccountsPerMessenger = 5
 
@@ -93,7 +93,7 @@ class PermissionServiceTest {
         when (permissionScope) {
             is OrganizationScope -> withRole(user, orgId = permissionScope.orgId, role = role)
             is ThreadScope -> withRole(user, thread = permissionScope.thread, role = role)
-            is DeadlineScope -> withRole(user, deadline = permissionScope.deadline, role = role)
+            is EventScope -> withRole(user, deadline = permissionScope.event, role = role)
         }
     }
 
@@ -101,7 +101,7 @@ class PermissionServiceTest {
         user: User,
         orgId: Long? = null,
         thread: Thread? = null,
-        deadline: Deadline? = null,
+        deadline: Event? = null,
         role: ScopeRole?,
         useAny: Boolean = false,
     ) {
@@ -145,7 +145,7 @@ class PermissionServiceTest {
             is Long -> withRole(user, orgId = target, role = role)
             is Organization -> withRole(user, orgId = target.id, role = role)
             is Thread -> withRole(user, thread = target, role = role)
-            is Deadline -> withRole(user, deadline = target, role = role)
+            is Event -> withRole(user, deadline = target, role = role)
             else -> throw IllegalArgumentException("Unsupported permission target: ${target!!::class}")
         }
     }
@@ -361,7 +361,7 @@ class PermissionServiceTest {
     }
 
     @Nested
-    inner class DeadlinePermissions {
+    inner class EventPermissions {
         @Nested
         inner class HasDeadlineAccess {
             @Test
@@ -433,7 +433,7 @@ class PermissionServiceTest {
                 permissionService.buildThreadPermissions(null, thread)
             )
             assertEquals(
-                DeadlinePermissions(update = false, delete = false, manageAssignees = false, manageAttachments = false),
+                EventPermissions(update = false, delete = false, manageAssignees = false, manageAttachments = false),
                 permissionService.buildDeadlinePermissions(null, deadline)
             )
             assertEquals(
@@ -447,7 +447,7 @@ class PermissionServiceTest {
                         mimeType = "text/plain",
                         sizeBytes = 1,
                         uploadedBy = nonAdmin,
-                        deadline = deadline,
+                        event = deadline,
                         uploadedAt = Instant.EPOCH
                     )
                 )

@@ -9,11 +9,12 @@ import type { ScopeType } from '@/types/scope';
 
 const props = defineProps<{
   scopeType: ScopeType;
+  entityName?: string;
 }>()
 const { t } = useI18n();
 
 const title = computed(() =>
-  `${capitalize(t("actions.create"))} ${t(`scopes.${props.scopeType}.name`)}`
+  `${capitalize(t("actions.create"))} ${props.entityName ?? t(`scopes.${props.scopeType}.name`)}`
 )
 
 provide(SCOPE_TYPE_KEY, props.scopeType);

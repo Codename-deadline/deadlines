@@ -1,6 +1,6 @@
 package xyz.om3lette.deadlines_api
 
-import xyz.om3lette.deadlines_api.data.scopes.deadline.model.Deadline
+import xyz.om3lette.deadlines_api.data.scopes.event.model.Event
 import xyz.om3lette.deadlines_api.data.scopes.organization.enums.InvitationStatus
 import xyz.om3lette.deadlines_api.data.scopes.organization.enums.OrganizationType
 import xyz.om3lette.deadlines_api.data.scopes.organization.model.Organization
@@ -55,8 +55,8 @@ object DomainObjectBuilder {
         createdAt: Instant = Instant.now(),
         due: Instant = Instant.now().plus(5, ChronoUnit.MINUTES),
         isCompleted: Boolean = false
-    ): Deadline =
-        Deadline(
+    ): Event =
+        Event(
             id = id,
             thread = thread,
             isCompleted = isCompleted,
